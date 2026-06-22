@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Software Finder — June 2026 Monthly Roster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Software Finder — June 2026 Monthly Roster
+   Brand: forest #0F3031 · lime #B3FA68 · teal #1F6F5C
+   Single-file: HTML + CSS + JS. To update monthly, edit the
+   ROSTER constant near the bottom and MONTH_CONFIG.
+   ============================================================ */
+:root{
+  --forest:#0F3031;          /* logo background */
+  --forest-deep:#0A2122;
+  --forest-soft:#16403F;
+  --lime:#B3FA68;            /* logo accent */
+  --lime-deep:#86C73E;
+  --teal:#1F6F5C;
+  --bg:#EEF3EF;
+  --card:#FFFFFF;
+  --ink:#15302A;
+  --muted:#5E726B;
+  --line:#E1E8E2;
+  --evening:#1F6F5C;         /* 6–8 PM */
+  --evening-bg:#E4F3EC;
+  --night:#274B6D;           /* 8 PM+ */
+  --night-bg:#E6EDF4;
+  --early:#B07514;           /* pre-6 PM */
+  --early-bg:#FBEFD8;
+  --off:#94A39C;
+  --off-bg:#F1F4F1;
+  --radius:16px;
+  --shadow-sm:0 1px 2px rgba(15,48,49,.06);
+  --shadow:0 6px 22px rgba(15,48,49,.08);
+  --shadow-lg:0 18px 44px rgba(15,48,49,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.brandmark{font-family:"Space Grotesk","Inter",sans-serif;letter-spacing:-.01em}
+.wrap{max-width:1320px;margin:0 auto;padding:0 22px}
+
+/* ---------- Header ---------- */
+.topbar{background:var(--forest);color:#fff;position:relative;overflow:hidden}
+.topbar::after{content:"";position:absolute;right:-80px;top:-60px;width:320px;height:320px;
+  background:radial-gradient(circle,rgba(179,250,104,.16),transparent 62%);pointer-events:none}
+.topbar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;padding:26px 0 28px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:42px;height:42px;flex:none}
+.brandmark{font-size:26px;font-weight:700;color:#fff;line-height:1}
+.brandmark b{color:var(--lime)}
+.brand-sub{font-size:12px;color:#A9C3BC;margin-top:3px;letter-spacing:.04em;text-transform:uppercase}
+.title-block{text-align:right}
+.title-block h1{font-size:22px;margin:0;font-weight:600}
+.title-block .meta{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+  padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.08);
+  border:1px solid rgba(179,250,104,.28);color:#EAF6E2}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--lime)}
+
+/* ---------- Section spacing ---------- */
+.section{padding:26px 0}
+.section h2{font-size:16px;margin:0 0 14px;display:flex;align-items:center;gap:10px;font-weight:600}
+.section h2 .tag{font-size:11px;font-weight:600;color:var(--teal);background:var(--evening-bg);
+  border:1px solid #CFE6DA;padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+
+/* ---------- Dashboard cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 16px 15px;box-shadow:var(--shadow-sm);position:relative;transition:transform .18s,box-shadow .18s}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.card .k{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.card .v{font-family:"Space Grotesk";font-size:30px;font-weight:700;margin-top:6px;line-height:1}
+.card .s{font-size:11.5px;color:var(--muted);margin-top:6px}
+.card .bar{height:4px;border-radius:999px;margin-top:12px;background:var(--line);overflow:hidden}
+.card .bar i{display:block;height:100%;border-radius:999px}
+.card.accent{background:linear-gradient(160deg,var(--forest),var(--forest-soft));color:#fff;border-color:transparent}
+.card.accent .k{color:#A9C3BC}
+.card.accent .v{color:var(--lime)}
+.card.accent .s{color:#C9DAD4}
+
+/* ---------- Controls ---------- */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
+.controls{display:grid;grid-template-columns:1.6fr repeat(4,1fr) auto;gap:12px;align-items:end}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;
+  font:inherit;font-size:13px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(31,111,92,.14)}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted)}
+.search-wrap input{padding-left:33px}
+.btn-clear{padding:9px 14px;border:1px solid var(--line);background:#fff;border-radius:10px;
+  font:inherit;font-weight:600;font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap;transition:.15s}
+.btn-clear:hover{background:var(--forest);color:#fff;border-color:var(--forest)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.result-count{margin-left:auto;font-weight:600;color:var(--teal)}
+
+/* ---------- Table ---------- */
+.table-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.table-scroll{overflow:auto;max-height:72vh}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:960px}
+thead th{position:sticky;top:0;z-index:5;background:var(--forest);color:#EAF6E2;
+  font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+  padding:13px 12px;text-align:left;white-space:nowrap;border-bottom:2px solid var(--lime)}
+thead th.day{text-align:center}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+tbody tr:nth-child(even){background:#F8FAF8}
+tbody tr:hover{background:var(--evening-bg)}
+tbody tr.col-hl td.dayhl{background:rgba(179,250,104,.22)}
+.sr{color:var(--muted);font-variant-numeric:tabular-nums;width:42px}
+.name{font-weight:600;white-space:nowrap}
+.team-chip{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;
+  background:var(--evening-bg);color:var(--teal);border:1px solid #CFE6DA;white-space:nowrap}
+.type-chip{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;letter-spacing:.03em}
+.type-WFO{background:var(--forest);color:#fff}
+.type-WFH{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+.shift{display:inline-block;font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.shift.evening{background:var(--evening-bg);color:var(--evening)}
+.shift.night{background:var(--night-bg);color:var(--night)}
+.shift.early{background:var(--early-bg);color:var(--early)}
+.shift.off{background:var(--off-bg);color:var(--off);font-weight:600}
+td.day{text-align:center}
+.hrs{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);text-align:right}
+.note{font-size:11.5px;color:var(--muted);max-width:150px}
+.empty{padding:48px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+
+/* ---------- Calendar ---------- */
+.cal-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding-bottom:4px}
+.cal-cell{aspect-ratio:1/.82;border-radius:12px;border:1px solid var(--line);padding:8px 9px;position:relative;
+  display:flex;flex-direction:column;justify-content:space-between;transition:transform .15s,box-shadow .15s}
+.cal-cell.blank{border:none;background:transparent}
+.cal-cell:not(.blank):hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.cal-cell .d{font-family:"Space Grotesk";font-weight:700;font-size:15px}
+.cal-cell .lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.cal-cell.work{background:var(--evening-bg);border-color:#CFE6DA}
+.cal-cell.work .lbl{color:var(--teal)}
+.cal-cell.weekend{background:var(--off-bg)}
+.cal-cell.weekend .lbl{color:var(--off)}
+.cal-cell.weekhl{outline:2px solid var(--lime);outline-offset:-2px}
+.cal-cell.today{box-shadow:0 0 0 2px var(--forest) inset}
+.cal-legend{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.cal-legend span{display:inline-flex;align-items:center;gap:6px}
+.cal-legend i{width:12px;height:12px;border-radius:4px}
+
+/* ---------- Footer ---------- */
+.foot{background:var(--forest);color:#A9C3BC;font-size:12px;padding:22px 0;margin-top:34px;text-align:center}
+.foot b{color:var(--lime)}
+
+/* ---------- Responsive ---------- */
+@media(max-width:1100px){.cards{grid-template-columns:repeat(3,1fr)}.controls{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .controls{grid-template-columns:1fr}
+  .title-block{text-align:left}.title-block .meta{justify-content:flex-start}
+  .topbar-inner{flex-direction:column;align-items:flex-start}
+  .cal-cell .lbl{display:none}
+}
+
+/* ---------- Print ---------- */
+@media print{
+  body{background:#fff;font-size:11px}
+  .panel,.controls,.btn-clear,.cal-legend,.legend,.foot::after{display:none!important}
+  .topbar,.foot{background:#0F3031!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .card,.table-card,.cal-card{box-shadow:none;break-inside:avoid}
+  .table-scroll{max-height:none;overflow:visible}
+  thead th{position:static}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:landscape;margin:12mm}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+        <rect width="100" height="100" rx="22" fill="#0F3031"/>
+        <path d="M58 22 L34 50 L50 50 L42 78 L70 46 L52 46 Z" fill="#B3FA68"/>
+      </svg>
+      <div>
+        <div class="brandmark">Software <b>Finder</b></div>
+        <div class="brand-sub">Workforce Operations</div>
+      </div>
+    </div>
+    <div class="title-block">
+      <h1>June 2026 — Monthly Roster</h1>
+      <div class="meta">
+        <span class="pill"><span class="dot"></span>Current Month: June 2026</span>
+        <span class="pill" id="pill-team">All Teams</span>
+        <span class="pill" id="pill-head">72 Team Members</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ===================== DASHBOARD CARDS ===================== -->
+  <section class="section">
+    <h2>Overview <span class="tag">Weekly recurring schedule</span></h2>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <!-- ===================== FILTERS ===================== -->
+  <section class="section" style="padding-top:0">
+    <div class="panel">
+      <div class="controls">
+        <div class="field search-wrap">
+          <label for="q">Search employee</label>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="q" type="text" placeholder="Type a name…" autocomplete="off">
+        </div>
+        <div class="field"><label for="f-team">Team</label><select id="f-team"></select></div>
+        <div class="field"><label for="f-shift">Shift band</label><select id="f-shift">
+          <option value="">All shifts</option>
+          <option value="early">Early (pre-6 PM)</option>
+          <option value="evening">Evening (6–8 PM)</option>
+          <option value="night">Night (8 PM+)</option>
+        </select></div>
+        <div class="field"><label for="f-day">Day</label><select id="f-day">
+          <option value="">All days</option>
+          <option value="0">Monday</option><option value="1">Tuesday</option>
+          <option value="2">Wednesday</option><option value="3">Thursday</option>
+          <option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+        </select></div>
+        <div class="field"><label for="f-type">Work type</label><select id="f-type">
+          <option value="">All</option><option value="WFO">On-site (WFO)</option><option value="WFH">Remote (WFH)</option>
+        </select></div>
+        <button class="btn-clear" id="clear">Reset</button>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--early-bg);border:1px solid #E7C988"></i>Early · pre-6 PM</span>
+        <span><i style="background:var(--evening-bg);border:1px solid #CFE6DA"></i>Evening · 6–8 PM</span>
+        <span><i style="background:var(--night-bg);border:1px solid #C8D5E4"></i>Night · 8 PM+</span>
+        <span><i style="background:var(--off-bg);border:1px solid var(--line)"></i>Off</span>
+        <span class="result-count" id="rc"></span>
+      </div>
+    </div>
+
+    <!-- ===================== ROSTER TABLE ===================== -->
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="sr">#</th>
+              <th>Team Member</th>
+              <th>Team</th>
+              <th>Type</th>
+              <th class="day" data-d="0">Mon</th><th class="day" data-d="1">Tue</th>
+              <th class="day" data-d="2">Wed</th><th class="day" data-d="3">Thu</th>
+              <th class="day" data-d="4">Fri</th><th class="day" data-d="5">Sat</th>
+              <th class="day" data-d="6">Sun</th>
+              <th style="text-align:right">Hrs/Wk</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CALENDAR ===================== -->
+  <section class="section">
+    <h2>June 2026 Calendar <span class="tag" id="cal-tag">Mon–Fri working · Sat–Sun off</span></h2>
+    <div class="cal-card">
+      <div class="cal-grid" id="cal"></div>
+      <div class="cal-legend">
+        <span><i style="background:var(--evening-bg);border:1px solid #CFE6DA"></i>Working day</span>
+        <span><i style="background:var(--off-bg);border:1px solid var(--line)"></i>Weekend / company off</span>
+        <span><i style="outline:2px solid var(--lime);background:#fff"></i>Selected week</span>
+      </div>
+    </div>
+    <div class="field" style="max-width:240px;margin-top:14px">
+      <label for="f-week">Highlight week</label>
+      <select id="f-week">
+        <option value="">None</option>
+        <option value="1">Week 1 · Jun 1–7</option>
+        <option value="2">Week 2 · Jun 8–14</option>
+        <option value="3">Week 3 · Jun 15–21</option>
+        <option value="4">Week 4 · Jun 22–28</option>
+        <option value="5">Week 5 · Jun 29–30</option>
+      </select>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <b>Software Finder</b> · June 2026 Monthly Roster · Generated for Workforce Operations · Schedule repeats weekly through the month.
+  </div>
+</footer>
+
+<script>
+/* =============================================================
+   DATA — replace this array each month to update the roster.
+   Each record: {sr, name, team, type:'WFO'|'WFH',
+                 days:[Mon,Tue,Wed,Thu,Fri,Sat,Sun]}  ('OFF' = off)
+   ============================================================= */
+const ROSTER = [{"sr":1,"name":"Brian Foster","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":2,"name":"Henry Ross","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":3,"name":"Alonso Blake","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":4,"name":"Grace Walker","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":5,"name":"John Reed","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":6,"name":"Abe Sinclair","team":"HR","type":"WFO","days":["8pm - 5am","8pm - 5am","8pm - 5am","8pm - 5am","8pm - 5am","OFF","OFF"]},{"sr":7,"name":"Zane Carter","team":"HR","type":"WFO","days":["OFF","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF"]},{"sr":8,"name":"Nolan West","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","8pm - 5am","8pm - 5am","OFF","OFF","6pm - 3am"]},{"sr":9,"name":"Eric Collins","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":10,"name":"Vanessa Sterling","team":"HR","type":"WFH","days":["8pm - 5am","8pm - 5am","OFF","OFF","8pm - 5am","6pm - 3am","6pm - 3am"]},{"sr":11,"name":"Nina Shaw","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":12,"name":"Nancy Brown","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":13,"name":"Sarah Johnson","team":"HR","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":14,"name":"Tazeen Ahmad","team":"MIS","type":"WFH","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":15,"name":"Sabeen Zehra","team":"MIS","type":"WFH","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":16,"name":"Tehmina Naz","team":"MIS","type":"WFH","days":["5:30pm - 2:30am","5:30pm - 2:30am","5:30pm - 2:30am","5:30pm - 2:30am","5:30pm - 2:30am","OFF","OFF"]},{"sr":17,"name":"Zainab Noor","team":"MIS","type":"WFH","days":["8:30pm - 5:30am","5:30pm - 2:30am","5:30pm - 2:30am","5:30pm - 2:30am","5:30pm - 2:30am","OFF","OFF"]},{"sr":18,"name":"Naureen Naz","team":"MIS","type":"WFH","days":["8pm - 5am","8pm - 5am","8pm - 5am","8pm - 5am","8pm - 5am","OFF","OFF"]},{"sr":19,"name":"Fatima Nawaz","team":"MIS","type":"WFH","days":["5:30pm - 2:30am","5:30pm - 2:30am","5:30pm - 2:30am","5:30pm - 2:30am","5:30pm - 2:30am","OFF","OFF"]},{"sr":20,"name":"Furqan Ali Jadoon","team":"MIS","type":"WFH","days":["8:30pm - 5:30am","8:30pm - 5:30am","8:30pm - 5:30am","8:30pm - 5:30am","8:30pm - 5:30am","OFF","OFF"]},{"sr":21,"name":"Hafsa Fawad","team":"RO","type":"WFH","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":22,"name":"Rameen Syed","team":"RO","type":"WFH","days":["7pm - 4am","7pm - 4am","7pm - 4am","7pm - 4am","7pm - 4am","OFF","OFF"]},{"sr":23,"name":"Megan Lewis","team":"Medical","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":24,"name":"Percis Patric","team":"Medical","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":25,"name":"Oliver Brown","team":"Medical","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":26,"name":"Chris Thompson","team":"Medical","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":27,"name":"Emily Taylor","team":"Medical","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF","6pm - 3am"]},{"sr":28,"name":"Kevin Fulton","team":"Medical","type":"WFO","days":["OFF","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF"]},{"sr":29,"name":"Adam Parker","team":"Medical","type":"WFO","days":["8pm - 5am","8pm - 5am","8pm - 5am","8pm - 5am","8pm - 5am","OFF","OFF"]},{"sr":30,"name":"Aaron Hale","team":"Medical","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":31,"name":"Hank Smith","team":"Medical","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":32,"name":"Shawn Hughes","team":"Medical","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":33,"name":"Frank Rivera","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":34,"name":"Seth Walker","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":35,"name":"Hunter Wade","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":36,"name":"Asher Smith","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":37,"name":"Spencer Quinn","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":38,"name":"Tony Reed","team":"Non Med","type":"WFO","days":["OFF","8pm - 5am","8pm - 5am","8pm - 5am","8pm - 5am","8pm - 5am","OFF"]},{"sr":39,"name":"Rob Collins","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":40,"name":"Jason Lewis","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":41,"name":"Michael Wilson","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":42,"name":"Jade Cole","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":43,"name":"Simon Keller","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":44,"name":"James Taylor","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":45,"name":"Alex Kross","team":"Non Med","type":"WFO","days":["6pm - 3am","6pm - 3am","OFF","OFF","6pm - 3am","6pm - 3am","6pm - 3am"]},{"sr":46,"name":"Mark Hayes","team":"Non Med","type":"WFO","days":["7pm - 4am","7pm - 4am","7pm - 4am","7pm - 4am","7pm - 4am","OFF","OFF"]},{"sr":47,"name":"Bahzad Jawad","team":"QA","type":"WFO","days":["6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","OFF","OFF"]},{"sr":48,"name":"Salman Bhatti","team":"QA","type":"WFO","days":["6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","OFF","OFF"]},{"sr":49,"name":"Khadija Kubra","team":"QA","type":"WFO","days":["6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","OFF","OFF"]},{"sr":50,"name":"Aun Mehdi","team":"QA","type":"WFO","days":["7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","OFF","OFF"]},{"sr":51,"name":"Zain Raza","team":"QA","type":"WFO","days":["7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","OFF","OFF"]},{"sr":52,"name":"Tabeel Samson","team":"QA","type":"WFO","days":["7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","OFF","OFF"]},{"sr":53,"name":"Muhammad Zahid Ameer","team":"QA","type":"WFO","days":["7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","7:00 - 4:00","OFF","OFF"]},{"sr":54,"name":"Shehryar Bhatti","team":"QA","type":"WFO","days":["8:00 - 5:00","8:00 - 5:00","8:00 - 5:00","8:00 - 5:00","8:00 - 5:00","OFF","OFF"]},{"sr":55,"name":"Zahid Mehmood","team":"QA","type":"WFO","days":["8:00 - 5:00","8:00 - 5:00","8:00 - 5:00","8:00 - 5:00","8:00 - 5:00","OFF","OFF"]},{"sr":56,"name":"Zaheer Hussain","team":"QA","type":"WFO","days":["8:30 - 5:30","8:30 - 5:30","8:30 - 5:30","8:30 - 5:30","8:30 - 5:30","OFF","OFF"]},{"sr":57,"name":"Muhammad Aneeq Hanyal","team":"QA","type":"WFO","days":["6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","OFF","OFF"]},{"sr":58,"name":"Syed Waleed Imtiaz","team":"T&D","type":"WFO","days":["8:30 - 5:30","8:30 - 5:30","8:30 - 5:30","8:30 - 5:30","8:30 - 5:30","OFF","OFF"]},{"sr":59,"name":"Rabbia Gulnar","team":"T&D","type":"WFO","days":["5:00pm - 2:00am","5:00pm - 2:00am","5:00pm - 2:00am","5:00pm - 2:00am","5:00pm - 2:00am","OFF","OFF"]},{"sr":60,"name":"Syed Murtaza Hussain","team":"BI","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":61,"name":"Abdullah Atif","team":"BI","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":62,"name":"Muhammad Arslan","team":"BI","type":"WFO","days":["3pm - 12am","3pm - 12am","3pm - 12am","3pm - 12am","3pm - 12am","OFF","OFF"]},{"sr":63,"name":"Nawab Iftikhar","team":"BI","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":64,"name":"Abdul Rafay","team":"CRM","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":65,"name":"M Umer Malik","team":"Nurturing","type":"WFO","days":["6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","OFF","OFF"]},{"sr":66,"name":"Usman Mohsin","team":"Nurturing","type":"WFO","days":["6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","OFF","OFF"]},{"sr":67,"name":"Harper Quinn","team":"Nurturing","type":"WFO","days":["6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","6:00 - 3:00","OFF","OFF"]},{"sr":68,"name":"Steve Harrington","team":"LC","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":69,"name":"Jordan Hayes","team":"LC","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":70,"name":"David Wade","team":"LC","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":71,"name":"Ali Hassan","team":"LC","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]},{"sr":72,"name":"Christopher Robert","team":"LC","type":"WFO","days":["6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","6pm - 3am","OFF","OFF"]}];
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAYNAMES = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+/* ---- Shift parsing: every shift is a 9-hour block; band by start time ---- */
+function parseTime(t){
+  t = t.toLowerCase().trim();
+  const ampm = t.includes('pm') ? 'pm' : (t.includes('am') ? 'am' : null);
+  const num = t.replace(/[apm\s]/g,'');
+  let [h,m] = num.split(':'); h = parseInt(h,10); m = parseInt(m||'0',10);
+  if(ampm==='pm' && h<12) h+=12;
+  else if(ampm==='am' && h===12) h=0;
+  else if(ampm===null && h<12) h+=12;     // plain "6:00" in a night op = 18:00
+  return h + m/60;
+}
+function shiftInfo(raw){
+  if(!raw || raw.toUpperCase()==='OFF') return {off:true};
+  const startH = parseTime(raw.split('-')[0]);
+  const band = startH < 18 ? 'early' : (startH < 20 ? 'evening' : 'night');
+  // tidy display label
+  const label = raw.replace(/\s*-\s*/,' – ').replace(/:00\b/g,'').replace('pm',' PM').replace('am',' AM').trim();
+  return {off:false, startH, band, label, raw};
+}
+/* enrich each employee */
+ROSTER.forEach(e=>{
+  e.shifts = e.days.map(shiftInfo);
+  e.working = e.shifts.filter(s=>!s.off).length;
+  e.offs = 7 - e.working;
+  e.weeklyHours = e.working * 9;
+  const counts = {early:0,evening:0,night:0};
+  e.shifts.forEach(s=>{ if(!s.off) counts[s.band]++; });
+  e.band = Object.keys(counts).reduce((a,b)=>counts[b]>counts[a]?b:a,'evening');
+  // note for rotating / non-standard patterns
+  const offDays = e.shifts.map((s,i)=>s.off?DAYS[i]:null).filter(Boolean);
+  const standardOff = offDays.length===2 && offDays.includes('Sat') && offDays.includes('Sun');
+  e.note = standardOff ? '' : ('Off: ' + (offDays.length?offDays.join(', '):'none'));
+});
+
+/* ===================== DASHBOARD CARDS ===================== */
+function buildCards(){
+  const total = ROSTER.length;
+  const teams = new Set(ROSTER.map(e=>e.team)).size;
+  const shiftsWk = ROSTER.reduce((a,e)=>a+e.working,0);
+  const offsWk = ROSTER.reduce((a,e)=>a+e.offs,0);
+  const early = ROSTER.filter(e=>e.band==='early').length;
+  const evening = ROSTER.filter(e=>e.band==='evening').length;
+  const night = ROSTER.filter(e=>e.band==='night').length;
+  const wfo = ROSTER.filter(e=>e.type==='WFO').length;
+  const wfh = total - wfo;
+  const cards = [
+    {k:'Team Members',v:total,s:teams+' teams · '+wfo+' on-site / '+wfh+' remote',cls:'accent'},
+    {k:'Weekly Shifts',v:shiftsWk,s:'Scheduled shift-slots per week',bar:[shiftsWk,total*7],color:'var(--teal)'},
+    {k:'Early · pre-6 PM',v:early,s:'Members on early band',bar:[early,total],color:'var(--early)'},
+    {k:'Evening · 6–8 PM',v:evening,s:'Members on evening band',bar:[evening,total],color:'var(--evening)'},
+    {k:'Night · 8 PM+',v:night,s:'Members on night band',bar:[night,total],color:'var(--night)'},
+    {k:'Weekly Offs',v:offsWk,s:'Total off-slots per week',bar:[offsWk,total*7],color:'var(--off)'},
+  ];
+  document.getElementById('cards').innerHTML = cards.map(c=>`
+    <div class="card ${c.cls||''}">
+      <div class="k">${c.k}</div>
+      <div class="v">${c.v}</div>
+      <div class="s">${c.s}</div>
+      ${c.bar?`<div class="bar"><i style="width:${Math.round(c.bar[0]/c.bar[1]*100)}%;background:${c.color}"></i></div>`:''}
+    </div>`).join('');
+}
+
+/* ===================== FILTERS + TABLE ===================== */
+const el = id=>document.getElementById(id);
+function buildTeamFilter(){
+  const teams = [...new Set(ROSTER.map(e=>e.team))].sort();
+  el('f-team').innerHTML = '<option value="">All teams</option>' + teams.map(t=>`<option>${t}</option>`).join('');
+}
+function shiftCell(s, highlight){
+  if(s.off) return `<td class="day ${highlight?'dayhl':''}"><span class="shift off">OFF</span></td>`;
+  return `<td class="day ${highlight?'dayhl':''}"><span class="shift ${s.band}">${s.label}</span></td>`;
+}
+function render(){
+  const q = el('q').value.trim().toLowerCase();
+  const team = el('f-team').value;
+  const shift = el('f-shift').value;
+  const day = el('f-day').value;       // '' or 0-6
+  const type = el('f-type').value;
+  const dayIdx = day===''?-1:parseInt(day,10);
+
+  const rows = ROSTER.filter(e=>{
+    if(q && !e.name.toLowerCase().includes(q)) return false;
+    if(team && e.team!==team) return false;
+    if(type && e.type!==type) return false;
+    if(shift && e.band!==shift) return false;
+    if(dayIdx>=0 && e.shifts[dayIdx].off) return false;   // working that day
+    return true;
+  });
+
+  // highlight day column headers
+  document.querySelectorAll('thead th.day').forEach(th=>{
+    th.style.background = (dayIdx>=0 && +th.dataset.d===dayIdx) ? 'var(--forest-soft)' : '';
+  });
+
+  const tb = el('tbody');
+  if(!rows.length){
+    tb.innerHTML = `<tr><td colspan="13" class="empty"><b>No team members match these filters</b>Try resetting the search or clearing a filter.</td></tr>`;
+  } else {
+    tb.innerHTML = rows.map(e=>`
+      <tr class="${dayIdx>=0?'col-hl':''}">
+        <td class="sr">${e.sr}</td>
+        <td class="name">${e.name}</td>
+        <td><span class="team-chip">${e.team}</span></td>
+        <td><span class="type-chip type-${e.type}">${e.type}</span></td>
+        ${e.shifts.map((s,i)=>shiftCell(s, dayIdx===i)).join('')}
+        <td class="hrs">${e.weeklyHours}</td>
+        <td class="note">${e.note||'<span style="color:var(--line)">—</span>'}</td>
+      </tr>`).join('');
+  }
+  el('rc').textContent = rows.length + ' of ' + ROSTER.length + ' shown';
+  el('pill-team').textContent = team || 'All Teams';
+  el('pill-head').textContent = rows.length + ' Team Members';
+}
+
+/* ===================== JUNE 2026 CALENDAR ===================== */
+function buildCalendar(){
+  const year=2026, month=5; // June (0-indexed)
+  const first = new Date(year,month,1);
+  const startDow = (first.getDay()+6)%7;   // Mon=0
+  const days = new Date(year,month+1,0).getDate();
+  const cal = el('cal');
+  let html = DAYS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<startDow;i++) html += `<div class="cal-cell blank"></div>`;
+  for(let d=1; d<=days; d++){
+    const dow = (new Date(year,month,d).getDay()+6)%7; // Mon=0
+    const weekend = dow>=5;
+    const wk = Math.ceil((d+startDow)/7);
+    html += `<div class="cal-cell ${weekend?'weekend':'work'}" data-week="${wk}">
+      <div class="d">${d}</div>
+      <div class="lbl">${weekend?'Off':'Working'}</div>
+    </div>`;
+  }
+  cal.innerHTML = html;
+}
+function highlightWeek(){
+  const wk = el('f-week').value;
+  document.querySelectorAll('.cal-cell[data-week]').forEach(c=>{
+    c.classList.toggle('weekhl', wk && c.dataset.week===wk);
+  });
+  el('cal-tag').textContent = wk ? ('Week '+wk+' highlighted') : 'Mon–Fri working · Sat–Sun off';
+}
+
+/* ===================== INIT + EVENTS ===================== */
+buildCards();
+buildTeamFilter();
+buildCalendar();
+render();
+['q','f-team','f-shift','f-day','f-type'].forEach(id=>{
+  el(id).addEventListener('input',render);
+  el(id).addEventListener('change',render);
+});
+el('f-week').addEventListener('change',highlightWeek);
+el('clear').addEventListener('click',()=>{
+  ['q','f-team','f-shift','f-day','f-type','f-week'].forEach(id=>el(id).value='');
+  render(); highlightWeek();
+});
+</script>
+</body>
+</html>
