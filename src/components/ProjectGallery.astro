@@ -1,7 +1,7 @@
 ---
 import { getImage } from 'astro:assets';
 import { projects as allProjects, categories, featuredIds, type Project } from '../data/projects';
-import { art, isRaster } from '../lib/images';
+import { art, artKind, isRaster } from '../lib/images';
 import ArtImage from './ArtImage.astro';
 import Icon from './Icon.astro';
 
@@ -15,7 +15,8 @@ const items = await Promise.all(
     const raster = isRaster(meta);
     const full = raster ? (await getImage({ src: meta, width: Math.min(meta.width, 2560), format: 'webp', quality: 82 })).src : meta.src;
     // A real raster image (photo / render) automatically replaces the illustration, so its badge goes too.
-    return { p: { ...p, illustrative: p.illustrative && !raster }, full };
+    const kind = artKind(p.image); // photo | render | illustration
+    return { p: { ...p, illustrative: p.illustrative && kind !== 'photo' }, kind, full };
   }),
 );
 // Only offer filters that actually have items.
@@ -30,9 +31,9 @@ const usedCats = categories.filter((c) => allProjects.some((p) => p.categories.i
   )}
   <p class="filter-status visually-hidden" role="status" aria-live="polite" data-status></p>
   <ul class="gallery__grid">
-    {items.map(({ p, full }, i) => (
+    {items.map(({ p, full, kind }, i) => (
       <li class="gcard reveal" style={`--d:${(i % 3) * 80}ms`} data-cats={JSON.stringify(p.categories)}>
-        <button type="button" class="gcard__btn" data-full={full} data-title={p.title} data-caption={p.caption} data-alt={p.alt} data-illustrative={String(p.illustrative)} aria-label={`View larger: ${p.title}`}>
+        <button type="button" class="gcard__btn" data-full={full} data-title={p.title} data-caption={p.caption} data-alt={p.alt} data-illustrative={String(p.illustrative)} data-kind={kind} aria-label={`View larger: ${p.title}`}>
           <span class="gcard__media"><ArtImage name={p.image} alt={p.alt} sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw" /></span>
           <span class="gcard__tags">
             {p.size && <span class="tag">{p.size}</span>}
@@ -44,11 +45,11 @@ const usedCats = categories.filter((c) => allProjects.some((p) => p.categories.i
             <span>{p.style ?? p.categories[0]}{p.location ? ` · ${p.location}` : ''}</span>
           </span>
         </button>
-        {p.illustrative && <span class="gcard__ill" title="Illustrative image — not a photograph of a completed project">Illustration</span>}
+        {p.illustrative && <span class="gcard__ill" title={kind === 'render' ? 'Computer-generated concept render — not a photograph of a completed project' : 'Illustration — not a photograph of a completed project'}>{kind === 'render' ? 'Concept render' : 'Illustration'}</span>}
       </li>
     ))}
   </ul>
-  {items.some(({ p }) => p.illustrative) && <p class="gallery__note">Images shown are original illustrations created to showcase house styles and construction stages. They are not photographs of completed Asif Builders projects and will be replaced with real project photography.</p>}
+  {items.some(({ p }) => p.illustrative) && <p class="gallery__note">Images marked “Concept render” or “Illustration” are computer-generated visuals created to showcase house styles and construction stages. They are not photographs of completed Asif Builders projects and will be replaced with real project photography.</p>}
 </div>
 
 <dialog class="lightbox" aria-label="Project image viewer" data-lightbox>
@@ -61,7 +62,7 @@ const usedCats = categories.filter((c) => allProjects.some((p) => p.categories.i
       <figcaption>
         <strong data-lb-title></strong>
         <span data-lb-caption></span>
-        <em data-lb-ill>Illustration — placeholder for a real project photograph.</em>
+        <em data-lb-ill>Computer-generated visual — not a photograph of a completed project.</em>
         <small data-lb-count></small>
       </figcaption>
     </figure>
