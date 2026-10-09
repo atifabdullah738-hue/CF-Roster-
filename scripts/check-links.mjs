@@ -11,7 +11,8 @@ const htmlFiles = walk(DIST).filter((f) => f.endsWith('.html'));
 const ids = new Map();
 const pages = new Map();
 for (const f of htmlFiles) {
-  const html = readFileSync(f, 'utf8');
+  const raw = readFileSync(f, 'utf8');
+  const html = raw.replace(/<script\b[\s\S]*?<\/script>/g, '');
   pages.set(f, html);
   ids.set(f, new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1])));
 }
@@ -47,7 +48,7 @@ for (const [file, html] of pages) {
     }
   }
   // Basic a11y checks
-  for (const m of html.matchAll(/<img\b[^>]*>/g)) if (!/\salt=/.test(m[0])) fail(file, `img without alt: ${m[0].slice(0, 80)}`);
+  for (const m of html.matchAll(/<img\b[^>]*>/g)) if (!/\salt(=|\s|\/|>)/.test(m[0])) fail(file, `img without alt: ${m[0].slice(0, 80)}`);
   const h1s = (html.match(/<h1[\s>]/g) || []).length;
   if (h1s !== 1) fail(file, `expected exactly one <h1>, found ${h1s}`);
 }

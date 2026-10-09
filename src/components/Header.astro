@@ -48,7 +48,10 @@ const topPeople = [ceo, vp];
   @media (max-width: 860px) { .topbar__txt { display: none; } .topbar__in { justify-content: center; } .topbar__phones { gap: 6px 16px; justify-content: center; font-size: .8rem; } }
   @media (max-width: 400px) { .topbar__role { display: none; } }
 
-  .header { position: sticky; top: 0; z-index: 100; background: rgb(250 247 241 / .92); backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--line); transition: box-shadow .3s; }
+  .header { position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--line); transition: box-shadow .3s; }
+  /* Blur lives on a pseudo-element: backdrop-filter on .header itself would make it the
+     containing block for the position:fixed mobile menu and shrink the menu to header height. */
+  .header::before { content: ''; position: absolute; inset: 0; z-index: -1; background: rgb(250 247 241 / .92); backdrop-filter: saturate(1.4) blur(12px); }
   .header.is-scrolled { box-shadow: var(--shadow-sm); }
   .header__in { display: flex; align-items: center; justify-content: space-between; height: var(--header-h); gap: 16px; }
   .header__logo { text-decoration: none; }
@@ -59,10 +62,10 @@ const topPeople = [ceo, vp];
   .nav ul a:hover::after, .nav ul a[aria-current='page']::after { transform: scaleX(1); }
   .nav ul a[aria-current='page'] { color: var(--navy-900); font-weight: 700; }
   .menu-btn { display: none; background: none; border: 0; color: var(--navy-900); width: 48px; height: 48px; border-radius: 10px; cursor: pointer; align-items: center; justify-content: center; }
+  .menu-btn__open, .menu-btn__close { display: inline-flex; }
   .menu-btn__close { display: none; }
   .menu-btn[aria-expanded='true'] .menu-btn__open { display: none; }
   .menu-btn[aria-expanded='true'] .menu-btn__close { display: inline-flex; }
-  .menu-btn span { display: inline-flex; }
 
   @media (max-width: 1080px) {
     .menu-btn { display: inline-flex; }

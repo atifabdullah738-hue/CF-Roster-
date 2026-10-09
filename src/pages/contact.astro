@@ -72,6 +72,7 @@ const mapSrc = site.mapEmbedUrl;
 
 <style>
   .layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: clamp(28px, 5vw, 64px); align-items: start; }
+  .info, .form-wrap { min-width: 0; }
   .info { display: grid; gap: 18px; }
   .info__card { display: flex; gap: 18px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); }
   .info__icon { flex: none; width: 48px; height: 48px; border-radius: 14px; background: var(--navy-900); color: var(--brass); display: grid; place-items: center; }
@@ -79,9 +80,10 @@ const mapSrc = site.mapEmbedUrl;
   .info h2 { font-size: 1.4rem; margin: 2px 0 8px; }
   .info address { font-style: normal; } .info p { margin: 4px 0 0; } .muted { color: var(--muted); font-size: .96rem; }
   .form-wrap { scroll-margin-top: calc(var(--header-h) + 20px); }
-  .map { border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 16/7; min-height: 320px; background: #fff; }
+  .map { border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 4/3; background: #fff; min-width: 0; }
+  @media (min-width: 800px) { .map { aspect-ratio: 16/7; } }
   .map iframe { width: 100%; height: 100%; border: 0; }
-  .map--empty { display: grid; place-content: center; justify-items: center; text-align: center; gap: 4px; padding: 32px; color: var(--navy-800); border: 2px dashed var(--sand); background: repeating-linear-gradient(45deg, #fff, #fff 14px, var(--cream-50) 14px, var(--cream-50) 28px); box-shadow: none; }
+  .map--empty { aspect-ratio: auto; min-height: 260px; display: grid; place-content: center; justify-items: center; text-align: center; gap: 4px; padding: 32px; color: var(--navy-800); border: 2px dashed var(--sand); background: repeating-linear-gradient(45deg, #fff, #fff 14px, var(--cream-50) 14px, var(--cream-50) 28px); box-shadow: none; }
   .map--empty p { color: var(--muted); max-width: 46ch; margin: 0; }
   @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } .form-wrap { order: -1; } }
 </style>

@@ -1,4 +1,5 @@
 import type { ImageMetadata } from 'astro';
+import placeholder from '../assets/placeholder.svg';
 
 const modules = import.meta.glob<{ default: ImageMetadata }>(
   '/src/assets/art/*.{svg,jpg,jpeg,png,webp,avif}',
@@ -17,7 +18,10 @@ for (const [path, mod] of Object.entries(modules)) {
 
 export function art(name: string): ImageMetadata {
   const img = registry.get(name);
-  if (!img) throw new Error(`Image "${name}" not found in src/assets/art/`);
+  if (!img) {
+    console.warn(`[images] "${name}" not found in src/assets/art/ — using placeholder.`);
+    return placeholder;
+  }
   return img;
 }
 

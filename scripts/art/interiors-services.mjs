@@ -566,6 +566,18 @@ function ledOn(Sf, u0, v0, u1, v1, col = '#ffd9a0', w = 2.2) {
   const a = Sf.map(u0, v0), b = Sf.map(u1, v1);
   return line(a[0], a[1], b[0], b[1], col, w * 5, { op: 0.28, filter: blur(4), lc: 'round' }) + line(a[0], a[1], b[0], b[1], '#fff3d6', w, { lc: 'round' });
 }
+// drum pendant with brass bands
+function drumPendant(x, y0, k, len, rad, h) {
+  const yb = y0 + len * k, r = rad * k, hh = h * k, yt = yb - hh;
+  let s = line(x, y0, x, yt, C.char, Math.max(1.5, k * 0.01));
+  s += ellipse(x, yb + hh * 0.3, r * 1.8, r * 1.0, radial('dp' + hkey(String(x) + y0), [[0, '#ffe2a8', 0.5], [1, '#ffe2a8', 0]]), { style: 'mix-blend-mode:screen' });
+  const gr = lin('dpg', [[0, '#d9cdb2'], [0.3, '#fbf2dc'], [0.7, '#fff6e2'], [1, '#cdbf9e']], [0, 0, 1, 0]);
+  s += rect(x - r, yt, r * 2, hh, gr);
+  s += ellipse(x, yt, r, r * 0.17, '#f6ecd4') + ellipse(x, yb, r, r * 0.17, '#ffe9b8');
+  s += rect(x - r, yt - 2, r * 2, 3.5, brassGrad(), { rx: 1.5 }) + rect(x - r, yb - 2, r * 2, 3.5, brassGrad(), { rx: 1.5 });
+  for (let i = -3; i <= 3; i++) s += line(x + i * r * 0.28, yt + 3, x + i * r * 0.28, yb - 3, '#e0d3b4', 1, { op: 0.6 });
+  return s;
+}
 // Soft veining on a polished floor (perspective)
 function floorVeins(cam, R, size = 1.2, n = 26, col = '#a39379') {
   reseed(77); let s = '';
@@ -810,7 +822,7 @@ function nightstand(cam, x0, x1, z0, z1, col = C.walnut) {
 // =============================================================================
 function bedroom() {
   begin('ibd');
-  const cam = new Cam(740, 600, 450, 1.5);
+  const cam = new Cam(740, 600, 440, 1.8);
   const R = { W: 3.0, H: 2.7, Zb: 6.0, Zn: 1.0, wall: vgrad('#eee5d3', '#e0d3ba') };
   R.wallB = '#1c3454';
   const Sb = surfBack(cam, R.Zb), SL = surfL(cam, R.W), SR = surfR(cam, R.W);
@@ -842,7 +854,7 @@ function bedroom() {
   // ---- left wall: wardrobe (depth 0.62)
   const wd = 0.62; const SL2 = surfL(cam, R.W - wd);
   // wardrobe shadow & body
-  add(cam.frect(-R.W, -R.W + wd, 0, 2.55, 3.45, hgrad('#4a2e1b', '#6a4328')));
+  add(cam.frect(-R.W, -R.W + wd, 0, 2.55, 3.45, hgrad('#6a4328', '#8a5a38')));
   add(sq(SL2, 3.45, 6.0, 0, 2.55, vgrad('#7a4e2f', '#5f3a22')));
   const doorW = (6.0 - 3.45) / 4;
   for (let i = 0; i < 4; i++) {
@@ -890,7 +902,7 @@ function bedroom() {
   { const k = cam.s(5.65); let [x, y] = cam.P(-1.7, 0.55, 5.65); add(tableLamp(x, y, k * 1.15, { shade: '#f7edd6' })); [x, y] = cam.P(1.7, 0.55, 5.65); add(tableLamp(x, y, k * 1.15, { shade: '#f7edd6' }));
     [x, y] = cam.P(-1.5, 0.55, 5.6); add(books(x, y, k * 1.3, 3)); [x, y] = cam.P(1.52, 0.55, 5.6); add(vase(x, y, k * 1.3, C.sage, { h: 0.22, w: 0.1, branch: true, bloom: '#f0e6d0' })); }
   // pendants beside bed
-  for (const sx of [-1.7, 1.7]) { const [x, y0] = cam.P(sx, 2.54, 5.7); const k = cam.s(5.7); add(pendantDome(x, y0, k, 0.6, 0.17, C.brass)); }
+  for (const sx of [-1.7, 1.7]) { const [x, y0] = cam.P(sx, 2.7, 5.7); const k = cam.s(5.7); add(pendantDome(x, y0, k, 0.6, 0.17, C.brass)); }
 
   // ---- BED
   const bedW = 1.0; const linen = '#f6f1e6';
@@ -914,9 +926,9 @@ function bedroom() {
   // quilting lines on duvet top
   for (let i = 1; i < 5; i++) { const x = -bedW + (2 * bedW * i) / 5; const a = cam.P(x, 0.667, 3.9), b = cam.P(x, 0.667, 4.65); add(line(a[0], a[1], b[0], b[1], '#d9cfba', 1.3, { op: 0.9 })); }
   // throw runner over the bed (navy with brass stripes)
-  add(cam.hq(-bedW - 0.03, bedW + 0.03, 4.0, 4.5, 0.67, lin('runner', [[0, '#35618e'], [1, '#1f3d5e']])));
+  add(cam.hq(-bedW - 0.03, bedW + 0.03, 4.0, 4.65, 0.67, lin('runner', [[0, '#35618e'], [1, '#1f3d5e']])));
   add(cam.quad([[-bedW - 0.03, 0.67, 4.0], [bedW + 0.03, 0.67, 4.0], [bedW + 0.03, 0.6, 4.0], [-bedW - 0.03, 0.6, 4.0]], '#1b3556'));
-  for (const zz of [4.06, 4.44]) { const a = cam.P(-bedW - 0.03, 0.672, zz), b = cam.P(bedW + 0.03, 0.672, zz); add(line(a[0], a[1], b[0], b[1], C.brass, 2)); }
+  for (const zz of [4.07, 4.58]) { const a = cam.P(-bedW - 0.03, 0.672, zz), b = cam.P(bedW + 0.03, 0.672, zz); add(line(a[0], a[1], b[0], b[1], C.brass, 2)); }
   for (let i = 0; i <= 28; i++) { const x = -bedW - 0.03 + (2 * (bedW + 0.03) * i) / 28; const a = cam.P(x, 0.6, 4.0), b = cam.P(x, 0.53, 4.0); add(line(a[0], a[1], b[0], b[1], C.brassL, 1.2)); }
   // pillows
   const pz = 5.55; const kp = cam.s(pz);
@@ -936,9 +948,643 @@ function bedroom() {
   // plant & chair at right window corner
   { const [x, y] = cam.P(2.55, 0, 5.9); add(plantSnake(x, y, cam.s(5.9) * 1.25, { pot: '#b9a77f', sc: 1.25 })); }
   { const [x, y] = cam.P(-2.55, 0, 3.3); }
+  { const [x, y0] = cam.P(0, 2.7, 4.4); const k = cam.s(4.4); add(drumPendant(x, y0, k, 0.75, 0.36, 0.28)); }
   add(downlights(cam, [[-1.8, 2.4], [1.8, 2.4], [-1.8, 4.2], [1.8, 4.2]], 2.54));
   add(finishLayer({ vig: 0.36, glow: '#ffd9a0', glowOp: 0.12, gx: 0.5, gy: 0.4 }));
   finish('interior-bedroom.svg', 'Master bedroom', 'A calm master bedroom with a padded navy headboard wall, a bed dressed in layered linen, nightstands with brass lamps, a walnut wardrobe, sheer curtains at the window and a patterned rug.');
+}
+
+// Tile pattern (fronto-parallel only). ts = tile size px; returns fill url
+function tilePat(name, ts, base, grout, o = {}) {
+  const cols = o.cols || 4, rows = o.rows || 2; reseed(o.seed ?? 5);
+  let inner = rect(0, 0, ts * cols, ts * rows, grout);
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const c = mix(base, o.alt || lighten(base, 0.18), rnd() * (o.var ?? 0.7));
+    const off = o.brick && j % 2 ? ts * 0.5 : 0;
+    const gx = i * ts + off, gy = j * ts;
+    inner += rect(gx + 1, gy + 1, ts - 2, ts - 2, c, { rx: o.rx ?? 1.5 });
+    inner += rect(gx + 1, gy + 1, ts - 2, (ts - 2) * 0.38, '#fff', { op: o.gloss ?? 0.1, rx: o.rx ?? 1.5 });
+    if (o.brick && off) inner += rect(gx - ts + 1, gy + 1, ts - 2, ts - 2, c, { rx: o.rx ?? 1.5 });
+  }
+  return pattern(name, ts * cols, ts * rows, inner);
+}
+// Cabinet door run on a fronto-parallel surface; handleless with brass reveal
+function doorsOn(Sf, u0, u1, v0, v1, n, col, o = {}) {
+  let s = ''; const du = (u1 - u0) / n;
+  for (let i = 0; i < n; i++) {
+    const a = u0 + du * i + 0.006, b = u0 + du * (i + 1) - 0.006;
+    s += sq(Sf, a, b, v0, v1, o.flat ? col : (o.horizGrad ? hgrad(lighten(col, 0.04), shade(col, 0.1)) : soft(col, 0.05, 0.1)), { stroke: shade(col, 0.28), sw: 0.8 });
+    if (o.reveal !== false) s += sq(Sf, a, b, o.top ? v1 - 0.02 : v0 + 0.0, o.top ? v1 : v0 + 0.0, 'none');
+    // brass finger-pull edge
+    if (o.pull === 'top') s += sq(Sf, a + 0.02, b - 0.02, v1 - 0.022, v1 - 0.012, C.brass);
+    else if (o.pull === 'bottom') s += sq(Sf, a + 0.02, b - 0.02, v0 + 0.012, v0 + 0.022, C.brass);
+    else if (o.pull === 'side') s += sq(Sf, i % 2 ? a + 0.03 : b - 0.04, i % 2 ? a + 0.04 : b - 0.03, v0 + (v1 - v0) * 0.3, v0 + (v1 - v0) * 0.7, C.brass);
+    if (o.grain) for (let j = 0; j < 4; j++) s += sl(Sf, a + (b - a) * (0.18 + j * 0.22), v0 + 0.03, a + (b - a) * (0.18 + j * 0.22), v1 - 0.03, lighten(col, 0.2), 1, { op: 0.22 });
+  }
+  return s;
+}
+// bar stool (screen space)
+function stool(cam, x, z, col = '#2a2f38', seat = '#c9a778') {
+  const [px, py] = cam.P(x, 0, z); const k = cam.s(z);
+  const h = 0.68 * k, r = 0.19 * k, ry = r * 0.3;
+  let s = shadowEll(px + 4, py, r * 1.3, ry * 1.1, 0.38, 6);
+  // legs
+  for (const dx of [-0.8, 0.8]) { s += line(px + dx * r * 0.95, py - 0.02 * k, px + dx * r * 0.55, py - h, C.brassD, Math.max(2, k * 0.016), { lc: 'round' }); s += line(px + dx * r * 0.95 + 1.5, py - 0.02 * k, px + dx * r * 0.55 + 1.5, py - h, C.brassL, 0.8, { op: 0.6 }); }
+  s += line(px, py - 0.02 * k, px, py - h, C.brassD, Math.max(2, k * 0.016));
+  s += ellipse(px, py - h * 0.36, r * 0.78, ry * 0.8, 'none', { stroke: C.brass, sw: Math.max(1.5, k * 0.012) });
+  // seat
+  s += path_(`M${r1(px - r)} ${r1(py - h)}L${r1(px - r)} ${r1(py - h + 0.07 * k)}A${r1(r)} ${r1(ry)} 0 0 0 ${r1(px + r)} ${r1(py - h + 0.07 * k)}L${r1(px + r)} ${r1(py - h)}Z`, hgrad(shade(seat, 0.25), shade(seat, 0.1)));
+  s += ellipse(px, py - h, r, ry, vgrad(lighten(seat, 0.2), seat));
+  s += ellipse(px, py - h, r * 0.8, ry * 0.75, 'none', { stroke: shade(seat, 0.18), sw: 1, op: 0.7 });
+  return s;
+}
+
+// =============================================================================
+// 3. KITCHEN
+// =============================================================================
+function kitchen() {
+  begin('ikn');
+  const cam = new Cam(700, 600, 425, 1.6);
+  const R = { W: 2.9, H: 2.7, Zb: 6.2, Zn: 1.0, wall: vgrad('#efe7d7', '#e3d8c2') };
+  R.wallB = '#e9dfcc'; R.floor = vgrad('#bfb6a6', '#d7cfc0');
+  const Sb = surfBack(cam, R.Zb), SL = surfL(cam, R.W), SR = surfR(cam, R.W);
+  add(roomShell(cam, R));
+  // floor: large porcelain tiles w/ grid + subtle warm veins
+  add(floorGrid(cam, R, 0.8, '#8e8574', 1.1, 0.4));
+  add(floorVeins(cam, R, 0.8, 18, '#8e8574'));
+  add(floorSheen(cam, R, 0.4));
+  add(ceilingTray(cam, R, 0.5, 0.15));
+  add(cam.quad([[R.W, 0, 5.7], [R.W, 0, 4.2], [0.9, 0, 2.6], [0.9, 0, 3.8]], lin('kwl', [[0, '#fff3d4', 0.6], [1, '#fff3d4', 0]], [1, 0, 0, 1]), { style: 'mix-blend-mode:screen', filter: blur(6) }));
+
+  // ---- BACK WALL
+  const zc = R.Zb - 0.6; // front plane of base cabinets
+  // backsplash tiles (full width, 0.93 .. 2.5)
+  const ts = 0.15 * cam.s(R.Zb);
+  const tile = tilePat('splash', ts, '#eae2d1', '#d3c8ad', { cols: 6, rows: 3, alt: '#f7f2e6', var: 0.9, seed: 8, gloss: 0.18 });
+  add(sq(Sb, -R.W, R.W, 0.9, 2.55, tile));
+  // under cabinet / above worktop shadow
+  add(sq(Sb, -R.W, R.W, 0.9, 1.08, lin('spsh', [[0, '#0a1020', 0], [1, '#0a1020', 0]], [0, 0, 0, 1])));
+  // open shelves between hood and uppers
+  for (const sx of [-1, 1]) {
+    for (const hv of [1.75, 2.15]) {
+      add(sq(Sb, sx * 0.62 - 0.38, sx * 0.62 + 0.38, hv, hv + 0.035, C.oak), sq(Sb, sx * 0.62 - 0.38, sx * 0.62 + 0.38, hv - 0.012, hv, shade(C.oak, 0.3)));
+    }
+  }
+  // objects on shelves (screen space)
+  { const kb = cam.s(R.Zb - 0.12);
+    for (const sx of [-1, 1]) {
+      let [x, y] = cam.P(sx * 0.62 - 0.2, 1.785, R.Zb - 0.12); add(vase(x, y, kb, sx > 0 ? C.terra : C.teal, { h: 0.22, w: 0.1 }));
+      [x, y] = cam.P(sx * 0.62 + 0.12, 1.785, R.Zb - 0.12); add(books(x, y, kb, 3, { seed: sx + 3 }));
+      [x, y] = cam.P(sx * 0.62 - 0.12, 2.185, R.Zb - 0.12); add(rrect(x - 0.1 * kb, y - 0.17 * kb, 0.2 * kb, 0.17 * kb, 3, '#e9dcbd', { stroke: C.brassD, sw: 1.2 }), rrect(x - 0.11 * kb, y - 0.2 * kb, 0.22 * kb, 0.04 * kb, 2, C.brass));
+      [x, y] = cam.P(sx * 0.62 + 0.15, 2.185, R.Zb - 0.12); add(rrect(x - 0.08 * kb, y - 0.14 * kb, 0.16 * kb, 0.14 * kb, 3, '#d9c8a2', { stroke: C.brassD, sw: 1.2 }), rrect(x - 0.09 * kb, y - 0.17 * kb, 0.18 * kb, 0.04 * kb, 2, C.brass));
+    } }
+  // base cabinets (navy handleless) + stone worktop
+  add(cam.frect(-R.W, R.W, 0, 0.08, zc, '#1a2536'));
+  add(sq(surfBack(cam, zc), -R.W, R.W, 0.08, 0.9, vgrad('#24415f', '#1a3150')));
+  add(doorsOn(surfBack(cam, zc), -R.W, R.W, 0.08, 0.9, 11, '#24415f', { pull: 'top' }));
+  // drawers center under hob
+  for (let i = 0; i < 3; i++) add(sq(surfBack(cam, zc), -0.55, 0.55, 0.12 + i * 0.26, 0.12 + i * 0.26 + 0.24, '#2a4b6e', { stroke: '#122238', sw: 0.8 }), sq(surfBack(cam, zc), -0.3, 0.3, 0.12 + i * 0.26 + 0.2, 0.12 + i * 0.26 + 0.215, C.brass));
+  // worktop (white marble slab w/ top visible)
+  add(cam.box(-R.W, R.W, 0.9, 0.95, zc - 0.03, R.Zb, { front: '#efece4', top: '#fbfaf6', left: '#c9c5bb', right: '#efece4' }, { flat: true }));
+  // hob (induction) on worktop
+  { const hx0 = -0.38, hx1 = 0.38, hz0 = 5.8, hz1 = 6.1;
+    add(cam.quad([[hx0, 0.952, hz0], [hx1, 0.952, hz0], [hx1, 0.952, hz1], [hx0, 0.952, hz1]], '#12151a'));
+    add(cam.quad([[hx0, 0.953, hz0], [hx0 + 0.22, 0.953, hz0], [hx0 + 0.12, 0.953, hz1], [hx0, 0.953, hz1]], '#ffffff', { op: 0.06 }));
+    for (const [cx, cz, rad] of [[-0.2, 5.92, 0.1], [0.2, 5.92, 0.1], [-0.2, 6.02, 0.07], [0.2, 6.02, 0.07]]) add(cam.hcircle(cx, cz, rad, 0.954, 'none', { stroke: '#8c929c', sw: 1.2, op: 0.9 }, 28));
+    add(cam.hcircle(-0.2, 5.92, 0.04, 0.955, '#e65a2e', { op: 0.8 }, 20));
+    // pot on hob
+    const [px, py] = cam.P(0.2, 0.95, 5.92); const k = cam.s(5.92);
+    add(shadowEll(px, py, 0.14 * k, 0.03 * k, 0.4, 3), rect(px - 0.13 * k, py - 0.15 * k, 0.26 * k, 0.15 * k, hgrad('#b8bcc4', '#7d828b'), { rx: 3 }), ellipse(px, py - 0.15 * k, 0.13 * k, 0.03 * k, '#c9ccd2'), rect(px + 0.13 * k, py - 0.1 * k, 0.07 * k, 0.015 * k, '#5a5f68'), rect(px - 0.2 * k, py - 0.1 * k, 0.07 * k, 0.015 * k, '#5a5f68'));
+    const kk = cam.s(5.92);
+    add(ellipse(px, py - 0.17 * kk, 0.1 * kk, 0.02 * kk, '#e9eef2', { op: 0.35 }));
+    // steam wisps
+    add(stroke_(`M${r1(px - 4)} ${r1(py - 0.2 * kk)}q-6 -14 2 -26t0 -24`, '#fff', 3, { op: 0.35, lc: 'round', filter: blur(1.6) }));
+  }
+  // chimney hood
+  { const sbs = (c) => ({ front: c, top: lighten(c, 0.2), left: shade(c, 0.2), right: c });
+    // shaft
+    add(cam.box(-0.24, 0.24, 1.85, 2.7, 5.85, 6.2, { front: '#b9bdc6', top: '#d6d9df', left: '#8d929c', right: '#b9bdc6' }, { flat: true }));
+    add(cam.frect(-0.24, 0.24, 1.85, 2.7, 5.85, hgrad('#dfe3e8', '#9aa0aa'), {}));
+    add(cam.frect(-0.24, -0.2, 1.85, 2.7, 5.85, '#fff', { op: 0.25 }));
+    // canopy
+    add(cam.quad([[-0.5, 1.55, 5.6], [0.5, 1.55, 5.6], [0.5, 1.58, 5.6], [-0.5, 1.58, 5.6]], '#444'));
+    add(cam.quad([[-0.5, 1.55, 5.6], [0.5, 1.55, 5.6], [0.24, 1.9, 5.86], [-0.24, 1.9, 5.86]], lin('hood', [[0, '#e6e9ee'], [0.5, '#aeb3bd'], [1, '#c9cdd4']], [0, 0, 0, 1])));
+    add(cam.quad([[-0.5, 1.55, 5.6], [-0.26, 1.55, 5.6], [-0.12, 1.9, 5.86], [-0.24, 1.9, 5.86]], '#fff', { op: 0.22 }));
+    add(cam.frect(-0.5, 0.5, 1.54, 1.57, 5.6, C.brass));
+    // light under hood
+    add(cam.quad([[-0.5, 1.5, 5.6], [0.5, 1.5, 5.6], [0.75, 0.95, 5.5], [-0.75, 0.95, 5.5]], lin('hoodlt', [[0, '#ffe2a8', 0.5], [1, '#ffe2a8', 0]], [0, 0, 0, 1]), { style: 'mix-blend-mode:screen' }));
+  }
+  // utensil rail
+  { const y = 1.4; const a = cam.P(-0.95, y, R.Zb - 0.05), b = cam.P(0.95, y, R.Zb - 0.05); add(line(a[0], a[1], b[0], b[1], C.brass, 3, { lc: 'round' }));
+    const kb = cam.s(R.Zb - 0.05);
+    [-0.7, -0.45, -0.2, 0.2, 0.5, 0.75].forEach((x, i) => { const [px, py] = cam.P(x, y, R.Zb - 0.05); add(stroke_(`M${r1(px)} ${r1(py)}v5`, C.brass, 1.6)); add(i % 3 === 0 ? ellipse(px, py + 0.1 * kb, 0.045 * kb, 0.05 * kb, '#8a8f98', { stroke: '#555a62', sw: 1 }) + rect(px - 1.2, py + 5, 2.4, 0.07 * kb, '#555a62') : (i % 3 === 1 ? rect(px - 2.5, py + 5, 5, 0.17 * kb, C.woodL, { rx: 2 }) : path_(`M${r1(px - 3)} ${r1(py + 5)}h6v${r1(0.14 * kb)}h-6z`, '#9aa0aa'))); });
+  }
+  // upper cabinets (cream/oak) left and right
+  const Su = surfBack(cam, R.Zb - 0.35);
+  add(cam.box(-R.W, -1.05, 1.5, 2.55, R.Zb - 0.35, R.Zb, { front: '#b99671', top: '#d9b88f', left: '#8a6c49', right: '#b99671' }, { flat: true }));
+  add(cam.box(1.05, R.W, 1.5, 2.55, R.Zb - 0.35, R.Zb, { front: '#b99671', top: '#d9b88f', left: '#8a6c49', right: '#b99671' }, { flat: true }));
+  add(doorsOn(Su, -R.W, -1.05, 1.5, 2.55, 4, '#b99671', { pull: 'bottom', horizGrad: true, grain: true }));
+  add(doorsOn(Su, 1.05, R.W, 1.5, 2.55, 4, '#b99671', { pull: 'bottom', horizGrad: true, grain: true }));
+  // glass front door with warm interior light
+  add(sq(Su, 1.5, 1.98, 1.54, 2.51, lin('glassd', [[0, '#ffe7b8'], [1, '#e6b878']], [0, 0, 0, 1]), { stroke: '#7a6a45', sw: 1.2 }));
+  for (const vv of [1.9, 2.2]) add(sq(Su, 1.52, 1.96, vv, vv + 0.025, C.oak));
+  add(sp(Su, [[1.5, 1.54], [1.65, 1.54], [1.78, 2.51], [1.5, 2.51]], '#fff', { op: 0.25 }));
+  { const kb = cam.s(R.Zb - 0.35); for (let i = 0; i < 3; i++) { const [x, y] = cam.P(1.58 + i * 0.14, 1.9, R.Zb - 0.35); add(rrect(x - 0.045 * kb, y - 0.12 * kb, 0.09 * kb, 0.12 * kb, 2, ['#b5603c', '#e8dcc0', '#2f6f73'][i])); } }
+  // under-cabinet LED
+  add(ledOn(Su, -R.W, 1.5, -1.05, 1.5, '#ffe3b0', 1.4), ledOn(Su, 1.05, 1.5, R.W, 1.5, '#ffe3b0', 1.4));
+  // sill herbs on counter right end
+  { const [x, y] = cam.P(1.55, 0.95, 6.0); const k = cam.s(6.0); add(plantSnake(x, y, k * 0.55, { pot: '#d9c8a2', sc: 0.5 })); }
+  // canisters left
+  { const kk = cam.s(5.95); [[-1.9, 0.14, '#e9e0c9'], [-1.62, 0.18, '#d9c8a2'], [-1.35, 0.11, '#b5603c']].forEach(([x, h, c]) => { const [px, py] = cam.P(x, 0.95, 5.95); add(shadowEll(px, py, 0.07 * kk, 0.012 * kk, 0.3, 2), rect(px - 0.06 * kk, py - h * 2 * kk, 0.12 * kk, h * 2 * kk, hgrad(lighten(c, 0.1), shade(c, 0.2)), { rx: 2 }), rect(px - 0.065 * kk, py - h * 2 * kk - 4, 0.13 * kk, 5, C.brass, { rx: 1.5 })); }); }
+
+  // ---- LEFT WALL: tall units (oak veneer), oven tower, fridge
+  const wd = 0.62; const SL2 = surfL(cam, R.W - wd);
+  add(cam.frect(-R.W, -R.W + wd, 0, 2.6, 3.4, hgrad('#7d6347', '#9a7c58')));
+  add(sq(SL2, 3.4, R.Zb - 0.0, 0, 2.6, vgrad('#b99671', '#a18058')));
+  // oven tower (3.4-4.45), pantry (4.45-5.2), fridge (5.2-6.2)
+  add(doorsOn(SL2, 4.45, 5.25, 0.05, 2.55, 2, '#b99671', { grain: true, pull: 'side' }));
+  add(sq(SL2, 3.4, 4.45, 0.05, 0.9, '#b99671', { stroke: '#7a5f3e', sw: 1 }), sq(SL2, 3.4, 4.45, 0.05 + 0, 0.9, 'none'));
+  add(sq(SL2, 3.45, 4.4, 0.95, 1.65, '#171a20', { stroke: '#4a4f58', sw: 2 }));
+  add(sq(SL2, 3.55, 4.3, 1.05, 1.52, lin('ovg', [[0, '#2b323d'], [1, '#12151a']], [0, 0, 1, 1])));
+  add(sp(SL2, [[3.55, 1.05], [3.85, 1.05], [3.7, 1.52], [3.55, 1.52]], '#fff', { op: 0.09 }));
+  add(sq(SL2, 3.5, 4.35, 1.58, 1.62, C.brass));
+  add(sq(SL2, 3.45, 4.4, 1.7, 2.05, '#171a20', { stroke: '#4a4f58', sw: 2 }), sq(SL2, 3.55, 4.3, 1.76, 1.99, '#1d232c'));
+  add(sq(SL2, 3.4, 4.45, 2.1, 2.55, '#b99671', { stroke: '#7a5f3e', sw: 1 }));
+  add(sq(SL2, 3.4, 4.45, 0.9, 0.95, '#b99671'));
+  // fridge
+  add(sq(SL2, 5.3, 6.15, 0.05, 2.5, lin('frz', [[0, '#e5e8ec'], [0.5, '#bdc2ca'], [1, '#d4d8de']], [0, 0, 1, 0]), { stroke: '#7d828b', sw: 1.2 }));
+  add(sq(SL2, 5.3, 6.15, 1.5, 1.52, '#7d828b'));
+  add(sq(SL2, 5.37, 5.4, 1.62, 2.2, C.brass), sq(SL2, 5.37, 5.4, 0.7, 1.4, C.brass));
+  add(sp(SL2, [[5.3, 0.05], [5.5, 0.05], [5.5, 2.5], [5.3, 2.5]], '#fff', { op: 0.18 }));
+  add(sq(SL2, 3.4, 6.2, 2.5, 2.6, '#8a6c49'));
+  add(ledOn(SL2, 3.4, 2.5, 6.2, 2.5, '#ffe3b0', 1.4));
+
+  // ---- RIGHT WALL: window over sink + base cabinets
+  add(sq(SR, 3.7, 6.2, 0.9, 2.5, 'none'));
+  add(sq(SR, 3.7, 6.2, 0.95, 1.2, tilePat('splashR', ts * 0.8, '#e8e0cf', '#c9bea5', { cols: 6, rows: 2, alt: '#f6f1e4', var: 0.9, seed: 3 })));
+  add(windowOn(SR, 4.2, 5.7, 1.2, 2.4, { cols: 3, tag: 'kn', t: 0.035, seed: 12, frame: '#2b2f36' }));
+  add(sq(SR, 4.15, 5.75, 1.15, 1.2, C.white));
+  // roller blind
+  add(sq(SR, 4.2, 5.7, 2.25, 2.4, '#efe6d2'), sq(SR, 4.2, 5.7, 2.24, 2.26, C.brass));
+  // base cabinets
+  const SRf = surfR(cam, R.W - 0.6);
+  add(cam.box(R.W - 0.6, R.W, 0.0, 0.9, 3.6, R.Zb, { front: '#24415f', top: '#fbfaf6', left: '#14263c', right: '#24415f' }, { flat: true }));
+  add(sq(SRf, 3.6, R.Zb, 0.08, 0.9, hgrad('#2d4f73', '#1c3552')));
+  add(doorsOn(SRf, 3.6, R.Zb, 0.08, 0.9, 5, '#24415f', { pull: 'top', horizGrad: true, flat: false }));
+  add(sq(SRf, 3.6, R.Zb, 0, 0.08, '#10192a'));
+  add(cam.box(R.W - 0.66, R.W, 0.9, 0.95, 3.55, R.Zb, { front: '#efece4', top: '#fbfaf6', left: '#c9c5bb', right: '#efece4' }, { flat: true }));
+  // sink
+  add(cam.quad([[R.W - 0.5, 0.955, 4.4], [R.W - 0.12, 0.955, 4.4], [R.W - 0.12, 0.955, 5.5], [R.W - 0.5, 0.955, 5.5]], hgrad('#aeb4bd', '#e7eaee')));
+  add(cam.quad([[R.W - 0.45, 0.956, 4.5], [R.W - 0.17, 0.956, 4.5], [R.W - 0.17, 0.956, 5.4], [R.W - 0.45, 0.956, 5.4]], '#6c727c'));
+  { const [x, y] = cam.P(R.W - 0.3, 0.95, 5.55); const k = cam.s(5.55);
+    add(path_(`M${r1(x)} ${r1(y)}v${r1(-0.28 * k)}q0 ${r1(-0.1 * k)} ${r1(-0.1 * k)} ${r1(-0.1 * k)}h${r1(-0.1 * k)}`, 'none', { stroke: C.brass, sw: Math.max(3, k * 0.025), lc: 'round' }), circle(x, y - 0.28 * k, 3, C.brassL)); }
+  // fruit bowl & board on island later
+
+  // ---- floor reflections / light
+  add(roomShade(cam, R, { ao: 0.22 }));
+
+  // ---- runner rug
+  { const rx0 = -1.35, rx1 = 1.35, rz0 = 4.3, rz1 = 5.3;
+    add(shadowPoly([cam.P(rx0, 0, rz0), cam.P(rx1 + 0.04, 0, rz0), cam.P(rx1 + 0.04, 0, rz1), cam.P(rx0, 0, rz1)], 0.22, 3));
+    add(rugPaint((u, v) => cam.P(rx0 + u * (rx1 - rx0), 0, rz0 + (1 - v) * (rz1 - rz0)), { field: '#8f3b30', field2: '#7d3028', border: '#1b3150', accent: '#d9c08a', motif: '#e9d9b0' }, { asp: (rz1 - rz0) / (rx1 - rx0), nU: 12, nV: 3 })); }
+
+  // ---- ISLAND
+  { const ix0 = -1.55, ix1 = 1.55, iz0 = 3.05, iz1 = 4.0;
+    add(shadowPoly([cam.P(ix0, 0, iz0), cam.P(ix1 + 0.1, 0, iz0), cam.P(ix1 + 0.2, 0, iz1 + 0.1), cam.P(ix0 + 0.1, 0, iz1 + 0.1)], 0.42, 9));
+    add(cam.box(ix0, ix1, 0.0, 0.9, iz0, iz1, { front: '#1d3a58', top: '#fff', left: '#14263c', right: '#2d4f73' }, { flat: true }));
+    add(cam.frect(ix0, ix1, 0.0, 0.07, iz0, '#0f1b2c'));
+    const Si = surfBack(cam, iz0);
+    add(sq(Si, ix0, ix1, 0.07, 0.9, vgrad('#2a4a6c', '#1b3652')));
+    // doors: 4 drawers pairs
+    for (let i = 0; i < 6; i++) { const a = ix0 + i * 0.5167 + 0.01, b = a + 0.5167 - 0.02; add(sq(Si, a, b, 0.1, 0.5, '#2a4a6c', { stroke: '#10203a', sw: 0.8 }), sq(Si, a + 0.12, b - 0.12, 0.45, 0.47, C.brass), sq(Si, a, b, 0.52, 0.88, '#2a4a6c', { stroke: '#10203a', sw: 0.8 }), sq(Si, a + 0.12, b - 0.12, 0.83, 0.85, C.brass)); }
+    // wood-panel on stool side (end panel) skipped; stone top w/ overhang
+    add(cam.box(ix0 - 0.04, ix1 + 0.04, 0.9, 0.96, iz0 - 0.15, iz1 + 0.05, { front: '#efece4', top: lin('islt', [[0, '#e8e4da'], [1, '#fbfaf6']], [0, 0, 0, 1]), left: '#c9c5bb', right: '#efece4' }, { flat: true }));
+    // marble veins on top
+    reseed(21); for (let i = 0; i < 9; i++) { const u = rr(0, 1); const a = cam.P(ix0 + u * (ix1 - ix0), 0.961, iz0 - 0.12), b = cam.P(ix0 + (u + rr(-0.15, 0.15)) * (ix1 - ix0), 0.961, iz1 + 0.02); add(line(a[0], a[1], b[0], b[1], '#8f8e8b', rr(0.6, 1.4), { op: rr(0.12, 0.3) })); }
+    add(cam.frect(ix0 - 0.04, ix1 + 0.04, 0.9, 0.915, iz0 - 0.15, C.brass));
+    // top decor: fruit bowl, board, vase
+    let [x, y] = cam.P(-0.6, 0.96, 3.55); let k = cam.s(3.55);
+    add(shadowEll(x, y, 0.2 * k, 0.04 * k, 0.3, 3), path_(`M${r1(x - 0.22 * k)} ${r1(y - 0.1 * k)}Q${r1(x)} ${r1(y + 0.06 * k)} ${r1(x + 0.22 * k)} ${r1(y - 0.1 * k)}Z`, hgrad(C.brassL, C.brassD)), ellipse(x, y - 0.1 * k, 0.22 * k, 0.04 * k, C.brass));
+    for (const [dx, dy, c] of [[-0.1, -0.13, '#c0392b'], [0.0, -0.15, '#e0a030'], [0.1, -0.13, '#7aa04a'], [-0.04, -0.2, '#d9552e'], [0.06, -0.19, '#c0392b']]) add(circle(x + dx * k, y + dy * k, 0.065 * k, soft(c, 0.2, 0.2)), circle(x + dx * k - 3, y + dy * k - 4, 0.014 * k, '#fff', { op: 0.35 }));
+    [x, y] = cam.P(0.5, 0.96, 3.6); add(rrect(x - 0.22 * k, y - 0.03 * k, 0.44 * k, 0.03 * k, 3, C.woodL), rrect(x - 0.22 * k, y - 0.03 * k, 0.44 * k, 0.012 * k, 2, lighten(C.woodL, 0.2)));
+    add(circle(x - 0.08 * k, y - 0.07 * k, 0.045 * k, '#a8c46a'), circle(x + 0.05 * k, y - 0.07 * k, 0.04 * k, '#e0b040'));
+    [x, y] = cam.P(1.2, 0.96, 3.5); add(vase(x, y, k, C.navy2, { h: 0.34, w: 0.14, branch: true, bloom: '#f4e9d2' }));
+  }
+  // ---- stools
+  for (const x of [-0.95, 0, 0.95]) add(stool(cam, x, 2.75));
+  // ---- pendants
+  for (const x of [-0.95, 0, 0.95]) { const [px, py] = cam.P(x, 2.7, 3.55); const k = cam.s(3.55); add(pendantDome(px, py, k, 0.8, 0.17, C.brass)); }
+  add(downlights(cam, [[-1.9, 2.3], [1.9, 2.3], [-1.9, 4.2], [1.9, 4.2], [0, 5.4]], 2.52));
+  add(finishLayer({ vig: 0.34, glow: '#ffe0a8', glowOp: 0.12, gx: 0.5, gy: 0.35 }));
+  finish('interior-kitchen.svg', 'Modern kitchen', 'A modern handleless kitchen with navy base cabinets, marble island with bar stools, hob and chimney hood, tiled backsplash, brass pendant lights and a bright window.');
+}
+
+// large-format tile wall on any surface (grid lines + soft veining)
+function bigTiles(Sf, u0, u1, v0, v1, du, dv, base, grout, o = {}) {
+  let s = sq(Sf, u0, u1, v0, v1, o.fill || vgrad(lighten(base, 0.05), shade(base, 0.05)));
+  reseed(o.seed ?? 4);
+  const nu = Math.round((u1 - u0) / du), nv = Math.round((v1 - v0) / dv);
+  for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) {
+    const a = u0 + i * du, b = a + du, c = v0 + j * dv, d = c + dv;
+    const t = rnd();
+    s += sq(Sf, a, b, c, d, t > 0.5 ? '#fff' : shade(base, 0.3), { op: (o.var ?? 0.07) * (0.4 + t) });
+    // veins
+    if (o.veins) { const pts = [[a + du * rr(0.1, 0.9), c], [a + du * rr(0, 1), c + dv * 0.35], [a + du * rr(0, 1), c + dv * 0.7], [a + du * rr(0.1, 0.9), d]].map((p) => Sf.map(p[0], p[1])); s += stroke_(`M${r1(pts[0][0])} ${r1(pts[0][1])}C${r1(pts[1][0])} ${r1(pts[1][1])} ${r1(pts[2][0])} ${r1(pts[2][1])} ${r1(pts[3][0])} ${r1(pts[3][1])}`, o.vein || shade(base, 0.35), rr(0.6, 1.5), { op: rr(0.1, 0.25) }); }
+  }
+  for (let i = 0; i <= nu; i++) s += sl(Sf, u0 + i * du, v0, u0 + i * du, v1, grout, o.gw ?? 1.2, { op: 0.8 });
+  for (let j = 0; j <= nv; j++) s += sl(Sf, u0, v0 + j * dv, u1, v0 + j * dv, grout, o.gw ?? 1.2, { op: 0.8 });
+  return s;
+}
+function brassTap(x, y, k, o = {}) { // wall/deck mounted basin tap (front view)
+  const w = Math.max(2.4, k * 0.022);
+  return stroke_(`M${r1(x)} ${r1(y)}v${r1(-0.2 * k)}q0 ${r1(-0.07 * k)} ${r1(0.06 * k)} ${r1(-0.07 * k)}h${r1(0.07 * k)}v${r1(0.04 * k)}`, 'none', 1) +
+    stroke_(`M${r1(x)} ${r1(y)}v${r1(-0.2 * k)}q0 ${r1(-0.07 * k)} ${r1(0.06 * k)} ${r1(-0.07 * k)}h${r1(0.07 * k)}v${r1(0.04 * k)}`, C.brass, w, { lc: 'round', lj: 'round' }) +
+    stroke_(`M${r1(x)} ${r1(y)}v${r1(-0.2 * k)}`, C.brassL, w * 0.35, { lc: 'round', op: 0.7 }) +
+    circle(x, y - 0.12 * k, w * 1.3, C.brassD) + (o.lever !== false ? rect(x - 0.07 * k, y - 0.17 * k, 0.04 * k, w * 0.9, C.brass, { rx: 1 }) : '');
+}
+
+// =============================================================================
+// 4. BATHROOM
+// =============================================================================
+function bathroom() {
+  begin('ibt');
+  const cam = new Cam(800, 600, 490, 1.45);
+  const R = { W: 2.1, H: 2.6, Zb: 5.0, Zn: 1.0, wall: '#d9cfbf' };
+  R.wallB = '#d8cdbb'; R.floor = vgrad('#a8a090', '#c9c1b2');
+  const Sb = surfBack(cam, R.Zb), SL = surfL(cam, R.W), SR = surfR(cam, R.W);
+  add(roomShell(cam, R));
+  // floor tiles (large format) + sheen
+  add(floorGrid(cam, R, 0.6, '#837b6b', 1.1, 0.45));
+  add(floorVeins(cam, R, 0.6, 22, '#7d7566'));
+  add(floorSheen(cam, R, 0.45));
+  add(cam.quad([[-R.W, R.H, 1], [R.W, R.H, 1], [R.W, R.H, R.Zb], [-R.W, R.H, R.Zb]], 'none'));
+
+  // ---- back wall: warm stone tile
+  add(bigTiles(Sb, -R.W, R.W, 0, R.H, 0.6, 1.3, '#d6cab5', '#b3a78f', { seed: 5, veins: true, var: 0.09, fill: vgrad('#e1d7c4', '#cfc3ad') }));
+  // shower wet-wall (left) in sage zellige
+  const sg = tilePat('szel', 0.1 * cam.s(R.Zb), '#6f8a79', '#4d6557', { cols: 6, rows: 3, alt: '#8ba597', var: 0.9, seed: 10, gloss: 0.22 });
+  add(sq(Sb, -R.W, -1.15, 0, R.H, sg));
+  // niche in shower wall
+  add(sq(Sb, -1.85, -1.4, 0.95, 1.55, '#3b4a43'), sq(Sb, -1.83, -1.42, 0.97, 1.53, lin('nich', [[0, '#d5cbb7'], [1, '#b6ab94']], [0, 0, 1, 1])));
+  add(sq(Sb, -1.83, -1.42, 1.25, 1.27, C.brass));
+  add(ledOn(Sb, -1.83, 1.53, -1.42, 1.53, '#ffe3b0', 1.4));
+  { const kb = cam.s(R.Zb); let [x, y] = cam.P(-1.7, 1.26, R.Zb); add(rrect(x - 0.025 * kb, y - 0.15 * kb, 0.05 * kb, 0.15 * kb, 3, '#e9dcbd'), rrect(x - 0.02 * kb, y - 0.18 * kb, 0.04 * kb, 0.03 * kb, 1.5, C.brass));
+    [x, y] = cam.P(-1.55, 1.26, R.Zb); add(rrect(x - 0.025 * kb, y - 0.12 * kb, 0.05 * kb, 0.12 * kb, 3, '#b5603c'));
+    [x, y] = cam.P(-1.7, 0.98, R.Zb); add(rrect(x - 0.06 * kb, y - 0.05 * kb, 0.12 * kb, 0.05 * kb, 2, '#efe8d8'), rrect(x - 0.06 * kb, y - 0.1 * kb, 0.12 * kb, 0.05 * kb, 2, '#d9c8a2')); }
+  add(sq(Sb, -1.15, -1.12, 0, R.H, shade('#6f8a79', 0.3)));
+
+  // ---- right wall: tile + clerestory window + towel rail
+  add(bigTiles(SR, 2.4, 5.0, 0, R.H, 0.6, 1.3, '#d6cab5', '#b3a78f', { seed: 8, veins: true, var: 0.09, fill: vgrad('#d9cebb', '#c7baa2') }));
+  add(windowOn(SR, 3.1, 4.5, 1.75, 2.35, { cols: 3, tag: 'bt', seed: 5, t: 0.03, frame: '#2b2f36', sky: [[0, '#cfe6f0'], [1, '#f6efdc']] }));
+  // frosted
+  add(sq(SR, 3.1, 4.5, 1.75, 2.35, '#fff', { op: 0.35 }));
+  // towel rail (brass ladder)
+  const rails = [3.35, 3.95];
+  for (const u of rails) add(sq(SR, u - 0.015, u + 0.015, 0.65, 1.65, C.brass));
+  for (const v of [0.78, 0.98, 1.18, 1.38, 1.58]) add(sq(SR, rails[0], rails[1], v - 0.012, v + 0.012, C.brass), sl(SR, rails[0], v + 0.008, rails[1], v + 0.008, C.brassL, 1, { op: 0.7 }));
+  // towels draped over rail
+  const towel = (v, h, col) => sp(SR, [[rails[0] + 0.05, v + 0.03], [rails[1] - 0.05, v + 0.03], [rails[1] - 0.05, v - h], [rails[0] + 0.05, v - h]], col, { stroke: shade(col, 0.2), sw: 1 });
+  add(towel(1.38, 0.38, '#f4efe6'), sq(SR, rails[0] + 0.05, rails[1] - 0.05, 1.2, 1.215, '#c9a24b'));
+  add(towel(0.98, 0.36, '#b5603c'), sq(SR, rails[0] + 0.05, rails[1] - 0.05, 0.82, 0.835, '#e8cc84'));
+  // wall shelf
+  add(roomShade(cam, R, { ao: 0.22 }));
+  // under-ceiling LED
+  add(ceilingTray(cam, R, 0.35, 0.12));
+
+  // ---- SHOWER ENCLOSURE (left)
+  const gx = -1.15; const SG = surfL(cam, -gx); // surface at X=gx (use surfL with W=-gx)
+  // interior left wall tiles (sage) inside enclosure
+  add(sq(SL, 3.0, R.Zb, 0, R.H, tilePat('szel2', 0.1 * cam.s(4), '#6f8a79', '#4d6557', { cols: 6, rows: 3, alt: '#8ba597', var: 0.9, seed: 4, gloss: 0.22 })));
+  add(sq(SL, 3.0, R.Zb, 0, R.H, lin('shs', [[0, '#0a1020', 0.0], [1, '#0a1020', 0.35]], [0, 0, 1, 0])));
+  // shower floor tray
+  add(cam.quad([[-R.W, 0.01, 3.0], [gx, 0.01, 3.0], [gx, 0.01, R.Zb], [-R.W, 0.01, R.Zb]], '#bdb6a6', { op: 0.9 }));
+  for (let i = 1; i < 6; i++) { const a = cam.P(-R.W + (i * (R.W + gx)) / 6 * -1 * -1, 0.012, 3.0); }
+  // rain shower: arm from the wall + head
+  { const [wx, wy] = cam.P(-R.W, 2.28, 4.2); const [hx, hy] = cam.P(-1.55, 2.18, 4.2); const k = cam.s(4.2);
+    add(line(wx, wy, hx, hy - 4, C.brass, Math.max(3, k * 0.025), { lc: 'round' }));
+    // water streaks
+    reseed(14);
+    for (let i = 0; i < 36; i++) { const px = hx + rr(-0.22, 0.22) * k, py0 = hy + rr(0, 0.05) * k; const [, fy] = cam.P(-1.55, 0, 4.2); add(line(px, py0, px + rr(-3, 3), fy - rr(0, 0.15) * k, '#e6f4fa', rr(0.8, 1.6), { op: rr(0.25, 0.6) })); }
+    add(ellipse(hx, hy, 0.24 * k, 0.045 * k, lin('rsh', [[0, C.brassL], [1, C.brassD]], [0, 0, 1, 0]), { stroke: C.brassD, sw: 1 }));
+    add(ellipse(hx, hy + 2, 0.2 * k, 0.03 * k, '#6a5a2a', { op: 0.7 }));
+    for (let i = -4; i <= 4; i++) add(circle(hx + i * 0.04 * k, hy + 3, 1.2, '#2b2f36', { op: 0.7 }));
+    // mist
+    add(ellipse(hx, hy + 0.5 * k, 0.4 * k, 0.55 * k, radial('mist', [[0, '#fff', 0.35], [1, '#fff', 0]]), { style: 'mix-blend-mode:screen' }));
+  }
+  // glass panels: side (front end at Z=3) and long panel (X=gx)
+  const glassG = lin('glassb', [[0, '#d6ecf3', 0.25], [0.5, '#bcdbe6', 0.12], [1, '#e3f3f8', 0.3]], [0, 0, 1, 1]);
+  add(cam.quad([[-R.W, 0, 3.0], [gx, 0, 3.0], [gx, 2.3, 3.0], [-R.W, 2.3, 3.0]], glassG));
+  add(sq(SG, 3.0, R.Zb, 0, 2.3, glassG));
+  add(sp(SG, [[3.1, 0], [3.5, 0], [3.9, 2.3], [3.5, 2.3]], '#fff', { op: 0.16 }));
+  add(sp(SG, [[4.1, 0], [4.25, 0], [4.65, 2.3], [4.5, 2.3]], '#fff', { op: 0.12 }));
+  // frame (black/brass slim)
+  const fr = '#23272e';
+  add(cam.frect(-R.W, gx, 2.28, 2.32, 3.0, fr), cam.frect(gx - 0.02, gx + 0.02, 0, 2.32, 3.0, fr), cam.frect(-R.W, gx, 0, 0.03, 3.0, '#3a3f48'));
+  add(sq(SG, 3.0, R.Zb, 2.28, 2.32, fr), sq(SG, 3.0, 3.04, 0, 2.32, fr), sq(SG, 3.0, R.Zb, 0, 0.04, '#3a3f48'));
+  add(sq(SG, 4.0, 4.03, 0, 2.3, fr)); // door seam
+  // door handle
+  add(sq(SG, 4.1, 4.13, 0.95, 1.35, C.brass));
+  add(sq(SG, 3.2, 3.22, 0, 2.3, fr, { op: 0.0 }));
+  // shower floor drain line
+  // ---- VANITY (floating, walnut) with vessel basin and round backlit mirror
+  const vx0 = -0.85, vx1 = 0.85, vz0 = 4.45, vz1 = R.Zb;
+  // mirror backlight
+  { const [mx, my] = cam.P(0, 1.65, R.Zb); const kb = cam.s(R.Zb); const rad = 0.5 * kb;
+    add(circle(mx, my, rad * 1.35, radial('mglow', [[0.6, '#ffe6b5', 0.75], [1, '#ffe6b5', 0]]), { style: 'mix-blend-mode:screen' }));
+    add(circle(mx, my, rad * 1.07, '#fff3d6', { filter: blur(3), op: 0.9 }));
+    add(circle(mx, my, rad * 1.025, C.brass));
+    add(circle(mx, my, rad * 0.99, shade(C.brassD, 0.2)));
+    const mid = lin('mirg', [[0, '#e5eff2'], [0.5, '#b8cdd4'], [1, '#d8e6ea']], [0, 0, 1, 1]);
+    add(circle(mx, my, rad * 0.95, mid));
+    // reflection: window/plant hints
+    add(g(circle(mx, my, rad * 0.95, '#000'), { clip: 'none', op: 0 }));
+    const cid = clipDef('mircl', circle(mx, my, rad * 0.95, '#000'));
+    add(g(rect(mx - rad * 0.9, my + rad * 0.2, rad * 1.8, rad * 0.9, '#d9cdb6', { op: 0.55 }) + ellipse(mx + rad * 0.4, my + rad * 0.35, rad * 0.22, rad * 0.5, C.leaf, { op: 0.35 }) + poly([[mx - rad * 0.8, my - rad * 0.9], [mx - rad * 0.3, my - rad * 0.9], [mx - rad * 0.05, my + rad * 0.9], [mx - rad * 0.55, my + rad * 0.9]], '#fff', { op: 0.35 }), { clip: cid }));
+  }
+  // vanity cabinet
+  add(shadowPoly([cam.P(vx0, 0, vz0 + 0.1), cam.P(vx1, 0, vz0 + 0.1), cam.P(vx1 + 0.1, 0, R.Zb), cam.P(vx0 - 0.1, 0, R.Zb)], 0.2, 8));
+  add(cam.quad([[vx0 - 0.1, 0.02, vz0], [vx1 + 0.1, 0.02, vz0], [vx1 + 0.1, 0.0, vz1], [vx0 - 0.1, 0.0, vz1]], lin('vgl', [[0, '#ffd9a0', 0.8], [1, '#ffd9a0', 0.2]], [0, 0, 0, 1]), { style: 'mix-blend-mode:screen', filter: blur(6) }));
+  add(cam.box(vx0, vx1, 0.22, 0.82, vz0, vz1, { front: C.walnut, top: '#f4f1ea', left: shade(C.walnut, 0.2), right: C.walnut }, { flat: true }));
+  { const Sv = surfBack(cam, vz0);
+    add(sq(Sv, vx0, vx1, 0.22, 0.82, hgrad('#7a4e2f', '#5e3a22')));
+    for (let j = 0; j < 12; j++) add(sl(Sv, vx0 + 0.04 + j * 0.14, 0.24, vx0 + 0.04 + j * 0.14, 0.8, lighten(C.walnut, 0.25), 1, { op: 0.2 }));
+    add(sq(Sv, vx0 + 0.04, 0, 0.0, 0.0, 'none'));
+    add(sq(Sv, vx0 + 0.03, vx0 + 0.83, 0.26, 0.5, 'none', { stroke: shade(C.walnut, 0.4), sw: 1.2 }));
+    add(sq(Sv, vx0 + 0.87, vx1 - 0.03, 0.26, 0.5, 'none', { stroke: shade(C.walnut, 0.4), sw: 1.2 }));
+    add(sq(Sv, vx0 + 0.03, vx1 - 0.03, 0.54, 0.78, 'none', { stroke: shade(C.walnut, 0.4), sw: 1.2 }));
+    add(sq(Sv, -0.25, 0.25, 0.745, 0.76, C.brass), sq(Sv, -0.25, 0.25, 0.465, 0.48, C.brass)); }
+  // countertop slab
+  add(cam.box(vx0 - 0.05, vx1 + 0.05, 0.82, 0.88, vz0 - 0.03, vz1, { front: '#f4f1ea', top: '#fbfaf6', left: '#c9c5bb', right: '#e9e6de' }, { flat: true }));
+  // vessel basin
+  { const [bx, by] = cam.P(0, 0.88, 4.85); const k = cam.s(4.85);
+    add(shadowEll(bx, by, 0.28 * k, 0.05 * k, 0.28, 3));
+    add(path_(`M${r1(bx - 0.26 * k)} ${r1(by - 0.12 * k)}Q${r1(bx - 0.25 * k)} ${r1(by)} ${r1(bx)} ${r1(by + 0.0)}Q${r1(bx + 0.25 * k)} ${r1(by)} ${r1(bx + 0.26 * k)} ${r1(by - 0.12 * k)}Z`, hgrad('#cfc9bd', '#f8f6f0')));
+    add(ellipse(bx, by - 0.12 * k, 0.26 * k, 0.06 * k, '#f8f6f0'), ellipse(bx, by - 0.115 * k, 0.22 * k, 0.045 * k, '#bdb7ab'));
+    add(brassTap(bx, by - 0.01 * k - 0.07 * k, k * 1.05));
+    // accessories
+    let [x, y] = cam.P(-0.55, 0.88, 4.95); add(rrect(x - 0.03 * k, y - 0.13 * k, 0.06 * k, 0.13 * k, 3, '#efe8d8'), rect(x - 0.012 * k, y - 0.17 * k, 0.024 * k, 0.04 * k, C.brass));
+    [x, y] = cam.P(0.55, 0.88, 4.95); add(vase(x, y, k * 1.1, '#d9cdb2', { h: 0.2, w: 0.1, branch: true, bloom: C.leaf, seed: 9 }));
+    [x, y] = cam.P(0.4, 0.88, 4.8); add(rrect(x - 0.1 * k, y - 0.03 * k, 0.2 * k, 0.03 * k, 2, '#efe6d2'), rrect(x - 0.1 * k, y - 0.06 * k, 0.2 * k, 0.03 * k, 2, '#c9a24b'));
+  }
+  // ---- plant in corner right, bath mat, basket
+  { const [x, y] = cam.P(1.65, 0, 4.7); add(plantFiddle(x, y, cam.s(4.7) * 1.15, { h: 1.35, n: 12, seed: 8, pot: C.sand2 })); }
+  { const mx0 = -0.65, mx1 = 0.65, mz0 = 3.45, mz1 = 4.2; add(shadowPoly([cam.P(mx0, 0, mz0), cam.P(mx1 + 0.03, 0, mz0), cam.P(mx1 + 0.03, 0, mz1), cam.P(mx0, 0, mz1)], 0.25, 3));
+    add(cam.fq(mx0, mx1, mz0, mz1, '#e6dcc5'));
+    for (let i = 0; i < 9; i++) { const x = mx0 + (mx1 - mx0) * (i + 0.5) / 9; const a = cam.P(x, 0, mz0 + 0.03), b = cam.P(x, 0, mz1 - 0.03); add(line(a[0], a[1], b[0], b[1], i % 2 ? '#c9a24b' : '#27496d', 3, { op: 0.8 })); }
+    add(cam.fq(mx0, mx1, mz0, mz0 + 0.03, '#b6a888')); }
+  { const [x, y] = cam.P(1.05, 0, 3.5); const k = cam.s(3.5);
+    add(shadowEll(x, y, 0.22 * k, 0.04 * k, 0.35, 5));
+    add(path_(`M${r1(x - 0.2 * k)} ${r1(y - 0.34 * k)}L${r1(x + 0.2 * k)} ${r1(y - 0.34 * k)}L${r1(x + 0.17 * k)} ${r1(y)}Q${r1(x)} ${r1(y + 0.04 * k)} ${r1(x - 0.17 * k)} ${r1(y)}Z`, hgrad('#b49a6c', '#8a7248')));
+    for (let i = 1; i < 6; i++) add(line(x - 0.2 * k, y - 0.34 * k + i * 0.057 * k, x + 0.2 * k, y - 0.34 * k + i * 0.057 * k, '#6b5834', 1, { op: 0.5 }));
+    add(rrect(x - 0.18 * k, y - 0.44 * k, 0.36 * k, 0.12 * k, 4, '#f4efe6', { stroke: '#cfc4aa', sw: 1 }), rrect(x - 0.16 * k, y - 0.5 * k, 0.32 * k, 0.1 * k, 4, '#b5603c'), rrect(x - 0.15 * k, y - 0.54 * k, 0.3 * k, 0.07 * k, 3, '#e8dcc0')); }
+  add(downlights(cam, [[-1.4, 2.5], [0, 2.5], [1.4, 2.5], [-0.6, 4.1], [0.6, 4.1]], 2.48));
+  add(finishLayer({ vig: 0.34, glow: '#ffe0a8', glowOp: 0.12, gx: 0.5, gy: 0.35 }));
+  finish('interior-bathroom.svg', 'Modern bathroom', 'A modern bathroom with a floating walnut vanity, round backlit mirror, large-format stone tiles, a glass shower enclosure with rain shower, brass towel rail and a plant.');
+}
+
+// crockery on a shelf (back-wall fronto-parallel surface only)
+function shelfItems(Sf, u0, u1, v, seed = 1, o = {}) {
+  reseed(seed); let s = ''; let u = u0 + 0.04;
+  const px = (m) => Math.abs(Sf.map(m, 0)[0] - Sf.map(0, 0)[0]); // metres->px
+  const pm = px(1);
+  const cols = [C.white, '#e9dfc6', C.navy3, C.terra, C.teal, C.brassL, '#d9c8a2'];
+  while (u < u1 - 0.12) {
+    const kind = Math.floor(rnd() * 5); const c = cols[Math.floor(rnd() * cols.length)];
+    const [x, y] = Sf.map(u, v);
+    if (kind === 0) { // plate stack standing
+      const w = rr(0.16, 0.2) * pm, n = 3 + Math.floor(rnd() * 3);
+      for (let i = 0; i < n; i++) s += rrect(x, y - (i + 1) * 0.014 * pm, w, 0.012 * pm, 1, i % 2 ? '#fff' : c, { stroke: C.brassD, sw: 0.5 });
+      u += w / pm + 0.05;
+    } else if (kind === 1) { // bowl
+      const w = rr(0.1, 0.15) * pm; s += path_(`M${r1(x)} ${r1(y - w * 0.5)}h${r1(w)}q0 ${r1(w * 0.55)} ${r1(-w / 2)} ${r1(w * 0.55)}t${r1(-w / 2)} ${r1(-w * 0.55)}z`, hgrad(lighten(c, 0.3), shade(c, 0.1))) + rect(x, y - w * 0.52, w, 2, C.brass); s += rect(x + w * 0.35, y - 1.5, w * 0.3, 1.5, shade(c, 0.2)); u += w / pm + 0.04;
+    } else if (kind === 2) { // vase
+      const h = rr(0.2, 0.3) * pm, w = rr(0.07, 0.1) * pm; s += path_(`M${r1(x + w * 0.3)} ${r1(y - h)}h${r1(w * 0.4)}q${r1(w * 0.5)} ${r1(h * 0.3)} ${r1(w * 0.25)} ${r1(h * 0.55)}q${r1(-w * 0.1)} ${r1(h * 0.15)} ${r1(-w * 0.35)} ${r1(h * 0.15)}h${r1(-w * 0.6)}q${r1(-w * 0.25)} 0 ${r1(-w * 0.35)} ${r1(-h * 0.15)}q${r1(-w * 0.25)} ${r1(-h * 0.25)} ${r1(w * 0.25)} ${r1(-h * 0.55)}z`, hgrad(lighten(c, 0.15), shade(c, 0.25))); s += rect(x + w * 0.3, y - h, w * 0.4, 1.5, C.brass); u += w / pm + 0.06;
+    } else if (kind === 3) { // cups row
+      const n = 3; for (let i = 0; i < n; i++) { const w = 0.05 * pm; s += path_(`M${r1(x + i * 0.065 * pm)} ${r1(y - 0.05 * pm)}h${r1(w)}l${r1(-w * 0.15)} ${r1(0.05 * pm)}h${r1(-w * 0.7)}z`, '#fbf8f0', { stroke: C.brassD, sw: 0.5 }); }
+      u += 0.065 * n + 0.04;
+    } else { // teapot
+      const w = 0.13 * pm; s += ellipse(x + w * 0.5, y - w * 0.4, w * 0.5, w * 0.38, hgrad(lighten(c, 0.2), shade(c, 0.2))); s += path_(`M${r1(x + w * 0.9)} ${r1(y - w * 0.4)}q${r1(w * 0.3)} ${r1(-w * 0.2)} ${r1(w * 0.35)} ${r1(-w * 0.5)}l${r1(-w * 0.1)} ${r1(w * 0.0)}q0 ${r1(w * 0.25)} ${r1(-w * 0.25)} ${r1(w * 0.45)}z`, shade(c, 0.1)); s += rect(x + w * 0.38, y - w * 0.85, w * 0.24, w * 0.09, C.brass, { rx: 1 }); s += stroke_(`M${r1(x)} ${r1(y - w * 0.5)}q${r1(-w * 0.3)} ${r1(w * 0.1)} 0 ${r1(w * 0.3)}`, C.brassD, 1.4); u += w / pm + 0.05;
+    }
+  }
+  return s;
+}
+// statement ring chandelier (screen space)
+function ringChandelier(x, y0, k, o = {}) {
+  const col = C.brass, rad = (o.r ?? 0.7) * k, n = o.n ?? 12; const drop = (o.drop ?? 0.55) * k; const ry = rad * 0.2;
+  const cy = y0 + drop;
+  let s = '';
+  s += ellipse(x, cy + 0.15 * k, rad * 1.9, rad * 0.9, radial('rcg' + hkey(String(x)), [[0, '#ffe2a8', 0.55], [1, '#ffe2a8', 0]]), { style: 'mix-blend-mode:screen' });
+  // rods
+  for (const a of [-0.7, 0, 0.7]) s += line(x, y0, x + a * rad * 0.9, cy, col, Math.max(1.4, k * 0.007), { op: 0.9 });
+  s += rect(x - 0.015 * k, y0 - 0.04 * k, 0.03 * k, 0.1 * k, col);
+  s += ellipse(x, y0, 0.08 * k, 0.025 * k, darken(col, 0.25));
+  // back half of ring then bulbs then front half
+  const ringW = Math.max(2.2, k * 0.014);
+  s += path_(`M${r1(x - rad)} ${r1(cy)}A${r1(rad)} ${r1(ry)} 0 0 1 ${r1(x + rad)} ${r1(cy)}`, 'none', { stroke: darken(col, 0.2), sw: ringW });
+  const bulbs = [];
+  for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; bulbs.push([x + Math.cos(a) * rad, cy + Math.sin(a) * ry, Math.sin(a)]); }
+  bulbs.sort((a, b) => a[2] - b[2]);
+  for (const [bx, by, d] of bulbs) {
+    if (d >= 0) continue;
+    s += circle(bx, by - 0.02 * k, 0.07 * k, radial('bgl' + Math.round(bx), [[0, '#fff4d0', 0.7], [1, '#ffd890', 0]]), { style: 'mix-blend-mode:screen' });
+    s += circle(bx, by - 0.02 * k, 0.03 * k, '#fff6dd');
+    s += rect(bx - 0.008 * k, by - 0.0 * k, 0.016 * k, 0.03 * k, col);
+  }
+  s += path_(`M${r1(x - rad)} ${r1(cy)}A${r1(rad)} ${r1(ry)} 0 0 0 ${r1(x + rad)} ${r1(cy)}`, 'none', { stroke: brassGrad(), sw: ringW * 1.15 });
+  s += path_(`M${r1(x - rad * 0.55)} ${r1(cy + 0.02 * k)}A${r1(rad * 0.55)} ${r1(ry * 0.55)} 0 0 0 ${r1(x + rad * 0.55)} ${r1(cy + 0.02 * k)}`, 'none', { stroke: brassGrad(), sw: ringW * 0.8 });
+  for (const [bx, by, d] of bulbs) {
+    if (d < 0) continue;
+    s += circle(bx, by - 0.02 * k, 0.075 * k, radial('bgl2' + Math.round(bx), [[0, '#fff4d0', 0.8], [1, '#ffd890', 0]]), { style: 'mix-blend-mode:screen' });
+    s += circle(bx, by - 0.02 * k, 0.032 * k, '#fff6dd', { stroke: '#f1d89a', sw: 1 });
+    s += rect(bx - 0.008 * k, by + 0.01 * k, 0.016 * k, 0.03 * k, col);
+  }
+  // hanging crystals
+  for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2 + 0.2; const bx = x + Math.cos(a) * rad * 0.55, by = cy + 0.02 * k + Math.sin(a) * ry * 0.55; if (Math.sin(a) > -0.3) s += line(bx, by, bx, by + 0.12 * k, '#e8d9b0', 0.8, { op: 0.7 }) + path_(`M${r1(bx)} ${r1(by + 0.1 * k)}l${r1(0.014 * k)} ${r1(0.025 * k)}l${r1(-0.014 * k)} ${r1(0.03 * k)}l${r1(-0.014 * k)} ${r1(-0.03 * k)}z`, '#fff', { op: 0.85 }); }
+  return s;
+}
+// dining chair (side view) facing +x (dir=1: back at x0) or -x
+function sideChair(cam, xc, zc, dir, col = '#cdbb94', frame = C.walnut) {
+  const hw = 0.23; const x0 = dir > 0 ? xc - 0.23 : xc - 0.23, x1 = xc + 0.23; // seat extent along x (depth)
+  const z0 = zc - hw, z1 = zc + hw;
+  const C_ = (c) => ({ front: c, top: lighten(c, 0.14), left: shade(c, 0.24), right: lighten(c, 0.05) });
+  let s = shadowPoly([cam.P(x0 - 0.02, 0, z0 + 0.03), cam.P(x1 + 0.05, 0, z0 + 0.03), cam.P(x1 + 0.05, 0, z1), cam.P(x0 - 0.02, 0, z1)], 0.3, 5);
+  const lw = 0.03;
+  const legs = [[x0 + 0.02, z0 + 0.02], [x1 - 0.05, z0 + 0.02], [x0 + 0.02, z1 - 0.05], [x1 - 0.05, z1 - 0.05]];
+  // far legs first (larger z)
+  legs.sort((a, b) => b[1] - a[1]);
+  for (const [lx, lz] of legs) s += cam.box(lx, lx + lw, 0, 0.45, lz, lz + lw, C_(frame), { flat: true });
+  const bx0 = dir > 0 ? x0 : x1 - 0.06, bx1 = dir > 0 ? x0 + 0.06 : x1;
+  // back rest (behind seat)
+  s += cam.box(bx0, bx1, 0.45, 1.0, z0 + 0.01, z1 - 0.01, C_(shade(col, 0.1)), { rx: 0.03 });
+  s += cam.box(bx0 + (dir > 0 ? -0.0 : 0.0), bx1, 0.5, 0.92, z0 + 0.04, z1 - 0.04, C_(lighten(col, 0.04)), { rx: 0.03 });
+  // seat
+  s += cam.box(x0, x1, 0.4, 0.5, z0, z1, C_(col), { rx: 0.03 });
+  // brass cap on the legs
+  return s;
+}
+function frontChair(cam, xc, zc, facing, col = '#cdbb94', frame = C.walnut) {
+  // facing = -1: faces camera; +1 faces away (seen from behind)
+  const hw = 0.23; const C_ = (c) => ({ front: c, top: lighten(c, 0.14), left: shade(c, 0.24), right: lighten(c, 0.05) });
+  const z0 = zc - hw, z1 = zc + hw; const x0 = xc - hw, x1 = xc + hw;
+  let s = shadowEll(...cam.P(xc, 0, zc), 0.34 * cam.s(zc), 0.06 * cam.s(zc), 0.3, 5);
+  const lw = 0.03;
+  const bz0 = facing < 0 ? z1 - 0.06 : z0, bz1 = facing < 0 ? z1 : z0 + 0.06;
+  const legs = [[x0 + 0.02, z1 - 0.05], [x1 - 0.05, z1 - 0.05], [x0 + 0.02, z0 + 0.02], [x1 - 0.05, z0 + 0.02]];
+  for (const [lx, lz] of legs) s += cam.box(lx, lx + lw, 0, 0.45, lz, lz + lw, C_(frame), { flat: true });
+  if (facing < 0) {
+    s += cam.box(x0, x1, 0.45, 1.0, bz0, bz1, C_(shade(col, 0.1)), { rx: 0.03 });
+    s += cam.box(x0, x1, 0.4, 0.5, z0, z1, C_(col), { rx: 0.03 });
+    const a = cam.P(xc, 0.58, z0), k = cam.s(z0);
+  } else {
+    s += cam.box(x0, x1, 0.4, 0.5, z0, z1, C_(col), { rx: 0.03 });
+    s += cam.box(x0, x1, 0.45, 1.0, bz0, bz1, C_(shade(col, 0.05)), { rx: 0.03 });
+    // channel stitching on the back
+    for (let i = 1; i < 4; i++) { const x = x0 + ((x1 - x0) * i) / 4; const a = cam.P(x, 0.55, bz0), b = cam.P(x, 0.95, bz0); s += line(a[0], a[1], b[0], b[1], shade(col, 0.28), 1, { op: 0.6 }); }
+  }
+  return s;
+}
+
+// =============================================================================
+// 5. DINING ROOM
+// =============================================================================
+function dining() {
+  begin('idn');
+  const cam = new Cam(840, 600, 452, 1.85);
+  const R = { W: 3.0, H: 2.8, Zb: 6.2, Zn: 1.0, wall: vgrad('#c9a47e', '#b98e66') };
+  R.wallB = vgrad('#cfaa84', '#bd946c'); R.floor = vgrad('#cdb895', '#e8dcc3');
+  const Sb = surfBack(cam, R.Zb), SL = surfL(cam, R.W), SR = surfR(cam, R.W);
+  add(roomShell(cam, R));
+  add(floorGrid(cam, R, 1.0, '#9a8765', 1.2, 0.35));
+  add(floorVeins(cam, R, 1.0, 22, '#8c7a58'));
+  add(floorSheen(cam, R, 0.45));
+  add(ceilingTray(cam, R, 0.6, 0.18, '#ffc882'));
+
+  // ---- back wall: vertical fluted wainscot + upper plaster
+  add(sq(Sb, -R.W, R.W, 0, 0.95, vgrad('#e8dcc4', '#d9c9a8')));
+  for (let i = 0; i < 70; i++) { const u = -R.W + i * (2 * R.W / 70); add(sl(Sb, u, 0, u, 0.95, shade('#d9c9a8', 0.2), 1, { op: 0.28 })); }
+  add(sq(Sb, -R.W, R.W, 0.95, 0.985, C.brass));
+  // arched niche (centre)
+  { const u0 = -0.75, u1 = 0.75;
+    add(sarch(Sb, u0 - 0.06, u1 + 0.06, 0.7, 2.5, C.brass));
+    add(sarch(Sb, u0 - 0.03, u1 + 0.03, 0.72, 2.47, shade('#a67c58', 0.2)));
+    add(sarch(Sb, u0, u1, 0.75, 2.44, lin('niche', [[0, '#f4e6c8'], [0.6, '#e6cfa2'], [1, '#d3b17a']], [0, 1, 0, 0])));
+    add(sarch(Sb, u0 + 0.1, u1 - 0.1, 0.95, 2.34, 'none', { stroke: C.brassD, sw: 1, op: 0.6 }));
+    // LED glow on arch
+    add(sarch(Sb, u0, u1, 0.75, 2.44, radial('nglow', [[0, '#fff1c8', 0.6], [1, '#fff1c8', 0]], [0.5, 0.5, 0.6]), { style: 'mix-blend-mode:screen' }));
+    // shelf inside + vase + brass bowl
+    add(sq(Sb, u0 + 0.0, u1, 0.75, 0.82, '#a67c58'), sq(Sb, u0, u1, 0.82, 0.835, C.brass));
+    const kb = cam.s(R.Zb);
+    let [x, y] = cam.P(-0.25, 0.835, R.Zb - 0.1); add(vase(x, y, kb, C.navy2, { h: 0.7, w: 0.2, branch: true, bloom: '#f0e6d0', seed: 12 }));
+    [x, y] = cam.P(0.3, 0.835, R.Zb - 0.1); add(shadowEll(x, y, 0.18 * kb, 0.03 * kb, 0.3, 3), path_(`M${r1(x - 0.18 * kb)} ${r1(y - 0.12 * kb)}Q${r1(x)} ${r1(y + 0.06 * kb)} ${r1(x + 0.18 * kb)} ${r1(y - 0.12 * kb)}Z`, hgrad(C.brassL, C.brassD)), ellipse(x, y - 0.12 * kb, 0.18 * kb, 0.035 * kb, C.brass), circle(x - 0.05 * kb, y - 0.15 * kb, 0.05 * kb, C.terra), circle(x + 0.05 * kb, y - 0.15 * kb, 0.05 * kb, '#d9a030'));
+    // console below arch
+    add(sq(Sb, -1.1, 1.1, 0.0, 0.7, 'none'));
+  }
+  // display cabinet (left)
+  { const u0 = -2.95, u1 = -0.95; const Sc = surfBack(cam, R.Zb - 0.4);
+    add(cam.box(u0, u1, 0, 2.5, R.Zb - 0.4, R.Zb, { front: C.walnut, top: C.walnut, left: shade(C.walnut, 0.2), right: shade(C.walnut, 0.1) }, { flat: true }));
+    add(sq(Sc, u0, u1, 0, 2.5, vgrad('#6d4529', '#583520')));
+    // lower doors
+    add(doorsOn(Sc, u0 + 0.05, u1 - 0.05, 0.08, 0.92, 3, '#7a4e2f', { pull: 'top', grain: true, horizGrad: true }));
+    // glass upper section interior
+    add(sq(Sc, u0 + 0.06, u1 - 0.06, 1.0, 2.4, lin('cabi', [[0, '#f2dfb5'], [1, '#d9b980']], [0, 0, 0, 1])));
+    for (let i = 0; i < 3; i++) { const v = 1.05 + i * 0.45; add(sq(Sc, u0 + 0.06, u1 - 0.06, v + 0.37, v + 0.395, 'none')); }
+    const shelves = [1.0, 1.45, 1.9];
+    for (const v of shelves) add(sq(Sc, u0 + 0.06, u1 - 0.06, v, v + 0.02, C.oak), sq(Sc, u0 + 0.06, u1 - 0.06, v - 0.012, v, shade(C.oak, 0.3)));
+    shelves.forEach((v, i) => add(shelfItems(Sc, u0 + 0.06, u1 - 0.06, v + 0.02, 10 + i * 7)));
+    add(sq(Sc, u0 + 0.06, u1 - 0.06, 2.38, 2.4, C.oak));
+    // glass doors overlay
+    for (let i = 0; i < 3; i++) { const a = u0 + 0.06 + i * (u1 - u0 - 0.12) / 3; add(sq(Sc, a, a + (u1 - u0 - 0.12) / 3, 1.0, 2.4, '#fff', { op: 0.07, stroke: C.brassD, sw: 1.4 })); add(sp(Sc, [[a + 0.05, 1.0], [a + 0.2, 1.0], [a + 0.35, 2.4], [a + 0.2, 2.4]], '#fff', { op: 0.14 })); }
+    add(sq(Sc, u0 - 0.03, u1 + 0.03, 2.5, 2.56, C.brass), sq(Sc, u0 - 0.03, u1 + 0.03, 2.46, 2.5, shade(C.walnut, 0.2)));
+    add(ledOn(Sc, u0 + 0.06, 2.4, u1 - 0.06, 2.4, '#ffe3b0', 1.6));
+  }
+  // right side: credenza + large art
+  { const u0 = 1.0, u1 = 2.95; const Sc = surfBack(cam, R.Zb - 0.45);
+    add(cam.box(u0, u1, 0.1, 0.85, R.Zb - 0.45, R.Zb, { front: C.walnut, top: lighten(C.walnut, 0.25), left: shade(C.walnut, 0.2), right: C.walnut }, { flat: true }));
+    add(sq(Sc, u0, u1, 0.1, 0.85, vgrad('#7a4e2f', '#5e3a22')));
+    add(doorsOn(Sc, u0 + 0.03, u1 - 0.03, 0.14, 0.82, 4, '#7a4e2f', { pull: 'side', grain: true, horizGrad: true }));
+    for (const x of [u0 + 0.1, u1 - 0.1]) add(cam.box(x - 0.02, x + 0.02, 0, 0.1, R.Zb - 0.4, R.Zb - 0.36, C.brass, { flat: true }));
+    add(ledOn(Sc, u0, 0.09, u1, 0.09, '#ffd9a0', 1.5));
+    // decor on credenza
+    const kb = cam.s(R.Zb - 0.2);
+    let [x, y] = cam.P(1.35, 0.85, R.Zb - 0.2); add(books(x, y, kb, 4, { seed: 9 }));
+    add(circle(x, y - 0.14 * kb, 0.05 * kb, C.brass));
+    [x, y] = cam.P(2.5, 0.85, R.Zb - 0.2); add(tableLamp(x, y, kb * 1.3, { shade: '#f6ead0', base: C.teal }));
+    [x, y] = cam.P(2.0, 0.85, R.Zb - 0.2); add(vase(x, y, kb, C.terra, { h: 0.36, w: 0.2 }));
+    // art
+    add(frameArt(Sb.map(1.2, 2.3)[0], Sb.map(1.2, 2.3)[1], Sb.map(2.75, 0)[0] - Sb.map(1.2, 0)[0], Sb.map(0, 1.15)[1] - Sb.map(0, 2.3)[1], 2, { frame: C.brass }));
+  }
+  // ---- LEFT WALL: tall window with curtains
+  add(windowOn(SL, 4.5, 5.95, 0.35, 2.45, { cols: 3, tag: 'dn', seed: 15, t: 0.045, frame: '#3a2a1c' }));
+  add(sq(SL, 4.45, 6.0, 0.3, 0.35, C.white));
+  add(curtainOn(SL, 4.4, 6.05, 2.55, 0.05, '#fbf6ea', 14, { sheer: true, sway: 0 }));
+  add(curtainOn(SL, 4.1, 4.62, 2.6, 0.03, '#8d3a2a', 7));
+  add(curtainOn(SL, 5.85, 6.2, 2.6, 0.03, '#8d3a2a', 5));
+  add(rodOn(SL, 4.05, 6.2, 2.65));
+  // ---- RIGHT WALL: framed art + wall sconces + mirror
+  add(sq(SR, 4.0, 6.2, 0, 0.95, vgrad('#e8dcc4', '#d9c9a8')));
+  add(sq(SR, 4.0, 6.2, 0.95, 0.985, C.brass));
+  add(sarch(SR, 4.4, 5.5, 0.95, 2.35, C.brass));
+  add(sarch(SR, 4.44, 5.46, 0.99, 2.31, lin('mir', [[0, '#d9e4e6'], [0.5, '#9fb7bf'], [1, '#d3dfe2']], [0, 0, 1, 1])));
+  add(sp(SR, [[4.5, 1.0], [4.65, 1.0], [4.95, 2.2], [4.8, 2.2]], '#fff', { op: 0.25 }));
+  for (const u of [5.8, 6.05]) { add(sq(SR, u - 0.02, u + 0.02, 1.7, 1.78, C.brass)); add(sc(SR, u, 1.9, 0.04, 0.09, '#fff3d0')); add(sc(SR, u, 1.9, 0.18, 0.28, radial('scg' + u, [[0, '#ffe2a8', 0.55], [1, '#ffe2a8', 0]]), { style: 'mix-blend-mode:screen' })); }
+  add(roomShade(cam, R, { ao: 0.25 }));
+  // floor light pool
+  add(cam.hellipse(0, 4.4, 2.4, 1.9, 0, radial('flr', [[0, '#ffd9a0', 0.4], [1, '#ffd9a0', 0]]), { style: 'mix-blend-mode:screen' }));
+
+  // ceiling rose: round coffer with LED ring
+  add(cam.hellipse(0, 4.3, 1.25, 1.25, 2.78, lin('rose', [[0, '#f0e4cc'], [1, '#e1d1b0']], [0, 0, 0, 1])));
+  add(cam.hellipse(0, 4.3, 1.25, 1.25, 2.78, 'none', { stroke: '#fff1cf', sw: 3, op: 0.95 }));
+  add(cam.hellipse(0, 4.3, 1.25, 1.25, 2.78, 'none', { stroke: '#ffd9a0', sw: 14, op: 0.35, filter: blur(5) }));
+  add(cam.hellipse(0, 4.3, 0.95, 0.95, 2.78, 'none', { stroke: C.brassD, sw: 1.4, op: 0.8 }));
+  // ---- RUG
+  { const rx0 = -1.75, rx1 = 1.75, rz0 = 2.6, rz1 = 5.9;
+    add(shadowPoly([cam.P(rx0, 0, rz0), cam.P(rx1 + 0.05, 0, rz0), cam.P(rx1 + 0.08, 0, rz1), cam.P(rx0, 0, rz1)], 0.3, 4));
+    add(rugPaint((u, v) => cam.P(rx0 + u * (rx1 - rx0), 0, rz0 + (1 - v) * (rz1 - rz0)), { field: '#27496d', field2: '#1d3a5b', border: '#7a3225', accent: '#d9c08a', motif: '#e9d9b0' }, { asp: (rz1 - rz0) / (rx1 - rx0), nU: 14, nV: 10 }));
+    for (let i = 0; i <= 50; i++) { const u = i / 50; const a = cam.P(rx0 + u * (rx1 - rx0), 0, rz0), b = cam.P(rx0 + u * (rx1 - rx0), 0, rz0 - 0.07); add(line(a[0], a[1], b[0], b[1], '#eadfc6', 1.1)); } }
+
+  // plants
+  { const [x, y] = cam.P(-2.65, 0, 4.0); add(plantSnake(x, y, cam.s(3.9) * 1.2, { pot: C.sand2, sc: 0.95 })); }
+  { const [x, y] = cam.P(2.6, 0, 5.2); add(plantFiddle(x, y, cam.s(5.2) * 1.1, { h: 1.5, seed: 33, pot: C.char2 })); }
+
+  // ---- chairs far end & far side, then table, then near
+  add(frontChair(cam, 0, 5.75, -1, '#c9b48b'));
+  add(sideChair(cam, -0.86, 5.0, 1)); add(sideChair(cam, 0.86, 5.0, -1));
+  add(sideChair(cam, -0.86, 4.3, 1)); add(sideChair(cam, 0.86, 4.3, -1));
+  // table
+  { const tx0 = -0.52, tx1 = 0.52, tz0 = 3.25, tz1 = 5.35;
+    add(shadowPoly([cam.P(tx0 - 0.1, 0, tz0), cam.P(tx1 + 0.15, 0, tz0), cam.P(tx1 + 0.2, 0, tz1 + 0.1), cam.P(tx0 - 0.1, 0, tz1 + 0.1)], 0.38, 9));
+    // legs: four tapered walnut legs with brass feet
+    for (const [lx, lz] of [[-0.44, 5.2], [0.44, 5.2], [-0.44, 3.4], [0.44, 3.4]]) { add(cam.box(lx - 0.035, lx + 0.035, 0.03, 0.72, lz - 0.035, lz + 0.035, C.walnut, { flat: true })); add(cam.box(lx - 0.04, lx + 0.04, 0, 0.03, lz - 0.04, lz + 0.04, C.brass, { flat: true })); }
+    // top: marble slab with brass edge
+    add(cam.box(tx0, tx1, 0.72, 0.77, tz0, tz1, { front: '#eae6dc', top: '#f6f3ec', left: '#c9c5bb', right: '#eae6dc' }, { flat: true }));
+    add(cam.frect(tx0, tx1, 0.72, 0.735, tz0, C.brass));
+    // marble veins
+    reseed(44); for (let i = 0; i < 8; i++) { const x = rr(tx0, tx1); const a = cam.P(x, 0.771, tz0 + 0.03), b = cam.P(x + rr(-0.3, 0.3), 0.771, tz1 - 0.03); add(line(a[0], a[1], b[0], b[1], '#8f8e8b', rr(0.6, 1.3), { op: rr(0.12, 0.3) })); }
+    // runner
+    add(cam.hq(-0.14, 0.14, tz0 + 0.02, tz1 - 0.02, 0.772, '#8d3a2a', { op: 0.92 }));
+    add(cam.hq(-0.14, -0.12, tz0 + 0.02, tz1 - 0.02, 0.773, C.brass), cam.hq(0.12, 0.14, tz0 + 0.02, tz1 - 0.02, 0.773, C.brass));
+    // place settings
+    const seatsZ = [3.6, 4.3, 5.0]; const place = (x, z, rot) => { return cam.hellipse(x, z, 0.12, 0.12, 0.775, '#fbf8f0', { stroke: C.brass, sw: 1.1 }, 24) + cam.hellipse(x, z, 0.075, 0.075, 0.776, 'none', { stroke: '#d7ccb2', sw: 0.8 }, 20); };
+    for (const z of seatsZ) { add(place(-0.33, z), place(0.33, z)); }
+    add(place(0, 5.12));
+    // glasses and napkin
+    for (const z of seatsZ) for (const x of [-0.33, 0.33]) { const [gx, gy] = cam.P(x * 1.0 + (x < 0 ? 0.0 : 0.0), 0.775, z + 0.2); const k = cam.s(z); add(path_(`M${r1(gx - 0.022 * k)} ${r1(gy - 0.1 * k)}h${r1(0.044 * k)}q0 ${r1(0.045 * k)} ${r1(-0.022 * k)} ${r1(0.055 * k)}q${r1(-0.022 * k)} ${r1(-0.01 * k)} ${r1(-0.022 * k)} ${r1(-0.055 * k)}z`, '#cfe5ee', { op: 0.7, stroke: '#fff', sw: 0.7 }), rect(gx - 0.002 * k, gy - 0.045 * k, 0.004 * k * 1.2, 0.045 * k, '#cfe5ee', { op: 0.8 })); }
+    // centerpiece: brass bowl w/ fruit + candles + vase
+    let [x, y] = cam.P(0, 0.772, 4.3); const k = cam.s(4.3);
+    add(shadowEll(x, y, 0.2 * k, 0.03 * k, 0.3, 3));
+    add(vase(x - 0.12 * k, y, k * 1.0, C.teal, { h: 0.34, w: 0.13, branch: true, bloom: '#f6d9b0', seed: 21 }));
+    add(path_(`M${r1(x + 0.0 * k)} ${r1(y - 0.09 * k)}Q${r1(x + 0.14 * k)} ${r1(y + 0.05 * k)} ${r1(x + 0.28 * k)} ${r1(y - 0.09 * k)}Z`, hgrad(C.brassL, C.brassD)), ellipse(x + 0.14 * k, y - 0.09 * k, 0.14 * k, 0.025 * k, C.brass));
+    for (const [dx, dy, c] of [[0.06, -0.11, '#c0392b'], [0.14, -0.13, '#e0a030'], [0.22, -0.11, '#7aa04a']]) add(circle(x + dx * k, y + dy * k, 0.045 * k, soft(c, 0.2, 0.2)));
+    [x, y] = cam.P(0.0, 0.772, 3.7); const k2 = cam.s(3.7);
+    for (const dx of [-0.1, 0.1]) { add(rect(x + dx * k2 - 0.012 * k2, y - 0.18 * k2, 0.024 * k2, 0.18 * k2, '#f4ecd8'), rect(x + dx * k2 - 0.026 * k2, y - 0.01 * k2, 0.052 * k2, 0.012 * k2, C.brass), path_(`M${r1(x + dx * k2)} ${r1(y - 0.2 * k2)}q${r1(-0.012 * k2)} ${r1(-0.03 * k2)} 0 ${r1(-0.06 * k2)}q${r1(0.012 * k2)} ${r1(0.03 * k2)} 0 ${r1(0.06 * k2)}z`, '#ffb347'), circle(x + dx * k2, y - 0.24 * k2, 0.06 * k2, radial('cd' + dx, [[0, '#ffe2a8', 0.7], [1, '#ffe2a8', 0]]), { style: 'mix-blend-mode:screen' })); }
+  }
+  // near chairs (side) & near end chair
+  add(sideChair(cam, -0.86, 3.6, 1)); add(sideChair(cam, 0.86, 3.6, -1));
+  // chandelier
+  { const [x, y0] = cam.P(0, 2.78, 4.3); const k = cam.s(4.3); add(ringChandelier(x, y0, k, { r: 0.75, drop: 0.45, n: 14 })); }
+  add(downlights(cam, [[-2.2, 2.5], [2.2, 2.5], [-2.2, 5.2], [2.2, 5.2], [0, 2.3]], 2.6));
+  add(finishLayer({ vig: 0.42, glow: '#ffc882', glowOp: 0.2, gx: 0.5, gy: 0.4 }));
+  finish('interior-dining.svg', 'Dining room', 'A warm dining room with a six-seat marble-top table, upholstered chairs, a statement brass chandelier, a lit crockery display cabinet and an arched niche.');
 }
 
 // =============================================================================
@@ -947,6 +1593,9 @@ function bedroom() {
 const JOBS = {
   'interior-living-room': () => livingRoom(),
   'interior-bedroom': () => bedroom(),
+  'interior-kitchen': () => kitchen(),
+  'interior-bathroom': () => bathroom(),
+  'interior-dining': () => dining(),
 };
 const want = process.argv.slice(2);
 for (const [name, fn] of Object.entries(JOBS)) {

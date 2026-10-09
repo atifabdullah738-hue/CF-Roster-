@@ -80,6 +80,11 @@ const TH = {
     far: '#18253f', tree: ['#0e2230', '#173a3c', '#2a5a48'], lawn: ['#1c3a30', '#142e28'], glass: [[0, '#3c5a80'], [0.5, '#1e3454'], [1, '#0c1a2e']],
     refl: 0.18, tint: ['#10264a', 0.22], road: ['#222833', '#181d27'], foot: '#4a5566', shadow: '#050a14', warm: 1.0, lights: true, stars: true,
   },
+  soft: {
+    sky: [[0, '#7f9cbb'], [0.55, '#bccddc'], [1, '#ece8df']], sun: [0.5, 0.2, '#ffffff', '#f4f6f8'], cloud: ['#f6f8fa', '#bfccd8'],
+    far: '#a2b2c0', tree: ['#2b5239', '#3f7048', '#74a05e'], lawn: ['#6e9b4e', '#5c8a40'], glass: [[0, '#d7e3ec'], [0.5, '#8fadc3'], [1, '#42627d']],
+    refl: 0.24, tint: ['#e8eef4', 0.06], road: ['#6b7279', '#575d64'], foot: '#d4cfc5', shadow: '#26323f', warm: 0.0, lights: false,
+  },
   hazy: {
     sky: [[0, '#b9ccd6'], [0.6, '#dbe4e6'], [1, '#f1ece0']], sun: [0.7, 0.3, '#fffbe8', '#fff3d0'], cloud: ['#f4f4f0', '#cfd8dc'],
     far: '#b9c5c9', tree: ['#4a6a50', '#628560', '#8aa874'], lawn: ['#9aa36a', '#8a9459'], glass: [[0, '#e6eef2'], [0.5, '#a8bcc8'], [1, '#5f7a8c']],
@@ -135,6 +140,12 @@ class Svg {
     this.defs.push(`<pattern id="${id}" width="${w}" height="${h}" patternUnits="userSpaceOnUse"${extra ? ' ' + extra : ''}>${build(r)}</pattern>`);
     const u = `url(#${id})`; this.pm.set(name, u); return u;
   }
+  sym(key, inner) {
+    const id = `${this.id}-s${key}`;
+    if (!this.pm.has('sym' + key)) { this.pm.set('sym' + key, id); this.defs.push(`<g id="${id}">${inner}</g>`); }
+    return id;
+  }
+  use(key, x, y) { return `<use href="#${this.id}-s${key}" x="${N(x)}" y="${N(y)}"/>`; }
   clip(shapeSvg) {
     const id = this.uid('c'); this.defs.push(`<clipPath id="${id}">${shapeSvg}</clipPath>`); return `url(#${id})`;
   }
@@ -371,7 +382,7 @@ function palm(S, x, y, h, th, { lean = 0.06, seed = 1, fronds = 11, trunk = '#8a
     s += P(`M${N(px - ww)} ${N(py)} Q${N(px)} ${N(py + 2.5)} ${N(px + ww)} ${N(py)}`, 'none', { stroke: trunkDark, 'stroke-width': 0.9, op: 0.55 });
   }
   const frond = (ang, len, col, sw, hi) => {
-    const dir = [Math.cos(ang), Math.sin(ang)]; const steps = 18; const pts = [];
+    const dir = [Math.cos(ang), Math.sin(ang)]; const steps = 14; const pts = [];
     for (let i = 0; i <= steps; i++) { const t = i / steps; pts.push([tx + dir[0] * len * t, ty + dir[1] * len * t + len * 0.62 * t * t]); }
     let lf = '', left = [], right = [];
     for (let i = 1; i <= steps; i++) {
@@ -381,17 +392,17 @@ function palm(S, x, y, h, th, { lean = 0.06, seed = 1, fronds = 11, trunk = '#8a
       const lp = [a1[0] + nx * ll + (tx2 / mag) * ll * 0.5, a1[1] + ny * ll + (ty2 / mag) * ll * 0.5 + droop];
       const rp = [a1[0] - nx * ll + (tx2 / mag) * ll * 0.5, a1[1] - ny * ll + (ty2 / mag) * ll * 0.5 + droop];
       left.push(lp); right.push(rp);
-      if (i > 1) lf += `M${N(a1[0])} ${N(a1[1])} L${N(lp[0])} ${N(lp[1])} M${N(a1[0])} ${N(a1[1])} L${N(rp[0])} ${N(rp[1])} `;
+      if (i > 1) lf += `M${Math.round(a1[0])} ${Math.round(a1[1])}L${Math.round(lp[0])} ${Math.round(lp[1])}M${Math.round(a1[0])} ${Math.round(a1[1])}L${Math.round(rp[0])} ${Math.round(rp[1])}`;
     }
     const poly = [pts[0], ...left, ...right.reverse()];
-    const midD = 'M' + pts.map((p) => N(p[0]) + ' ' + N(p[1])).join(' L');
-    return POLY(poly, col, { op: 0.9 }) + P(lf, 'none', { stroke: hi ? lite(col, 0.22) : dark(col, 0.28), 'stroke-width': sw, cap: 'round', op: 0.8 }) + P(midD, 'none', { stroke: dark(col, 0.45), 'stroke-width': sw * 1.2, cap: 'round' });
+    const midD = 'M' + pts.map((p) => Math.round(p[0]) + ' ' + Math.round(p[1])).join(' L');
+    return `<polygon points="${poly.map((p) => Math.round(p[0]) + ',' + Math.round(p[1])).join(' ')}" fill="${col}" opacity="0.9"/>` + P(lf, 'none', { stroke: hi ? lite(col, 0.22) : dark(col, 0.28), 'stroke-width': sw, cap: 'round', op: 0.8 }) + P(midD, 'none', { stroke: dark(col, 0.45), 'stroke-width': sw * 1.2, cap: 'round' });
   };
   const angs = [];
   for (let i = 0; i < fronds; i++) angs.push(-Math.PI + 0.12 + (i / (fronds - 1)) * (Math.PI - 0.24) + (r() - 0.5) * 0.18);
   for (let i = 0; i < fronds; i++) s += frond(angs[i], h * (0.34 + r() * 0.08), i % 2 ? d : dark(d, 0.2), 1.1);
   for (let i = 0; i < fronds; i++) if (i % 2 === 0) s += frond(angs[i] + 0.12, h * (0.28 + r() * 0.07), m, 1.1, true);
-  s += frond(-Math.PI / 2 + 0.05, h * 0.18, l, 1.0, true);
+  s += frond(-Math.PI / 2 + 0.05, h * 0.15, m, 1.0, true);
   s += C(tx, ty + 4, h * 0.022, '#4a3a2c') + C(tx + 5, ty + 7, h * 0.016, '#5c4838');
   S.add(E(x, y + 3, h * 0.12, h * 0.016, '#000', { op: 0.22 }), s);
 }
@@ -789,6 +800,7 @@ const WALL_BASE = 800;
 // shared: forecourt ground, boundary wall with pillars + street
 function forecourt(S, y, h, { lawn = false, paver = true } = {}) {
   const th = S.th;
+  S.add(R(0, y, S.W, WALL_BASE - y + 2, S.grad([[0, '#b9b1a3'], [1, '#a29a8c']], 'v')), R(0, y, S.W, WALL_BASE - y + 2, paverPat(S, { name: 'fc' }), { op: 0.8 }));
   if (lawn) grassBand(S, 0, y, S.W, h, th); else S.add(R(0, y, S.W, h, S.grad([[0, '#b9b1a3'], [1, '#a29a8c']], 'v')), R(0, y, S.W, h, paverPat(S, { name: 'fc' }), { op: 0.8 }));
 }
 function boundaryWall(S, x, w, { top = 724, base = WALL_BASE, fill = B.cream, capCol = null, tex = null, lampCol = null } = {}) {
@@ -948,8 +960,8 @@ scenes['house-10marla-modern'] = () => {
   farBlocks(S, 690, th, { op: 0.35, seed: 12 }); farTrees(S, 696, th, { h: 80, op: 0.7, seed: 11 });
   const X = 215, Wd = 770, GY = 690, fh = 186, sl = 18;
   const y1 = GY - fh, s1 = y1 - sl, y2 = s1 - fh, s2 = y2 - sl;
-  grassBand(S, 0, GY, W, 60, th);
-  S.add(R(X + 590, GY, 210, 60, S.grad([[0, '#b9b1a3'], [1, '#a29a8c']], 'v')), R(X + 590, GY, 210, 60, paverPat(S, { name: 'fc' }), { op: 0.8 }));
+  forecourt(S, GY, 0);
+  grassBand(S, 0, GY, X + 570, 60, th); grassBand(S, X + 818, GY, W - X - 818, 60, th);
   S.add(tank(S, X + 600, s2 + 8, 66, 80, { stand: 8 }), tank(S, X + 674, s2 + 8, 66, 80, { stand: 8 }));
   // recessed ground floor
   S.add(vol(S, X + 4, y1, Wd - 8, fh, { fill: '#cfc8ba', edge: false }));
@@ -977,7 +989,6 @@ scenes['house-10marla-modern'] = () => {
   S.add(R(X + 484, y2, 100, fh, woodPat(S, { name: 'w10b', sw: 14 })), R(X + 484, y2, 100, fh, S.grad([[0, '#fff', 0.06], [1, '#000', 0.22]], 'h')), shadeSide(S, X + 484, y2, fh, 12, 0.3, 1));
   S.add(win(S, X + 616, y2 + 26, 50, 126, { cols: 1, rows: 3, frame: '#25282d', fw: 3.6, sill: true, sillCol: '#32353c', interior: 'curtain', seed: 7 }));
   S.add(win(S, X + 696, y2 + 26, 50, 126, { cols: 1, rows: 3, frame: '#25282d', fw: 3.6, sill: true, sillCol: '#32353c', interior: 'shelf', seed: 8 }));
-  S.add(ac(S, X + 628, y2 + 176 - 4, 38, 0));
   S.add(R(X + Wd + 14, y2, 10, fh, '#32353c'));
   // roof plane
   S.add(slab(S, X - 36, s2 - 4, Wd + 72, 22, { fill: '#2d3036', shy: 22 }));
@@ -996,9 +1007,543 @@ scenes['house-10marla-modern'] = () => {
   S.add(pillar(S, X + 818, WALL_BASE, 26, 98, { fill: '#ebe5d9', cap: '#2d3036', lamp: true, glow: th.lights }));
   S.add(plate(S, X + 60, 770, 36, 20, '#2d3036'));
   street(S, th, WALL_BASE);
-  palm(S, 1090, 812, 540, th, { lean: -0.04, seed: 4 }); palm(S, 1140, 812, 430, th, { lean: 0.05, seed: 9 });
+  palm(S, 1120, 812, 470, th, { lean: -0.02, seed: 4 }); palm(S, 1170, 812, 380, th, { lean: 0.04, seed: 9 });
   blobTree(S, 70, 812, 360, th, { seed: 12, w: 0.9 });
   S.add(carSide(S, 380, 884, 0.8, '#f3f4f5'));
   finish(S);
   S.write('house-10marla-modern.svg');
+};
+
+scenes['house-10marla-stone'] = () => {
+  const S = new Svg('h10s', 1200, 900, { title: 'Contemporary 10 Marla house with natural stone cladding', desc: 'Front elevation of a contemporary 10 Marla house clad in warm natural stone with a double-height glazed entrance, a white rendered wing with a glass balcony, a striped front lawn with stepping stones, hedges and palms, behind a low stone wall with metal railing in soft morning light.', seed: 5, th: 'warm' });
+  const th = S.th; const { W } = S;
+  sky(S, th, { horizon: 640, clouds: [[220, 120, 1.2, 0.9], [880, 85, 1.3, 0.85], [600, 200, 0.7, 0.55]] });
+  farBlocks(S, 690, th, { op: 0.3, seed: 15 }); farTrees(S, 700, th, { h: 90, op: 0.75, seed: 14 });
+  const X = 205, Wd = 790, GY = 680, fh = 188, sl = 16;
+  const y1 = GY - fh, s1 = y1 - sl, y2 = s1 - fh, s2 = y2 - sl, par = s2 - 26;
+  const stone = stonePat(S, { name: 'st5', palette: ['#b9aa90', '#a8977b', '#c7b89d', '#9b8b71', '#d1c4a9'], mortar: '#5a5042' });
+  // lawn
+  grassBand(S, 0, GY, W, 130, th, { stripes: 7 });
+  S.add(R(0, GY, W, 14, S.grad([[0, '#000', 0.18], [1, '#000', 0]], 'v')));
+  // path to door
+  S.add(POLY([[X + 330, GY], [X + 392, GY], [X + 470, 800], [X + 250, 800]], S.grad([[0, '#d6cfc2'], [1, '#bdb5a6']], 'v'), { op: 0.0 }));
+  const stones = [[X + 361, 688, 54, 8], [X + 361, 702, 62, 9], [X + 361, 719, 72, 11], [X + 361, 741, 86, 13], [X + 361, 770, 104, 15]];
+  for (const [cx, cy, w, h] of stones) S.add(R(cx - w / 2, cy, w, h, '#d8d1c4', { rx: 2 }), R(cx - w / 2, cy, w, 1.6, '#fff', { op: 0.5 }), R(cx - w / 2, cy + h - 1.5, w, 1.5, '#000', { op: 0.2 }));
+  // roof items
+  S.add(tank(S, X + 80, par + 30, 60, 76, { stand: 6 }));
+  S.add(solarRow(S, X + 560, par + 6, 3, 58, 30, 6));
+  // main white wing (right)
+  const rx = X + 470;
+  S.add(vol(S, rx, par, Wd - 470, GY - par, { fill: '#f3efe6' }));
+  S.add(win(S, rx + 40, y1 + 30, 180, 130, { cols: 3, rows: 1, transom: 0.2, frame: '#2b2f36', fw: 4, sill: true, sillCol: '#d9d1c1', interior: 'lounge', seed: 3 }));
+  S.add(win(S, rx + 250, y1 + 30, 50, 130, { cols: 1, rows: 3, frame: '#2b2f36', fw: 3.4, sill: true, sillCol: '#d9d1c1', interior: 'shelf', seed: 4 }));
+  S.add(slab(S, rx - 10, s1, Wd - 470 + 20, sl, { fill: '#2f3238', shy: 22 }));
+  S.add(R(rx + 20, y2 + 10, 280, fh - 10, '#f3efe6', { op: 0 }));
+  S.add(win(S, rx + 34, y2 + 18, 220, fh - 22, { cols: 3, rows: 1, transom: 0.18, frame: '#2b2f36', fw: 4, sill: false, interior: 'pendant', seed: 6 }));
+  S.add(railing(S, rx + 22, s1 - 3, 246, 58, { type: 'glass', posts: 4 }));
+  S.add(R(rx + 270, y2, 50, fh, woodPat(S, { name: 'w5s', sw: 12 })), R(rx + 270, y2, 50, fh, S.grad([[0, '#fff', 0.06], [1, '#000', 0.22]], 'h')));
+  S.add(slab(S, rx - 6, par - 6, Wd - 470 + 12, 12, { fill: '#2f3238', shy: 10 }));
+  // left stone wing
+  const lw = 252;
+  S.add(R(X, par - 30, lw, GY - par + 30, stone), R(X, par - 30, lw, GY - par + 30, S.grad([[0, '#fff', 0.12], [0.6, '#000', 0], [1, '#000', 0.28]], 'h')), R(X, par - 30, lw, GY - par + 30, S.grad([[0, '#fff', 0.08], [1, '#000', 0.1]], 'v')));
+  S.add(slab(S, X - 6, par - 40, lw + 12, 12, { fill: '#2f3238', shy: 10 }));
+  S.add(win(S, X + 34, y2 + 50, 180, 84, { cols: 3, rows: 1, frame: '#1f2125', fw: 4, sill: false, interior: 'shelf', seed: 8, depth: true }));
+  S.add(R(X + 28, y2 + 44, 192, 7, '#1f2125'), R(X + 28, y2 + 134, 192, 7, '#1f2125'), shadeBelow(S, X + 28, y2 + 51, 192, 12, 0.3));
+  S.add(win(S, X + 44, y1 + 40, 164, 104, { cols: 2, rows: 1, frame: '#1f2125', fw: 4, sill: false, interior: 'lounge', seed: 9 }));
+  S.add(R(X + 38, y1 + 34, 176, 7, '#1f2125'), R(X + 38, y1 + 144, 176, 7, '#1f2125'), shadeBelow(S, X + 38, y1 + 41, 176, 12, 0.3));
+  // double-height entrance
+  const ex = X + lw, ew = 218;
+  S.add(R(ex, par - 30, ew, GY - par + 30, '#2f3238'));
+  S.add(R(ex + 14, par - 8 + 20, ew - 28, GY - par - 20 + 8, S.grad(th.glass, 'v')));
+  S.add(interiorArt(S, ex + 14, par + 12, ew - 28, GY - par - 12, 'pendant', 5, null, true));
+  S.add(R(ex + 14, par + 12, ew - 28, GY - par - 12, S.grad([[0, '#ffe7b0', 0.1], [0.5, '#ffd490', 0.35], [1, '#e8913c', 0.45]], 'v')));
+  // chandelier
+  const chx = ex + ew / 2; const chy = par + 70;
+  S.add(L(chx, par + 12, chx, chy, '#3a3a3a', 1.4), glow(S, chx, chy + 20, 70, '#fff0c0', 0.65), C(chx, chy + 20, 18, B.brass, { op: 0.9 }), C(chx, chy + 20, 10, '#fff6d8'), L(chx - 24, chy + 24, chx + 24, chy + 24, B.brass, 2));
+  for (let i = -2; i <= 2; i++) S.add(C(chx + i * 12, chy + 30 + Math.abs(i) * 2, 2.4, '#fff4cf'));
+  // mezzanine railing line inside
+  S.add(R(ex + 14, y2 + fh - 6 + 0, ew - 28, 5, '#d9d1c1', { op: 0.4 }), R(ex + 14, s1 - 2, ew - 28, 8, '#2f3238', { op: 0.5 }));
+  S.add(R(ex + 14, par + 12, ew - 28, GY - par - 12, reflPat(S, 'day')));
+  S.add(gridGlass(ex + 14, par + 12, ew - 28, GY - par - 12, 3, 5, '#1f2125', 3.4));
+  S.add(R(ex + 14, par + 12, ew - 28, GY - par - 12, 'none', { stroke: '#1f2125', 'stroke-width': 4 }));
+  S.add(R(ex + 4, par - 30, 6, GY - par + 30, B.brass, { op: 0.9 }), R(ex + ew - 10, par - 30, 6, GY - par + 30, B.brass, { op: 0.9 }));
+  // pivot door
+  S.add(door(S, ex + ew / 2 - 46, GY - 168, 92, 168, { style: 'wood', col: '#8a5a34', panels: 3, handle: B.brass }));
+  S.add(R(ex + ew / 2 - 46, GY - 168, 92, 168, 'none', { stroke: '#1f2125', 'stroke-width': 4 }));
+  S.add(R(ex - 8, GY - 6, ew + 16, 6, '#d6cfc2'), R(ex - 20, GY, ew + 40, 6, '#c3bbab'), shadeBelow(S, ex - 20, GY + 6, ew + 40, 8, 0.3));
+  S.add(slab(S, ex - 10, par - 40, ew + 20, 12, { fill: '#2f3238', shy: 12 }));
+  S.add(shadeSide(S, ex + ew, y1, GY - y1, 20, 0.25, 1));
+  // landscaping
+  hedge(S, X + 6, GY + 14, 200, 30, th, { seed: 5 }); hedge(S, rx + 10, GY + 14, 280, 26, th, { seed: 6 });
+  shrub(S, ex - 20, GY + 6, 70, 40, th, { seed: 8, flowers: ['#f7e3a6', '#fff'] }); shrub(S, ex + ew - 24, GY + 6, 70, 40, th, { seed: 9, flowers: ['#f7e3a6', '#fff'] });
+  topiary(S, X + 252, GY + 22, 20, th); topiary(S, X + 466, GY + 22, 20, th);
+  // low stone wall + railing + gate
+  const wy = 748;
+  S.add(R(0, wy, W, WALL_BASE - wy, stone), R(0, wy, W, WALL_BASE - wy, S.grad([[0, '#fff', 0.1], [1, '#000', 0.25]], 'v')), slab(S, -4, wy - 8, W + 8, 9, { fill: '#2f3238', shy: 8 }));
+  S.add(R(0, wy - 52, 280, 44, 'none'));
+  S.add(railing(S, 0, wy - 8, X + 70, 44, { type: 'bars', post: '#2b2f36', rail: '#2b2f36' }));
+  S.add(railing(S, X + 590, wy - 8, W - X - 590, 44, { type: 'bars', post: '#2b2f36', rail: '#2b2f36' }));
+  S.add(R(X + 262, wy - 8, 200, 8, '#000', { op: 0 }));
+  S.add(R(X + 262, wy, 198, WALL_BASE - wy, '#9fa6ad', { op: 0.0 }));
+  S.add(gate(S, X + 262, WALL_BASE, 198, 104, { col: '#2b2f36', style: 'bars', accent: B.brass, n: 14 }));
+  for (const px of [X + 228, X + 460, X + 76, X + 586]) S.add(R(px, WALL_BASE - 112, 34, 112, stone), R(px, WALL_BASE - 112, 34, 112, S.grad([[0, '#fff', 0.1], [1, '#000', 0.3]], 'h')), slab(S, px - 4, WALL_BASE - 122, 42, 10, { fill: '#2f3238', shadow: false }), R(px + 9, WALL_BASE - 144, 16, 22, '#fff4d0', { rx: 3 }), R(px + 7, WALL_BASE - 148, 20, 4, '#2f3238'));
+  S.add(plate(S, X + 86, 768, 22, 16, '#2f3238'));
+  street(S, th, WALL_BASE);
+  palm(S, 70, 812, 470, th, { lean: -0.05, seed: 5 }); palm(S, 124, 812, 360, th, { lean: 0.02, seed: 6 });
+  blobTree(S, 1105, 812, 450, th, { seed: 8, w: 0.9 });
+  S.add(carSide(S, 520, 886, 0.8, '#2d4054', { dir: -1 }));
+  finish(S);
+  S.write('house-10marla-stone.svg');
+};
+
+function lounger(S, x, y, s = 1, col = '#f3efe6') {
+  return G(E(40, 3, 46, 5, '#000', { op: 0.25 }) + P('M0 -4 L58 -4 L72 -34 L80 -32 L66 -4 L74 -4 L74 2 L0 2Z', col) + P('M6 -8 L56 -8 L68 -30', 'none', { stroke: '#fff', 'stroke-width': 1.5, op: 0.6 }) + R(4, -2, 5, 8, '#555') + R(64, -2, 5, 8, '#555') + R(10, -14, 24, 5, B.brass, { rx: 2, op: 0.85 }), { tf: `translate(${N(x)} ${N(y)}) scale(${s})` });
+}
+
+scenes['house-1kanal-modern'] = () => {
+  const S = new Svg('h1km', 1200, 900, { title: 'Modern 1 Kanal villa with pool and lawn', desc: 'A wide modern 1 Kanal villa made of several volumes: a timber-clad garage wing with a roof terrace, a double-height glazed central block under a large entrance canopy, and a stone-clad tower, set in golden-hour light with a striped lawn and the edge of a swimming pool in the foreground.', seed: 6, th: 'golden' });
+  const th = S.th; const { W } = S;
+  sky(S, th, { horizon: 600, clouds: [[200, 130, 1.4, 0.9], [620, 90, 1.5, 0.85], [1000, 170, 1.1, 0.8], [420, 260, 0.9, 0.6]] });
+  birds(S, [[820, 120, 1], [860, 140, 0.8], [900, 112, 0.9], [780, 150, 0.7]]);
+  farBlocks(S, 650, th, { op: 0.3, seed: 21 }); farTrees(S, 655, th, { h: 90, op: 0.8, seed: 22 });
+  farTrees(S, 668, th, { h: 70, op: 0.9, seed: 23, col: dark(th.tree[0], 0.0) });
+  const X = 120, GY = 640, fh = 176, sl = 16;
+  const y1 = GY - fh, s1 = y1 - sl, y2 = s1 - fh, s2 = y2 - sl;
+  // ground
+  grassBand(S, 0, GY, W, H_(S) - GY, th, { stripes: 9 });
+  // driveway (left)
+  S.add(POLY([[X + 40, GY], [X + 230, GY], [X + 380, 900], [X - 120, 900]], S.grad([[0, '#a79f92'], [1, '#c5bdaf']], 'v')), POLY([[X + 40, GY], [X + 230, GY], [X + 380, 900], [X - 120, 900]], settPat(S, { name: 'st1', w: 70, h: 40 }), { op: 0.55 }));
+  // central glass block + porch
+  const cx = X + 280, cw = 500;
+  S.add(vol(S, cx, y2, cw, GY - y2, { fill: '#e9e3d6' }));
+  S.add(R(cx + 20, y1 + 6, cw - 40, fh - 6, S.grad([[0, '#2a2418'], [1, '#14100c']], 'v')));
+  S.add(win(S, cx + 24, y1 + 10, cw - 48, fh - 10, { cols: 6, rows: 1, transom: 0.14, frame: '#25282d', fw: 5, sill: false, mode: 'warm', interior: 'pendant', seed: 4 }));
+  for (let i = 0; i < 3; i++) S.add(glow(S, cx + 100 + i * 150, y1 + 50, 60, '#fff0c0', 0.45));
+  S.add(door(S, cx + cw / 2 - 52, GY - 150, 104, 150, { style: 'glass', lit: true }));
+  S.add(slab(S, cx - 12, s1, cw + 24, sl, { fill: '#2d3036', shy: 28 }));
+  S.add(win(S, cx + 24, y2 + 22, cw - 48, 118, { cols: 6, rows: 1, transom: 0.2, frame: '#25282d', fw: 4.5, sill: false, interior: 'lounge', seed: 7 }));
+  S.add(slab(S, cx - 18, s2 - 6, cw + 36, 24, { fill: '#2d3036', shy: 20 }), R(cx - 18, s2 - 6, cw + 36, 3, B.brass, { op: 0.85 }));
+  // big porch canopy over entrance
+  const pc = cx + cw / 2;
+  S.add(shadeBelow(S, cx + 130, y1 + 4, 240, 30, 0.25));
+  S.add(slab(S, pc - 150, GY - 168, 300, 18, { fill: '#2d3036', shy: 24 }));
+  S.add(R(pc - 150, GY - 168, 300, 3, B.brass, { op: 0.85 }));
+  for (const px of [pc - 140, pc + 132]) S.add(R(px, GY - 150, 8, 150, S.grad([[0, '#4a4e56'], [1, '#22252b']], 'h')));
+  for (let i = 0; i < 4; i++) S.add(glow(S, pc - 105 + i * 70, GY - 146, 36, '#ffe3a8', 0.5), C(pc - 105 + i * 70, GY - 150, 3, '#fff6d8'));
+  S.add(R(pc - 160, GY - 4, 320, 4, '#d6cfc2'), R(pc - 170, GY, 340, 6, '#c3bbab'));
+  // left wing: timber garage + roof terrace
+  const lw = 280;
+  S.add(R(X, y1 + 6, lw, GY - y1 - 6, woodPat(S, { name: 'w1k', sw: 14, colors: ['#9b6b43', '#8a5b37', '#a8774b'] })), R(X, y1 + 6, lw, GY - y1 - 6, S.grad([[0, '#fff', 0.1], [1, '#000', 0.3]], 'h')));
+  S.add(R(X + 22, GY - 128, lw - 52, 128, S.grad([[0, '#f6f2ea'], [1, '#d9d3c5']], 'v')));
+  for (let i = 1; i < 8; i++) S.add(L(X + 22, GY - 128 + i * 16, X + lw - 30, GY - 128 + i * 16, '#8f8a7e', 1.4, { op: 0.7 }));
+  S.add(R(X + 22, GY - 128, lw - 52, 128, 'none', { stroke: '#2d3036', 'stroke-width': 4 }), R(X + 22, GY - 128, lw - 52, 5, '#000', { op: 0.18 }));
+  S.add(slab(S, X - 10, y1 - 10, lw + 20, 20, { fill: '#2d3036', shy: 18 }));
+  S.add(railing(S, X - 6, y1 - 10, lw + 12, 46, { type: 'glass', posts: 6 }));
+  S.add(planter(S, X + 20, y1 - 10, 90, 16, { fill: '#2d3036', th, seed: 3, flowers: ['#f2c14e'] }));
+  S.add(shadeSide(S, X + lw, y1 - 10, GY - y1 + 10, 22, 0.35, 1));
+  // right tower (stone)
+  const rx = cx + cw + 4, rw = 1090 - rx;
+  S.add(R(rx, s2 - 52, rw, GY - s2 + 52, stonePat(S, { name: 'st1k', palette: ['#8f8a84', '#7d7872', '#9f9a92', '#6f6a64', '#aaa59c'], mortar: '#3d3a37' })), R(rx, s2 - 52, rw, GY - s2 + 52, S.grad([[0, '#000', 0.25], [0.3, '#000', 0], [1, '#000', 0.3]], 'h')));
+  S.add(slab(S, rx - 6, s2 - 62, rw + 12, 12, { fill: '#2d3036', shy: 10 }));
+  S.add(win(S, rx + 30, y2 + 6, 36, 150, { cols: 1, rows: 4, frame: '#1c1d21', fw: 3.4, sill: false, interior: 'curtain', seed: 5, mode: 'warm' }));
+  S.add(win(S, rx + 30 + 70, y2 + 6, 36, 150, { cols: 1, rows: 4, frame: '#1c1d21', fw: 3.4, sill: false, interior: 'shelf', seed: 6 }));
+  S.add(win(S, rx + 30, y1 + 20, 106, 118, { cols: 2, rows: 2, frame: '#1c1d21', fw: 3.4, sill: false, interior: 'lounge', seed: 9, mode: 'warm' }));
+  S.add(shadeSide(S, rx, s2 - 52, GY - s2 + 52, 20, 0.35, -1));
+  S.add(tank(S, cx + 60, s2 + 6, 62, 74, { stand: 6 }));
+  // landscape at house base
+  hedge(S, cx - 6, GY + 14, 130, 26, th, { seed: 3 }); hedge(S, pc + 150, GY + 14, 220, 26, th, { seed: 4 });
+  hedge(S, rx - 30, GY + 14, rw + 40, 26, th, { seed: 5 });
+  shrub(S, cx + 130, GY + 4, 70, 32, th, { seed: 7, flowers: ['#fff', '#ffd1e0'] });
+  palm(S, 62, 700, 380, th, { lean: -0.04, seed: 3 }); palm(S, 1150, 690, 400, th, { lean: 0.03, seed: 7 });
+  // car in front of garage
+  S.add(carFront(S, X + 120, 770, 210, '#f0f1f2'));
+  // pool
+  const py = 745;
+  S.add(R(560, py - 14, 640, 170, S.grad([[0, '#c9c1b2'], [1, '#b4ab9b']], 'v')), R(560, py - 14, 640, 170, paverPat(S, { name: 'deck', w: 90, h: 46 }), { op: 0.7 }));
+  S.add(R(560, py + 20, 640, 200, S.grad([[0, '#58c1cf'], [0.5, '#2796b3'], [1, '#126f8f']], 'v')));
+  for (let i = 0; i < 9; i++) S.add(L(580 + i * 70 + (i % 2) * 20, py + 36 + (i % 3) * 22, 640 + i * 70 + (i % 2) * 20, py + 36 + (i % 3) * 22, '#fff', 2, { op: 0.28, cap: 'round' }));
+  S.add(R(560, py + 20, 640, 200, S.grad([[0, th.sun[3], 0.5], [0.5, th.sun[3], 0.0]], 'v')));
+  S.add(R(560, py + 16, 640, 8, S.grad([[0, '#fff', 0.7], [1, '#d8d0c0', 0.2]], 'v')), R(560, py + 20, 640, 5, '#000', { op: 0.18 }));
+  S.add(lounger(S, 620, py - 4, 1.0, '#f6f2ea'), lounger(S, 740, py - 4, 1.0, '#f6f2ea'));
+  S.add(R(822, py - 56, 5, 56, '#6a6e75'), POLY([[780, py - 56], [869, py - 56], [848, py - 80], [801, py - 80]], B.sand), L(824, py - 56, 824, py - 4, '#555', 1));
+  finish(S);
+  S.write('house-1kanal-modern.svg');
+};
+function H_(S) { return S.H; }
+
+/* ---- classical helpers ---- */
+function balustrade(S, x, y, w, h, { col = '#f6f0e2', pierEvery = 0, n = null } = {}) { // y = base line
+  const key = 'bal' + Math.round(h);
+  const t = 0, b = h; const cx = 0;
+  S.sym(key, P(`M-2.6 ${t} L-2.6 ${h * 0.2} Q-6 ${h * 0.46} -2.6 ${h * 0.72} L-3.8 ${b} L3.8 ${b} L2.6 ${h * 0.72} Q6 ${h * 0.46} 2.6 ${h * 0.2} L2.6 ${t}Z`, S.grad([[0, '#fff'], [0.5, col], [1, dark(col, 0.18)]], 'h')));
+  let s = '';
+  const rh = Math.max(5, h * 0.16), bh = Math.max(4, h * 0.12);
+  const k = n || Math.floor(w / 15);
+  for (let i = 0; i < k; i++) s += S.use(key, x + (i + 0.5) * (w / k), y - h + rh * 0.4);
+  s += R(x, y - h - rh * 0.5, w, rh, S.grad([[0, '#fff'], [1, dark(col, 0.15)]], 'v')) + R(x, y - bh, w, bh, S.grad([[0, col], [1, dark(col, 0.2)]], 'v'));
+  s += shadeBelow(S, x, y - h + rh * 0.5, w, 6, 0.16);
+  if (pierEvery) for (let px = x; px <= x + w - 10; px += pierEvery) s += R(px, y - h - rh * 0.5 - 6, 12, h + 6 + rh * 0.5, S.grad([[0, '#fff'], [1, dark(col, 0.2)]], 'h')) + R(px - 2, y - h - rh * 0.5 - 10, 16, 6, col);
+  return s;
+}
+function colonnade(S, cx, top, bot, d, { col = '#f3ecdb' } = {}) { // classical column, centre x
+  let s = '';
+  const baseH = 16, capH = 30;
+  s += R(cx - d / 2 - 6, bot - 8, d + 12, 8, dark(col, 0.06)) + E(cx, bot - 12, d / 2 + 4, 5, dark(col, 0.04));
+  s += R(cx - d / 2, top + capH, d, bot - top - capH - baseH + 4, S.grad([[0, lite(col, 0.4)], [0.25, col], [0.7, dark(col, 0.14)], [1, dark(col, 0.32)]], 'h'));
+  for (let i = 1; i < 6; i++) s += L(cx - d / 2 + (i * d) / 6, top + capH, cx - d / 2 + (i * d) / 6, bot - baseH, '#000', 0.9, { op: 0.12 });
+  s += R(cx - d / 2 - 2, bot - baseH - 3, d + 4, 4, col);
+  s += P(`M${cx - d / 2 - 1} ${top + capH} L${cx - d / 2 - 7} ${top + 6} L${cx + d / 2 + 7} ${top + 6} L${cx + d / 2 + 1} ${top + capH}Z`, S.grad([[0, lite(col, 0.3)], [1, dark(col, 0.2)]], 'h'));
+  for (let i = 0; i < 5; i++) s += P(`M${N(cx - d / 2 - 3 + i * ((d + 6) / 4))} ${top + capH - 2} Q${N(cx - d / 2 + i * ((d + 6) / 4))} ${top + 14} ${N(cx - d / 2 - 3 + i * ((d + 6) / 4) + 2)} ${top + 8}`, 'none', { stroke: dark(col, 0.35), 'stroke-width': 1.2, op: 0.8 });
+  s += R(cx - d / 2 - 9, top, d + 18, 7, col) + R(cx - d / 2 - 9, top, d + 18, 1.5, '#fff', { op: 0.7 }) + C(cx, top + 14, 3, B.brass);
+  return s;
+}
+function keystoneArch(S, x, y, w, h, { surround = '#faf5e9', frame = '#faf5e9', mode = 'day', interior = null, seed = 1, cols = 2, rows = 3, surW = 7 } = {}) {
+  let s = win(S, x, y, w, h, { arch: 'round', cols, rows, frame, fw: 3, sill: false, mode, interior, seed, surround, surW });
+  s += P(`M${x + w / 2 - 6} ${y - surW - 3} L${x + w / 2 + 6} ${y - surW - 3} L${x + w / 2 + 4} ${y + 8} L${x + w / 2 - 4} ${y + 8}Z`, '#fff8e8') + R(x - surW - 5, y + h, w + 2 * surW + 10, 6, '#f6efdd') + shadeBelow(S, x - surW - 5, y + h + 6, w + 2 * surW + 10, 8, 0.25);
+  return s;
+}
+function lanternPost(S, x, y, h, { on = true } = {}) { // y = base
+  let s = R(x - 7, y - 10, 14, 10, '#222') + R(x - 3, y - h, 6, h, '#1e2126') + R(x - 6, y - h + 20, 12, 5, '#1e2126');
+  s += P(`M${x - 10} ${y - h} L${x + 10} ${y - h} L${x + 14} ${y - h - 6} L${x - 14} ${y - h - 6}Z`, B.brass) + R(x - 9, y - h - 34, 18, 28, on ? '#ffeab0' : '#dfe6ea', { rx: 2 }) + R(x - 9, y - h - 34, 18, 28, 'none', { stroke: '#1e2126', 'stroke-width': 1.6, rx: 2 }) + P(`M${x - 13} ${y - h - 34} L${x} ${y - h - 46} L${x + 13} ${y - h - 34}Z`, '#1e2126') + C(x, y - h - 48, 2.4, B.brass);
+  if (on) s = glow(S, x, y - h - 20, 56, '#ffd27a', 0.6) + s;
+  return s;
+}
+function fountain(S, cx, y, sc = 1, th = S.th) {
+  let s = E(cx, y + 3, 118 * sc, 24 * sc, '#000', { op: 0.25 });
+  s += E(cx, y, 110 * sc, 22 * sc, '#cdbf9f') + E(cx, y - 4 * sc, 106 * sc, 19 * sc, S.grad([[0, '#8fd0d8'], [1, '#2f8fa8']], 'v'));
+  s += P(`M${cx - 110 * sc} ${y} Q${cx - 110 * sc} ${y + 14 * sc} ${cx} ${y + 22 * sc} Q${cx + 110 * sc} ${y + 14 * sc} ${cx + 110 * sc} ${y}`, '#cbbd9d') + E(cx, y, 110 * sc, 22 * sc, 'none', { stroke: '#e9ddc2', 'stroke-width': 3 });
+  s += E(cx, y - 3 * sc, 96 * sc, 15 * sc, 'none', { stroke: '#fff', 'stroke-width': 1.4, op: 0.5 });
+  s += R(cx - 12 * sc, y - 70 * sc, 24 * sc, 70 * sc, S.grad([[0, '#f4ecd9'], [1, '#b9ab8e']], 'h'));
+  s += E(cx, y - 70 * sc, 54 * sc, 12 * sc, '#d9ccb0') + P(`M${cx - 54 * sc} ${y - 70 * sc} Q${cx} ${y - 40 * sc} ${cx + 54 * sc} ${y - 70 * sc}Z`, '#cfc1a3') + E(cx, y - 72 * sc, 48 * sc, 9 * sc, S.grad([[0, '#9bd6dc'], [1, '#3b97ae']], 'v'));
+  s += R(cx - 7 * sc, y - 120 * sc, 14 * sc, 50 * sc, S.grad([[0, '#f4ecd9'], [1, '#b9ab8e']], 'h'));
+  s += E(cx, y - 118 * sc, 30 * sc, 7 * sc, '#d9ccb0') + P(`M${cx - 30 * sc} ${y - 118 * sc} Q${cx} ${y - 98 * sc} ${cx + 30 * sc} ${y - 118 * sc}Z`, '#cfc1a3') + C(cx, y - 134 * sc, 7 * sc, '#e7dcc3');
+  const w1 = '#ffffff';
+  for (const sd of [-1, 1]) {
+    s += P(`M${cx} ${y - 140 * sc} Q${cx + sd * 30 * sc} ${y - 160 * sc} ${cx + sd * 54 * sc} ${y - 74 * sc}`, 'none', { stroke: w1, 'stroke-width': 2.4, op: 0.7, cap: 'round' });
+    s += P(`M${cx} ${y - 140 * sc} Q${cx + sd * 18 * sc} ${y - 150 * sc} ${cx + sd * 30 * sc} ${y - 120 * sc}`, 'none', { stroke: w1, 'stroke-width': 2, op: 0.6, cap: 'round' });
+    s += P(`M${cx + sd * 54 * sc} ${y - 72 * sc} Q${cx + sd * 90 * sc} ${y - 80 * sc} ${cx + sd * 100 * sc} ${y - 8 * sc}`, 'none', { stroke: w1, 'stroke-width': 2, op: 0.5, cap: 'round' });
+  }
+  s += P(`M${cx} ${y - 140 * sc} L${cx} ${y - 168 * sc}`, 'none', { stroke: w1, 'stroke-width': 2.4, op: 0.8, cap: 'round' });
+  return s;
+}
+
+scenes['house-1kanal-classical'] = () => {
+  const S = new Svg('h1kc', 1200, 900, { title: 'Neo-classical 1 Kanal luxury villa', desc: 'A symmetrical neo-classical 1 Kanal villa in ivory stone with a four-column portico and pediment, arched windows with keystones, rusticated ground floor, balustraded balconies and roof, a tiered fountain in the front garden, clipped hedges, cypress trees and an ornamental iron fence and gate.', seed: 7, th: 'noon' });
+  const th = S.th; const { W } = S;
+  sky(S, th, { horizon: 640, clouds: [[200, 100, 1.3, 0.95], [980, 80, 1.4, 0.9], [640, 60, 0.8, 0.6], [1080, 230, 0.8, 0.6]] });
+  farBlocks(S, 660, th, { op: 0.25, seed: 31 }); farTrees(S, 670, th, { h: 110, op: 0.8, seed: 32 });
+  const GY = 640, ivory = '#f0e6d2', trim = '#faf5e9', shade = '#c9bc9f';
+  // trees behind
+  blobTree(S, 90, 680, 420, th, { seed: 2, w: 0.95 }); blobTree(S, 1110, 680, 440, th, { seed: 3, w: 0.95 });
+  blobTree(S, 40, 680, 330, th, { seed: 9, w: 0.95 });
+  grassBand(S, 0, GY, W, 160, th, { stripes: 6 });
+  // plinth + wall body
+  const WX0 = 140, WX1 = 1060;
+  S.add(R(WX0, 256, WX1 - WX0, GY - 256, ivory), R(WX0, 256, WX1 - WX0, GY - 256, grainPat(S, { name: 'grain' })));
+  // wings
+  for (const [wx, side] of [[WX0, -1], [794, 1]]) {
+    const ww = 266;
+    // rustication
+    S.add(R(wx, 454, ww, 186, '#ebe0c8'));
+    for (let yy = 454; yy < 640; yy += 23) S.add(R(wx, yy, ww, 2.4, '#000', { op: 0.14 }), R(wx, yy + 2.4, ww, 1.2, '#fff', { op: 0.5 }));
+    for (let yy = 454, r = 0; yy < 640; yy += 23, r++) for (let xx = wx + (r % 2 ? 40 : 0); xx < wx + ww; xx += 80) S.add(R(xx, yy, 2, 23, '#000', { op: 0.1 }));
+    S.add(R(wx, 440, ww, 14, '#f6efdd'), R(wx, 440, ww, 2, '#fff', { op: 0.7 }), shadeBelow(S, wx, 454, ww, 8, 0.2));
+    const centres = side < 0 ? [wx + 78, wx + 188] : [wx + 78, wx + 188];
+    for (const cxw of centres) {
+      S.add(keystoneArch(S, cxw - 30, 490, 60, 140, { mode: 'day', interior: 'curtain', seed: cxw, rows: 4, cols: 2 }));
+      S.add(win(S, cxw - 28, 312, 56, 102, { cols: 2, rows: 3, frame: trim, fw: 2.6, sill: false, surround: trim, surW: 7, interior: 'curtain', seed: cxw + 1 }));
+      S.add(P(`M${cxw - 40} ${312 - 7} L${cxw} ${312 - 26} L${cxw + 40} ${312 - 7}Z`, trim), R(cxw - 40, 312 - 8, 80, 3, '#000', { op: 0.1 }));
+      S.add(railing(S, cxw - 36, 414, 72, 24, { type: 'bars', post: '#2b2f36', rail: '#2b2f36' }), R(cxw - 40, 414, 80, 6, trim), shadeBelow(S, cxw - 40, 420, 80, 8, 0.25));
+    }
+    // pilaster + quoins at outer edge
+    const qx = side < 0 ? wx : wx + ww - 24;
+    S.add(R(qx, 280, 24, 160, '#f6efdd'));
+    for (let yy = 282, k = 0; yy < 440; yy += 26, k++) S.add(R(qx + (k % 2 ? 0 : -3), yy, k % 2 ? 24 : 27, 22, '#faf5e9'), R(qx + (k % 2 ? 0 : -3), yy + 20, k % 2 ? 24 : 27, 2, '#000', { op: 0.14 }));
+    const qx2 = side < 0 ? wx + ww - 20 : wx;
+    S.add(R(qx2, 280, 20, 360, '#f6efdd', { op: 0.65 }), R(qx2 + (side < 0 ? 0 : 18), 280, 2, 360, '#000', { op: 0.1 }));
+    // cornice with dentils
+    S.add(R(wx - 4, 256, ww + 8, 24, S.grad([[0, '#fffaf0'], [1, '#d6c9ac']], 'v')));
+    S.add(R(wx - 4, 266, ww + 8, 8, S.pat('dent', 12, 8, () => R(0, 0, 7, 8, '#fff7e4') + R(7, 0, 5, 8, '#b8aa8a', { op: 0.6 }))));
+    S.add(shadeBelow(S, wx - 4, 280, ww + 8, 12, 0.3));
+    S.add(balustrade(S, wx - 4, 256, ww + 8, 38, { pierEvery: 120 }));
+  }
+  // centre wall behind portico (recess shade)
+  S.add(R(406, 280, 388, 360, S.grad([[0, '#d6c8a8'], [0.5, '#e6dac0'], [1, '#d6c8a8']], 'h')));
+  S.add(R(406, 280, 388, 360, grainPat(S, { name: 'grain' })));
+  S.add(shadeBelow(S, 406, 280, 388, 46, 0.35));
+  // first floor french doors + balcony (behind columns)
+  S.add(keystoneArch(S, 552, 316, 96, 112, { mode: 'warm', interior: 'pendant', seed: 4, cols: 2, rows: 3, surW: 8 }));
+  for (const cx2 of [455, 745]) S.add(keystoneArch(S, cx2 - 26, 332, 52, 96, { mode: 'day', interior: 'curtain', seed: cx2, cols: 2, rows: 3 }));
+  // ground floor doors
+  S.add(R(406, 454, 388, 186, '#e6dac0'));
+  for (let yy = 454; yy < 640; yy += 23) S.add(R(406, yy, 388, 2.4, '#000', { op: 0.12 }));
+  S.add(keystoneArch(S, 552, 478, 96, 162, { mode: 'warm', surW: 8, interior: 'lounge', seed: 2 }));
+  S.add(door(S, 556, 520, 88, 120, { style: 'wood', col: '#6b4228', arch: null, panels: 2, handle: B.brass }));
+  S.add(R(556, 520, 88, 120, 'none', { stroke: trim, 'stroke-width': 4 }));
+  for (const cx2 of [455, 745]) S.add(keystoneArch(S, cx2 - 26, 512, 52, 118, { mode: 'warm', interior: 'curtain', seed: cx2 + 3, cols: 2, rows: 3 }));
+  S.add(R(414, 440, 372, 16, '#faf5e9'));
+  // balcony slab + balustrade across portico
+  S.add(R(396, 440, 408, 16, S.grad([[0, '#fffaf0'], [1, '#cdbf9f']], 'v')), shadeBelow(S, 396, 456, 408, 16, 0.35));
+  S.add(balustrade(S, 400, 440, 400, 44, { pierEvery: 130 }));
+  // columns
+  for (const cx2 of [425, 520, 680, 775]) S.add(colonnade(S, cx2, 290, GY, 38));
+  // entablature
+  S.add(R(390, 276, 420, 14, S.grad([[0, '#fffaf0'], [1, '#d3c6a8']], 'v')), R(390, 252, 420, 24, '#f6efdd'), R(390, 252, 420, 24, grainPat(S, { name: 'grain' })), R(390, 266, 420, 1.5, B.brass), R(390, 262, 420, 1.2, '#000', { op: 0.1 }));
+  S.add(R(380, 236, 440, 16, S.grad([[0, '#fffaf0'], [1, '#c8baa0']], 'v')), R(380, 244, 440, 6, S.pat('dent', 12, 8, () => R(0, 0, 7, 8, '#fff7e4') + R(7, 0, 5, 8, '#b8aa8a', { op: 0.6 }))), shadeBelow(S, 390, 276, 420, 18, 0.35));
+  // pediment
+  S.add(POLY([[372, 236], [828, 236], [600, 140]], '#f6efdd'), POLY([[396, 232], [804, 232], [600, 150]], S.grad([[0, '#ece1c9'], [1, '#dccfb0']], 'v')));
+  S.add(PL([[372, 236], [600, 140], [828, 236]], '#fffaf0', 7, { lj: 'round' }), PL([[380, 238], [600, 146], [820, 238]], '#b8aa8a', 2, { op: 0.6 }));
+  S.add(C(600, 205, 22, '#faf5e9'), C(600, 205, 16, S.grad(S.th.glass, 'v')), C(600, 205, 16, 'none', { stroke: B.brass, 'stroke-width': 3 }), L(584, 205, 616, 205, B.brass, 1.6), L(600, 189, 600, 221, B.brass, 1.6));
+  for (const sd of [-1, 1]) S.add(P(`M${600 + sd * 70} ${232} q${sd * 30} -6 ${sd * 60} 0`, 'none', { stroke: '#b8aa8a', 'stroke-width': 2, op: 0.7 }));
+  S.add(R(594, 130, 12, 12, '#fffaf0'), C(600, 124, 8, B.brass));
+  // stairs
+  for (let i = 0; i < 4; i++) S.add(R(520 - i * 14, GY + i * 7, 160 + i * 28, 8, lite('#d8cbb0', 0.1 + i * 0.05)), R(520 - i * 14, GY + i * 7 + 6, 160 + i * 28, 2, '#000', { op: 0.18 }));
+  // path/ drive
+  S.add(POLY([[536, GY + 28], [664, GY + 28], [720, 780], [480, 780]], S.grad([[0, '#d9cfbc'], [1, '#c4b9a3']], 'v')), POLY([[536, GY + 28], [664, GY + 28], [720, 780], [480, 780]], settPat(S, { name: 'st7', w: 56, h: 32, a: '#d6ccb9', b: '#c9bfa9', mortar: '#9d9482' }), { op: 0.6 }));
+  // parterre hedges + flowers
+  for (const sd of [-1, 1]) {
+    const bx = sd < 0 ? 150 : 790;
+    hedge(S, bx, GY + 50, 250, 24, th, { seed: 2 + sd });
+    hedge(S, bx + 20, GY + 98, 210, 22, th, { seed: 5 + sd });
+    S.add(R(bx + 8, GY + 54, 234, 32, '#e6b9c6', { op: 0.0 }));
+    shrub(S, bx + 30, GY + 82, 190, 22, th, { seed: 8 + sd, flowers: ['#e84a8a', '#f7d86a', '#fff'] });
+  }
+  for (const [tx, h] of [[160, 220], [250, 200], [950, 200], [1040, 220]]) cypress(S, tx, GY + 18, h, th);
+  topiary(S, 505, GY + 30, 17, th, { pot: '#d9cfbc' }); topiary(S, 695, GY + 30, 17, th, { pot: '#d9cfbc' });
+  S.add(lanternPost(S, 480, GY + 24, 90, { on: th.lights }), lanternPost(S, 720, GY + 24, 90, { on: th.lights }));
+  S.add(fountain(S, 600, 718, 0.58));
+  // fence + gate
+  const wy = 758;
+  S.add(R(0, wy, W, WALL_BASE - wy, '#d8cbb0'), R(0, wy, W, WALL_BASE - wy, S.grad([[0, '#fff', 0.25], [1, '#000', 0.2]], 'v')), R(0, wy, W, 3, '#fff', { op: 0.5 }));
+  S.add(railing(S, 0, wy, 500, 66, { type: 'bars', post: '#1e2126', rail: '#1e2126' }), railing(S, 700, wy, 500, 66, { type: 'bars', post: '#1e2126', rail: '#1e2126' }));
+  for (let x = 6; x < 500; x += 24) S.add(P(`M${x - 3} ${wy - 66} L${x + 1} ${wy - 76} L${x + 5} ${wy - 66}Z`, B.brass), P(`M${x + 694} ${wy - 66} L${x + 698} ${wy - 76} L${x + 702} ${wy - 66}Z`, B.brass));
+  for (const px of [30, 260, 470, 705, 940, 1160]) S.add(R(px - 16, WALL_BASE - 150, 32, 150, S.grad([[0, '#fffaf0'], [1, '#c5b79a']], 'h')), R(px - 21, WALL_BASE - 160, 42, 10, '#f6efdd'), R(px - 11, WALL_BASE - 176, 22, 16, '#e8dcc0'), C(px, WALL_BASE - 186, 9, '#f1e8d2'), R(px - 14, WALL_BASE - 100, 28, 3, '#000', { op: 0.12 }));
+    // gate (iron, arched)
+  let g = '';
+  g += P('M500 800 L500 758 Q600 716 700 758 L700 800', 'none', { stroke: '#1e2126', 'stroke-width': 5 });
+  for (let x = 508; x < 700; x += 14) { const t = (x - 500) / 200; const yTop = 758 - Math.sin(Math.PI * t) * 38 + 0; g += R(x, yTop + 6, 3, 800 - yTop - 6, '#1e2126'); }
+  g += R(500, 784, 200, 5, '#1e2126') + R(500, 764, 200, 3, '#1e2126') + L(600, 720, 600, 800, '#1e2126', 4);
+  g += C(600, 776, 11, 'none', { stroke: B.brass, 'stroke-width': 2.4 }) + C(600, 776, 4, B.brass);
+  S.add(R(500, 690, 200, 110, '#0b0f14', { op: 0.0 }), g);
+  street(S, th, WALL_BASE);
+  S.add(carSide(S, 880, 886, 0.8, '#1f2530'));
+  finish(S);
+  S.write('house-1kanal-classical.svg');
+};
+
+/* ---- traditional helpers ---- */
+function jali(S, x, y, w, h, { arch = null, col = '#ead7b0', back = '#1c110b', s = 18, name = 'jalit' } = {}) {
+  const shape = (f) => (arch ? P(archD(x, y, w, h, arch), f) : R(x, y, w, h, f));
+  return shape(back) + shape(jaliPat(S, { name, col, s, sw: 1.5 })) + (arch ? P(archD(x, y, w, h, arch), 'none', { stroke: dark(back, 0.2), 'stroke-width': 2 }) : R(x, y, w, h, 'none', { stroke: dark(back, 0.2), 'stroke-width': 2 }));
+}
+function kangura(S, x, y, w, { col = '#e0c79c', n = 0, mw = 22, mh = 30 } = {}) { // y = baseline of merlons
+  let s = '';
+  const k = n || Math.floor(w / (mw + 6));
+  const step = w / k;
+  for (let i = 0; i < k; i++) {
+    const mx = x + i * step + (step - mw) / 2;
+    s += P(`M${N(mx)} ${y} L${N(mx)} ${N(y - mh * 0.5)} Q${N(mx)} ${N(y - mh * 0.85)} ${N(mx + mw / 2)} ${N(y - mh)} Q${N(mx + mw)} ${N(y - mh * 0.85)} ${N(mx + mw)} ${N(y - mh * 0.5)} L${N(mx + mw)} ${y}Z`, S.grad([[0, lite(col, 0.25)], [1, dark(col, 0.15)]], 'h'));
+    s += P(`M${N(mx + mw / 2)} ${N(y - mh * 0.84)} Q${N(mx + mw * 0.26)} ${N(y - mh * 0.6)} ${N(mx + mw * 0.26)} ${N(y - mh * 0.28)}`, 'none', { stroke: '#000', 'stroke-width': 1, op: 0.1 });
+  }
+  s += R(x, y - 4, w, 6, col) + R(x, y - 4, w, 1.4, '#fff', { op: 0.5 });
+  return s;
+}
+function dome(S, cx, y, w, h, { col = '#e8d3a8', fin = B.brass, bulb = 0.12 } = {}) { // y = base
+  const hw = w / 2;
+  let s = P(`M${N(cx - hw)} ${y} C${N(cx - hw - hw * bulb)} ${N(y - h * 0.4)} ${N(cx - hw * 0.5)} ${N(y - h * 0.78)} ${N(cx)} ${N(y - h)} C${N(cx + hw * 0.5)} ${N(y - h * 0.78)} ${N(cx + hw + hw * bulb)} ${N(y - h * 0.4)} ${N(cx + hw)} ${y}Z`, S.grad([[0, lite(col, 0.3)], [0.55, col], [1, dark(col, 0.3)]], 'h'));
+  s += P(`M${N(cx - hw * 0.55)} ${N(y - h * 0.15)} C${N(cx - hw * 0.5)} ${N(y - h * 0.5)} ${N(cx - hw * 0.2)} ${N(y - h * 0.8)} ${N(cx - hw * 0.05)} ${N(y - h * 0.94)}`, 'none', { stroke: '#fff', 'stroke-width': 2.4, op: 0.28, cap: 'round' });
+  s += R(cx - hw - 3, y - 3, w + 6, 6, dark(col, 0.06)) + L(cx, y - h, cx, y - h - 16, fin, 2) + C(cx, y - h - 6, 3.6, fin) + C(cx, y - h - 16, 2.6, fin);
+  return s;
+}
+function chhatri(S, cx, y, w, h, { col = '#e0c79c' } = {}) { // y = floor
+  let s = R(cx - w / 2 - 6, y - 8, w + 12, 8, dark(col, 0.1)) + R(cx - w / 2 - 6, y - 8, w + 12, 1.6, '#fff', { op: 0.5 });
+  const colH = h * 0.5, topY = y - 8 - colH;
+  s += R(cx - w / 2 + 6, topY, w - 12, colH, '#1e120c', { op: 0.55 });
+  s += P(archD(cx - w / 2 + 10, topY + 0, w - 20, colH, 'pointed'), 'none');
+  for (const px of [-w / 2, -w / 6, w / 6, w / 2 - 8]) s += R(cx + px, topY, 8, colH, S.grad([[0, lite(col, 0.3)], [1, dark(col, 0.2)]], 'h'));
+  for (let i = 0; i < 3; i++) { const a = cx - w / 2 + 8 + i * ((w - 16) / 3); s += P(`M${N(a)} ${N(topY + 24)} Q${N(a + (w - 16) / 6)} ${N(topY - 6)} ${N(a + (w - 16) / 3)} ${N(topY + 24)}`, 'none', { stroke: col, 'stroke-width': 8 }); }
+  s += R(cx - w / 2 - 8, topY - 8, w + 16, 10, col) + R(cx - w / 2 - 8, topY - 8, w + 16, 1.6, '#fff', { op: 0.5 }) + shadeBelow(S, cx - w / 2 - 8, topY + 2, w + 16, 12, 0.35);
+  s += dome(S, cx, topY - 8, w - 6, h * 0.5, { col });
+  return s;
+}
+function lantern(S, x, y, on = true) {
+  let s = L(x, y - 24, x, y, '#2a1d12', 1.2) + P(`M${x - 5} ${y} L${x + 5} ${y} L${x + 7} ${y + 5} L${x - 7} ${y + 5}Z`, B.brass) + P(`M${x - 7} ${y + 5} L${x + 7} ${y + 5} L${x + 5} ${y + 20} L${x - 5} ${y + 20}Z`, on ? '#ffe2a0' : '#d8d2c2') + P(`M${x - 5} ${y + 20} L${x + 5} ${y + 20} L${x} ${y + 25}Z`, B.brass) + P(`M${x - 7} ${y + 5} L${x + 7} ${y + 5} L${x + 5} ${y + 20} L${x - 5} ${y + 20}Z`, 'none', { stroke: B.brass, 'stroke-width': 1.2 });
+  return glow(S, x, y + 12, 36, '#ffd27a', 0.5) + s;
+}
+
+scenes['house-traditional-arches'] = () => {
+  const S = new Svg('htr', 1200, 900, { title: 'Traditional Pakistani brick house with arches and jharoka', desc: 'A traditional Pakistani two-storey house in terracotta-red brick with sandstone dressing: a multi-foil arched entrance opening to a glimpse of a lit courtyard, pointed-arch windows with jali screens, a projecting jharoka balcony with a domed roof, a kangura parapet and a chhatri on the roof corner, shown in golden evening light.', seed: 8, th: 'golden' });
+  const th = S.th; const { W } = S;
+  sky(S, th, { horizon: 640, clouds: [[200, 150, 1.3, 0.9], [900, 100, 1.4, 0.85], [600, 250, 0.8, 0.5]] });
+  birds(S, [[300, 90, 1], [330, 110, 0.9], [920, 70, 1.1], [960, 90, 0.9], [880, 100, 0.8]], '#3a2a44');
+  farBlocks(S, 670, th, { op: 0.35, seed: 41 }); farTrees(S, 676, th, { h: 100, op: 0.85, seed: 42 });
+  const sand = '#e2c9a0', sandD = '#bda073';
+  const brick = brickPat(S, { name: 'brk8', w: 30, h: 11, colors: ['#b9533a', '#a94a31', '#c4603f', '#9c432d', '#b24f36'], mortar: '#d6bf9c' });
+  const GY = 650, X = 220, Wd = 760, cxm = 600;
+  const y1 = 450, y2 = 266;
+  // neem tree behind (courtyard feel)
+  blobTree(S, 110, 730, 520, th, { seed: 4, w: 0.95 }); blobTree(S, 1110, 730, 470, th, { seed: 5, w: 0.95 });
+  grassBand(S, 0, GY, W, 160, th, { stripes: 5 });
+  S.add(R(0, GY, W, 160, S.grad([[0, '#c9ae86'], [1, '#a98c66']], 'v')), R(0, GY, W, 160, settPat(S, { name: 'cob', w: 60, h: 34, a: '#c7a77c', b: '#b8986e', mortar: '#8a6d4c' }), { op: 0.6 }));
+  // main body brick
+  S.add(R(X, 210, Wd, GY - 210, brick), R(X, 210, Wd, GY - 210, S.grad([[0, '#fff', 0.1], [0.5, '#000', 0], [1, '#000', 0.2]], 'h')), R(X, 210, Wd, GY - 210, S.grad([[0, '#000', 0.0], [1, '#3a1608', 0.18]], 'v')));
+  // plinth, string course, cornice
+  S.add(R(X - 6, GY - 28, Wd + 12, 28, S.grad([[0, lite(sand, 0.2)], [1, sandD]], 'v')), R(X - 6, GY - 28, Wd + 12, 2, '#fff', { op: 0.5 }));
+  S.add(R(X - 4, y1 - 14, Wd + 8, 14, S.grad([[0, lite(sand, 0.3)], [1, sandD]], 'v')), shadeBelow(S, X, y1, Wd, 12, 0.3));
+  S.add(R(X - 6, 240, Wd + 12, 26, S.grad([[0, lite(sand, 0.3)], [1, sandD]], 'v')), shadeBelow(S, X, 266, Wd, 16, 0.4));
+  for (let x = X + 6; x < X + Wd - 8; x += 24) S.add(P(`M${x} 266 L${x + 16} 266 L${x + 14} 280 L${x + 2} 280Z`, sand, { op: 0.0 }), R(x, 266, 14, 8, dark(sand, 0.1)), R(x + 2, 274, 10, 6, dark(sand, 0.2)));
+  S.add(kangura(S, X - 6, 240, Wd + 12, { col: sand }));
+  // pointed windows (ground + first)
+  const wcs = [330, 440, 760, 870];
+  for (const cx2 of wcs) {
+    // ground floor: wooden shutter lower, jali upper
+    const wx = cx2 - 27;
+    S.add(P(archD(wx - 9, 468, 54 + 18, 160, 'pointed'), sand), P(archD(wx - 9, 468, 72, 160, 'pointed'), 'none', { stroke: dark(sand, 0.3), 'stroke-width': 1.4 }));
+    S.add(jali(S, wx, 478, 54, 150, { arch: 'pointed', name: 'jaliG' }));
+    S.add(R(wx, 548, 54, 80, '#4a2c18'), R(wx, 548, 54, 80, S.grad([[0, '#fff', 0.1], [1, '#000', 0.2]], 'h')), L(wx + 27, 548, wx + 27, 628, '#1c110b', 2), R(wx, 548, 54, 80, 'none', { stroke: '#1c110b', 'stroke-width': 2 }));
+    for (let k = 1; k < 5; k++) S.add(L(wx + 3, 548 + k * 16, wx + 24, 548 + k * 16, '#000', 1, { op: 0.35 }), L(wx + 30, 548 + k * 16, wx + 51, 548 + k * 16, '#000', 1, { op: 0.35 }));
+    S.add(R(wx - 12, 628, 78, 8, sand), shadeBelow(S, wx - 12, 636, 78, 8, 0.3));
+    // first floor
+    S.add(P(archD(wx - 9, 288, 72, 142, 'pointed'), sand), P(archD(wx - 9, 288, 72, 142, 'pointed'), 'none', { stroke: dark(sand, 0.3), 'stroke-width': 1.4 }));
+    S.add(win(S, wx, 298, 54, 132, { arch: 'pointed', cols: 2, rows: 4, frame: '#3a2415', fw: 3, sill: false, mode: 'warm', interior: 'curtain', seed: cx2, depth: true }));
+    S.add(jali(S, wx, 298, 54, 62, { arch: 'pointed', name: 'jaliG' }), R(wx - 12, 430, 78, 8, sand), shadeBelow(S, wx - 12, 438, 78, 8, 0.3));
+  }
+  // central ground-floor entrance
+  const dcx = cxm, dw = 136, dx = dcx - dw / 2, dy = 476, dh = GY - dy;
+  S.add(P(archD(dx - 14, dy - 14, dw + 28, dh + 14, 'cusp'), S.grad([[0, lite(sand, 0.3)], [1, sandD]], 'h')), P(archD(dx - 14, dy - 14, dw + 28, dh + 14, 'cusp'), 'none', { stroke: dark(sand, 0.35), 'stroke-width': 1.4 }));
+  const clipDoor = S.clip(P(archD(dx, dy, dw, dh, 'cusp')));
+  let inner = R(dx, dy, dw, dh, S.grad([[0, '#ffe9b4'], [0.5, '#ffc673'], [1, '#e48f45']], 'v'));
+  inner += R(dx, dy, dw, dh, S.rgrad([[0, '#fff3cc', 0.8], [1, '#fff3cc', 0]], [dcx, dy + 120, 90]));
+  // courtyard: back wall, arcade, neem tree, plant pots
+  inner += R(dx, dy + 70, dw, dh - 70, '#a9552f') + R(dx, dy + 70, dw, dh - 70, brick, { op: 0.8 }) + R(dx, dy + 70, dw, dh - 70, S.grad([[0, '#ffd890', 0.3], [1, '#000', 0.2]], 'v'));
+  for (const ax of [dcx - 40, dcx, dcx + 40]) inner += P(archD(ax - 15, dy + 86, 30, dh - 86 - 30, 'pointed'), '#2b150c', { op: 0.9 }) + P(archD(ax - 15, dy + 86, 30, dh - 86 - 30, 'pointed'), 'none', { stroke: sand, 'stroke-width': 2.4 });
+  inner += C(dcx - 54, dy + 66, 30, '#3b6a3c', { op: 0.9 }) + C(dcx - 40, dy + 52, 22, '#4f8a4c', { op: 0.9 }) + R(dcx - 56, dy + 74, 4, 22, '#4a3626');
+  inner += R(dx, GY - 28, dw, 28, '#c9ae86') + R(dx, GY - 28, dw, 28, settPat(S, { name: 'cob', w: 60, h: 34, a: '#c7a77c', b: '#b8986e', mortar: '#8a6d4c' }), { op: 0.6 });
+  inner += P(`M${dcx + 50} ${GY - 28} L${dcx + 62} ${GY - 28} L${dcx + 59} ${GY - 48} L${dcx + 53} ${GY - 48}Z`, '#b4543a') + C(dcx + 56, GY - 56, 9, '#3b8a46');
+  // open door leaves
+  inner += POLY([[dx, dy - 4], [dx + 26, dy + 10], [dx + 26, GY - 12], [dx, GY]], '#5a3519') + POLY([[dx + dw, dy - 4], [dx + dw - 26, dy + 10], [dx + dw - 26, GY - 12], [dx + dw, GY]], '#4a2b15');
+  for (let k = 0; k < 6; k++) inner += C(dx + 12, dy + 40 + k * 22, 1.8, B.brass) + C(dx + dw - 12, dy + 40 + k * 22, 1.8, B.brass);
+  inner += R(dx, dy, dw, 30, S.grad([[0, '#000', 0.45], [1, '#000', 0]], 'v'));
+  S.add(G(inner, { cp: clipDoor }));
+  S.add(P(archD(dx, dy, dw, dh, 'cusp'), 'none', { stroke: '#2b1a0e', 'stroke-width': 3 }));
+  S.add(lantern(S, dcx - 100, dy + 20), lantern(S, dcx + 100, dy + 20));
+  S.add(R(dcx - 100, GY - 30, 200, 4, '#d6bf9c', { op: 0.0 }));
+  for (const sx of [dcx - 100, dcx + 100]) S.add(R(sx - 15, GY - 62, 30, 34, '#b4543a', { rx: 2 }), R(sx - 18, GY - 66, 36, 8, '#9c432d', { rx: 2 }), C(sx, GY - 80, 15, '#3f8a46'), C(sx - 7, GY - 84, 9, '#58a65c'));
+  // jharoka
+  const jx = cxm - 82, jw = 164, jy = 322;
+  S.add(shadeBelow(S, jx - 20, 422, jw + 40, 90, 0.0));
+  // corbels
+  for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) { const bx = sd < 0 ? jx - 8 + i * 12 : jx + jw + 8 - i * 12; S.add(P(`M${bx} 438 L${bx + sd * 12} 438 L${bx + sd * 12} ${450 + i * 9} Q${bx + sd * 4} ${446 + i * 9} ${bx} 438Z`, sandD)); }
+  S.add(P(`M${jx + 20} 438 L${jx + jw - 20} 438 L${jx + jw / 2 + 24} 470 L${jx + jw / 2 - 24} 470Z`, S.grad([[0, sand], [1, sandD]], 'v')), C(jx + jw / 2, 472, 5, B.brass));
+  S.add(R(jx - 18, 424, jw + 36, 16, S.grad([[0, lite(sand, 0.3)], [1, sandD]], 'v')), shadeBelow(S, jx - 18, 440, jw + 36, 26, 0.45));
+  S.add(R(jx, jy, jw, 102, S.grad([[0, '#e8d1a6'], [1, '#c9ab7c']], 'h')));
+  for (let i = 0; i < 3; i++) {
+    const ax = jx + 10 + i * 48;
+    S.add(P(archD(ax, jy + 10, 40, 86, 'cusp'), '#1c110b'), jali(S, ax, jy + 56, 40, 40, { name: 'jaliG', col: '#ead7b0' }));
+    S.add(win(S, ax + 3, jy + 14, 34, 42, { arch: 'cusp', cols: 1, rows: 1, frame: '#3a2415', fw: 2, sill: false, mode: 'warm', seed: i, depth: false, refl: false }));
+    S.add(P(archD(ax, jy + 10, 40, 86, 'cusp'), 'none', { stroke: dark(sand, 0.4), 'stroke-width': 1.6 }));
+  }
+  for (let i = 0; i <= 3; i++) S.add(R(jx + i * 48 - 2, jy + 6, 10, 96, S.grad([[0, lite(sand, 0.35)], [1, sandD]], 'h')));
+  S.add(R(jx - 8, jy - 12, jw + 16, 14, S.grad([[0, lite(sand, 0.3)], [1, sandD]], 'v')), shadeBelow(S, jx - 8, jy + 2, jw + 16, 12, 0.35));
+  S.add(dome(S, cxm, jy - 12, 136, 56, { col: '#e8d3a8' }));
+  // roof corner chhatris
+  S.add(chhatri(S, 920, 214, 70, 110, { col: sand }), chhatri(S, 280, 214, 52, 80, { col: sand }));
+  S.add(tank(S, 660, 232, 54, 66, { stand: 6 }));
+  // front wall with jali top and wooden gate
+  const wy = 726;
+  S.add(R(0, wy, W, WALL_BASE - wy, brick), R(0, wy, W, WALL_BASE - wy, S.grad([[0, '#fff', 0.1], [1, '#000', 0.3]], 'v')));
+  S.add(R(-4, wy - 10, W + 8, 12, S.grad([[0, lite(sand, 0.3)], [1, sandD]], 'v')), shadeBelow(S, 0, wy + 2, W, 8, 0.3));
+  for (const [gx0, gx1] of [[0, 500], [700, 1200]]) S.add(R(gx0, wy - 54, gx1 - gx0, 44, '#1c110b', { op: 0.0 }), jali(S, gx0 + 4, wy - 58, gx1 - gx0 - 8, 46, { name: 'jaliG', s: 20 }));
+  for (let x = 0; x < W; x += 8) S.add(R(x, wy - 62, 0, 0, 'none'));
+  // gate: double wooden leaves, arched
+  const gx = 520, gw = 160;
+  S.add(R(gx - 16, wy - 124, gw + 32, 124 + (WALL_BASE - wy), sand, { op: 0.0 }));
+  S.add(P(`M${gx - 12} ${WALL_BASE} L${gx - 12} ${wy - 92} Q${gx - 12} ${wy - 132} ${cxm} ${wy - 140} Q${gx + gw + 12} ${wy - 132} ${gx + gw + 12} ${wy - 92} L${gx + gw + 12} ${WALL_BASE}Z`, S.grad([[0, lite(sand, 0.3)], [1, sandD]], 'h')));
+  const gclip = S.clip(P(`M${gx} ${WALL_BASE} L${gx} ${wy - 90} Q${gx} ${wy - 124} ${cxm} ${wy - 132} Q${gx + gw} ${wy - 124} ${gx + gw} ${wy - 90} L${gx + gw} ${WALL_BASE}Z`));
+  let gg = R(gx, wy - 140, gw, 220, '#4a2a16') + R(gx, wy - 140, gw, 220, woodPat(S, { name: 'w8g', sw: 20, colors: ['#6b4026', '#5a3419', '#74482b'], bg: '#1c110b' }), { op: 0.9 });
+  gg += R(cxm - 1.5, wy - 140, 3, 220, '#1c110b');
+  for (let i = 0; i < 5; i++) for (let j = 0; j < 7; j++) gg += C(gx + 14 + i * 14, wy - 100 + j * 20, 2, B.brass, { op: 0.9 }) + C(gx + gw - 14 - i * 14, wy - 100 + j * 20, 2, B.brass, { op: 0.9 });
+  gg += R(gx, wy - 20, gw, 6, '#1c110b') + R(cxm - 14, wy - 40, 4, 22, B.brass) + R(cxm + 10, wy - 40, 4, 22, B.brass);
+  S.add(G(gg, { cp: gclip }), shadeBelow(S, gx, wy - 130, gw, 10, 0.4));
+  for (const px of [gx - 28, gx + gw + 4]) S.add(R(px, WALL_BASE - 140, 24, 140, brick), R(px, WALL_BASE - 140, 24, 140, S.grad([[0, '#fff', 0.1], [1, '#000', 0.3]], 'h')), R(px - 4, WALL_BASE - 150, 32, 10, sand), dome(S, px + 12, WALL_BASE - 150, 24, 22, { col: sand }), lantern(S, px + 12, WALL_BASE - 130, th.lights));
+  S.add(plate(S, 200, 760, 36, 20, '#3a2415'));
+  bougain(S, 740, 726, 130, 60, { seed: 4, colors: ['#c2306b', '#d94b86', '#e56aa0'] });
+  street(S, th, WALL_BASE);
+  palm(S, 90, 812, 480, th, { lean: 0.03, seed: 11 });
+  S.add(carSide(S, 840, 886, 0.8, '#d9d3c4'));
+  finish(S);
+  S.write('house-traditional-arches.svg');
+};
+
+scenes['house-fusion-luxury'] = () => {
+  const S = new Svg('hfu', 1200, 900, { title: 'Luxury fusion house with arches, glass and brass', desc: 'A luxury house that blends traditional Pakistani arches with modern glass: a double-height pointed-arch glass atrium with brass lattice, a ground-floor arcade of round arches, brass-finned first-floor windows, a jali parapet band, boxwood planters, cypress trees and a charcoal gate with brass inlay under soft overcast light.', seed: 9, th: 'soft' });
+  const th = S.th; const { W } = S;
+  sky(S, th, { horizon: 640, clouds: [[240, 90, 1.5, 0.9], [640, 140, 1.7, 0.7], [1000, 100, 1.4, 0.85], [300, 240, 1.0, 0.5], [900, 250, 1.1, 0.5]], sunVisible: false });
+  farBlocks(S, 668, th, { op: 0.3, seed: 51 }); farTrees(S, 676, th, { h: 90, op: 0.75, seed: 52 });
+  const GY = 660, X = 190, Wd = 820;
+  const fh = 196, sl = 16; const y1 = GY - fh, s1 = y1 - sl, y2 = s1 - 176, s2 = y2 - sl;
+  const cream = '#f3eee3', char = '#2b2f36';
+  blobTree(S, 90, 700, 400, th, { seed: 12, w: 0.95 }); blobTree(S, 1120, 700, 430, th, { seed: 14, w: 0.95 });
+  forecourt(S, GY, 90, { lawn: false });
+  grassBand(S, 0, GY, 160, 90, th); grassBand(S, 1040, GY, 160, 90, th);
+  // body
+  S.add(vol(S, X, s2 - 40, Wd, GY - s2 + 40, { fill: cream }));
+  // parapet jali band
+  S.add(R(X, s2 - 40, Wd, 40, '#262a30'), R(X, s2 - 40, Wd, 40, jaliPat(S, { name: 'jaliB', col: '#c9a24b', s: 20, sw: 1.3 }), { op: 0.9 }), R(X, s2 - 40, Wd, 40, S.grad([[0, '#000', 0.3], [1, '#000', 0]], 'v')));
+  S.add(slab(S, X - 10, s2 - 52, Wd + 20, 12, { fill: cream, shy: 6 }), R(X - 10, s2 - 41, Wd + 20, 2, B.brass));
+  // first floor windows with brass fins
+  const winSpec = [[X + 40, 200], [X + Wd - 240, 200]];
+  for (const [wx, ww] of winSpec) {
+    S.add(R(wx - 14, y2 + 14, ww + 28, 146, '#e5ddcd'), R(wx - 14, y2 + 14, ww + 28, 146, 'none', { stroke: '#d3c8b2', 'stroke-width': 1.5 }));
+    S.add(win(S, wx, y2 + 24, ww, 126, { cols: 3, rows: 1, transom: 0.24, frame: char, fw: 4, sill: false, mode: 'warm', interior: 'pendant', seed: wx }));
+    for (let i = 0; i <= ww / 12; i++) S.add(R(wx + 2 + i * 12, y2 + 20, 3, 134, B.brass, { op: 0.85 }), R(wx + 2 + i * 12, y2 + 20, 1, 134, '#fff', { op: 0.35 }));
+    S.add(R(wx - 10, y2 + 18, ww + 20, 6, B.brass), R(wx - 10, y2 + 152, ww + 20, 6, B.brass), shadeBelow(S, wx - 10, y2 + 158, ww + 20, 10, 0.3));
+  }
+  // first floor flanking atrium: balcony niches
+  S.add(slab(S, X - 8, s1, Wd + 16, sl, { fill: cream, shy: 26 }), R(X - 8, s1 + sl - 3, Wd + 16, 3, B.brass));
+  // ground floor arcade
+  S.add(R(X, y1, Wd, fh, '#d9d0bd'), R(X, y1, Wd, fh, S.grad([[0, '#000', 0.3], [1, '#000', 0.05]], 'v')));
+  const arcs = [X + 26, X + 168, X + Wd - 168 - 110 + 0, X + Wd - 26 - 110];
+  const arcX = [X + 30, X + 170, X + Wd - 170 - 110, X + Wd - 30 - 110];
+  for (let i = 0; i < arcX.length; i++) {
+    const ax = arcX[i];
+    S.add(P(archD(ax - 12, y1 + 6, 134, fh - 6, 'round'), '#fbf7ee'), P(archD(ax - 12, y1 + 6, 134, fh - 6, 'round'), 'none', { stroke: '#cdbfa3', 'stroke-width': 1.4 }));
+    S.add(win(S, ax, y1 + 18, 110, fh - 18, { arch: 'round', cols: 2, rows: 3, frame: char, fw: 3.4, sill: false, mode: 'warm', interior: i % 2 ? 'lounge' : 'pendant', seed: i * 5 + 1 }));
+    S.add(P(archD(ax - 1, y1 + 17, 112, fh - 17, 'round'), 'none', { stroke: B.brass, 'stroke-width': 2.4 }));
+  }
+  for (const px of [X + 4, X + 148, X + Wd - 160 - 0, X + Wd - 20]) { }
+  for (const px of [X + 2, X + 150, X + Wd - 162, X + Wd - 14]) S.add(R(px, y1 + 40, 12, fh - 40, S.grad([[0, '#fff'], [1, '#cdbf9f']], 'h')), R(px - 2, y1 + 130, 16, 5, B.brass, { op: 0 }));
+  // central atrium
+  const cx = 600, aw = 164, ax0 = cx - aw / 2, aTop = 238, aH = GY - aTop;
+  S.add(P(archD(ax0 - 34, aTop - 34, aw + 68, aH + 34, 'pointed'), S.grad([[0, '#fffaf0'], [1, '#d9ceb6']], 'v')), P(archD(ax0 - 34, aTop - 34, aw + 68, aH + 34, 'pointed'), 'none', { stroke: '#bfb294', 'stroke-width': 1.4 }));
+  S.add(P(archD(ax0 - 14, aTop - 14, aw + 28, aH + 14, 'pointed'), B.brass), P(archD(ax0 - 14, aTop - 14, aw + 28, aH + 14, 'pointed'), 'none', { stroke: '#fff', 'stroke-width': 1, op: 0.4 }));
+  S.add(P(archD(ax0, aTop, aw, aH, 'pointed'), S.grad([[0, '#ffe7b0'], [0.45, '#ffc977'], [1, '#e8913c']], 'v')));
+  S.add(interiorArt(S, ax0, aTop + 120, aw, aH - 120, 'pendant', 3, null));
+  // chandelier
+  S.add(glow(S, cx, aTop + 150, 100, '#fff0c0', 0.6), L(cx, aTop + 90, cx, aTop + 150, '#3a3a3a', 1.4), C(cx, aTop + 160, 18, B.brass, { op: 0.9 }), C(cx, aTop + 160, 9, '#fff6d8'));
+  S.add(P(archD(ax0, aTop, aw, aH, 'pointed'), S.pat('lattB', 42, 42, () => PL([[0, 0], [42, 42]], B.brass, 1.7) + PL([[42, 0], [0, 42]], B.brass, 1.7) + PL([[21, 0], [21, 42]], B.brass, 0.8) + PL([[0, 21], [42, 21]], B.brass, 0.8)), { op: 0.9 }), P(archD(ax0, aTop, aw, aH, 'pointed'), reflPat(S, 'day')));
+  S.add(L(cx, aTop, cx, GY, B.brass, 4), R(ax0, GY - 196, aw, 5, B.brass));
+  S.add(P(archD(ax0, aTop, aw, aH, 'pointed'), 'none', { stroke: char, 'stroke-width': 4 }));
+  S.add(R(cx - 22, GY - 108, 4, 56, B.brass, { rx: 2 }), R(cx + 18, GY - 108, 4, 56, B.brass, { rx: 2 }));
+  S.add(R(ax0 - 20, GY - 7, aw + 40, 7, '#d8ccb2'), R(ax0 - 34, GY, aw + 68, 7, '#c3b79c'), shadeBelow(S, ax0 - 34, GY + 7, aw + 68, 8, 0.3));
+  for (const sx of [ax0 - 60, ax0 + aw + 40]) S.add(R(sx, y1 + 34, 8, 30, B.brass, { rx: 4 }), glow(S, sx + 4, y1 + 50, 30, '#ffd890', 0.4));
+  // plinth
+  S.add(R(X - 6, GY - 14, Wd + 12, 14, '#c8bca2'), R(X - 6, GY - 14, Wd + 12, 2, '#fff', { op: 0.5 }));
+  // planters
+  for (const px of [X + 90, X + 232, X + Wd - 232, X + Wd - 90]) S.add(R(px - 18, GY + 8, 36, 26, '#2b2f36', { rx: 2 }), R(px - 18, GY + 8, 36, 2, B.brass), C(px, GY - 8, 22, th.tree[0]), C(px - 2, GY - 10, 19, th.tree[1]), C(px - 7, GY - 16, 7, th.tree[2], { op: 0.8 }));
+  cypress(S, 150, GY + 10, 280, th, { w: 0.07 }); cypress(S, 1050, GY + 10, 270, th, { w: 0.07 });
+  // wall + gate
+  const wy = 740;
+  boundaryWall(S, 0, 470, { top: wy, fill: cream, capCol: char });
+  boundaryWall(S, 730, 470, { top: wy, fill: cream, capCol: char });
+  S.add(R(0, wy + 14, 470, 18, S.grad([[0, '#000', 0.1], [1, '#000', 0]], 'v'), { op: 0 }));
+  for (const [a, b] of [[20, 460], [740, 1180]]) S.add(R(a, wy + 14, b - a, 30, '#2b2f36'), R(a, wy + 14, b - a, 30, jaliPat(S, { name: 'jaliB', col: '#c9a24b', s: 20, sw: 1.3 }), { op: 0.9 }), R(a, wy + 12, b - a, 3, B.brass), R(a, wy + 44, b - a, 3, B.brass));
+  S.add(gate(S, 478, WALL_BASE, 244, 104, { col: char, style: 'bars', accent: B.brass, n: 16 }));
+  for (const px of [452, 722]) S.add(pillar(S, px, WALL_BASE, 30, 112, { fill: cream, cap: char, lamp: true, glow: th.lights }), R(px, WALL_BASE - 64, 30, 3, B.brass));
+  S.add(plate(S, 30, 770, 40, 20, B.brass));
+  street(S, th, WALL_BASE);
+  palm(S, 1120, 812, 500, th, { lean: -0.04, seed: 14 }); palm(S, 1170, 812, 390, th, { lean: 0.03, seed: 15 });
+  S.add(carSide(S, 160, 886, 0.8, '#2b3038'));
+  finish(S);
+  S.write('house-fusion-luxury.svg');
 };

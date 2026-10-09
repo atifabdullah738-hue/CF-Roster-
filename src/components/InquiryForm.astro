@@ -103,7 +103,6 @@ const configured = Boolean(site.formEndpoint);
     const status = form.querySelector<HTMLElement>('[data-status]')!;
     const btnLabel = form.querySelector<HTMLElement>('.btn__label')!;
     const submitBtn = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
-    const endpoint = form.dataset.endpoint || '';
     const waBase = form.dataset.wa || '';
 
     // Preselect service from ?service=slug
@@ -181,6 +180,7 @@ const configured = Boolean(site.formEndpoint);
       if (val('website')) return; // honeypot tripped: silently drop
       if (!validateAll()) { show('err', '<strong>Please check the highlighted fields.</strong><p>Some information is missing or incorrect.</p>', false); return; }
 
+      const endpoint = form.dataset.endpoint || '';
       if (!endpoint) {
         // No backend configured: be honest — nothing has been delivered.
         show('warn', `<strong>Your inquiry has NOT been sent yet.</strong><p>Your details look good, but online submission isn’t switched on for this website. To reach us right away, send your details on WhatsApp — or call us.</p>${waButton()}`);
