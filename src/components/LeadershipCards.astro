@@ -1,7 +1,7 @@
 ---
 import { site } from '../data/site';
 import PersonContact from './PersonContact.astro';
-const initials = (n: string) => n.split(' ').map((w) => w[0]).join('');
+const initials = (n: string) => n.split(' ').slice(0, 2).map((w) => w[0]).join('');
 ---
 <div class="leaders">
   {site.leadership.map((p, i) => (

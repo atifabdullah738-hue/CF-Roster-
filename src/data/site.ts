@@ -28,7 +28,7 @@ export const site = {
 
   leadership: [
     {
-      name: 'Muhammad Asif',
+      name: 'Muhammad Asif Waheed',
       title: 'CEO',
       // Confirmed by the owner: +92 300 4337882
       phone: '0300 4337882',
