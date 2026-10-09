@@ -12,8 +12,10 @@ const list: Project[] = featured ? featuredIds.map((i) => allProjects.find((p) =
 const items = await Promise.all(
   list.map(async (p) => {
     const meta = art(p.image);
-    const full = isRaster(meta) ? (await getImage({ src: meta, width: 1800, format: 'webp' })).src : meta.src;
-    return { p, full, w: meta.width, h: meta.height };
+    const raster = isRaster(meta);
+    const full = raster ? (await getImage({ src: meta, width: Math.min(meta.width, 2560), format: 'webp', quality: 82 })).src : meta.src;
+    // A real raster image (photo / render) automatically replaces the illustration, so its badge goes too.
+    return { p: { ...p, illustrative: p.illustrative && !raster }, full };
   }),
 );
 // Only offer filters that actually have items.
@@ -46,7 +48,7 @@ const usedCats = categories.filter((c) => allProjects.some((p) => p.categories.i
       </li>
     ))}
   </ul>
-  <p class="gallery__note">Images shown are original illustrations created to showcase house styles and construction stages. They are not photographs of completed Asif Builders projects and will be replaced with real project photography.</p>
+  {items.some(({ p }) => p.illustrative) && <p class="gallery__note">Images shown are original illustrations created to showcase house styles and construction stages. They are not photographs of completed Asif Builders projects and will be replaced with real project photography.</p>}
 </div>
 
 <dialog class="lightbox" aria-label="Project image viewer" data-lightbox>

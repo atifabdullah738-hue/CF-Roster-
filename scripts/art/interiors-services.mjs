@@ -100,8 +100,12 @@ function clipDef(name, shapes) {
   return url(name);
 }
 
-function finish(file, title, desc) {
+function finish(file, title, desc, zoom) {
   const p = S.p;
+  if (zoom) { // zoom/crop the scene (everything but the final vignette layer)
+    const [s, cx, cy, dy] = zoom; const last = S.body.pop();
+    S.body = [`<g transform="translate(${r1(cx * (1 - s))} ${r1(cy * (1 - s) + dy)}) scale(${s})">`, ...S.body, '</g>', last];
+  }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img" aria-labelledby="${p}-title ${p}-desc">\n<title id="${p}-title">${title}</title>\n<desc id="${p}-desc">${desc}</desc>\n<defs>${[...S.defs.values()].join('')}</defs>\n${S.body.join('\n')}\n</svg>\n`;
   fs.writeFileSync(path.join(OUT, file), svg);
   console.log(file.padEnd(34), (svg.length / 1024).toFixed(1) + ' KB');
@@ -444,6 +448,643 @@ function curtainFolds(x0, x1, y0, y1, col, nf = 8, o = {}) {
 }
 
 // =============================================================================
+// 10. svc-renovation (before / after split)
+// =============================================================================
+function svcRenovation() {
+  begin('srn');
+  add(svcBg({ r: 360, cy: 450, ground: false }));
+  const cx0 = 100, cy0 = 120, cw = 1000, ch = 660;
+  const clipAll = clipDef('card', rrect(cx0, cy0, cw, ch, 30, '#000'));
+  const dTop = 650, dBot = 540;
+  const clipL = clipDef('half-l', poly([[cx0, cy0], [dTop, cy0], [dBot, cy0 + ch], [cx0, cy0 + ch]], '#000'));
+  const clipR = clipDef('half-r', poly([[dTop, cy0], [cx0 + cw, cy0], [cx0 + cw, cy0 + ch], [dBot, cy0 + ch]], '#000'));
+  add(shadowPoly([[cx0 + 10, cy0 + 24], [cx0 + cw + 10, cy0 + 24], [cx0 + cw + 10, cy0 + ch + 24], [cx0 + 10, cy0 + ch + 24]], 0.35, 16));
+  const k = 1.5, fx = 600 - 260 * k, groundY = 700, fy = groundY - 358 * k;
+  // ---------- BEFORE (left)
+  let L = '';
+  L += rect(cx0, cy0, cw, ch, lin('skyo', [[0, '#b8b7ab'], [0.7, '#dcd6c4'], [1, '#e8dfc8']], [0, 0, 0, 1]));
+  L += cloud(250, 220, 1.4, 0.45) + cloud(520, 180, 1.0, 0.4);
+  L += circle(180, 190, 38, '#e8e1cf', { op: 0.7 });
+  // pole + wires
+  L += rect(170, 230, 9, 520, '#4a4338') + rect(140, 262, 70, 6, '#4a4338') + rect(150, 300, 50, 5, '#4a4338');
+  L += path_(`M140 265Q380 330 ${fx + 40} 300`, 'none', { stroke: '#2b2f36', sw: 1.6 }) + path_('M205 265Q420 320 640 285', 'none', { stroke: '#2b2f36', sw: 1.6 });
+  // far buildings muted
+  for (let i = 0; i < 8; i++) L += rect(cx0 + i * 90, groundY - 140 - (i % 3) * 30, 70, 160, '#9a9788', { op: 0.35 });
+  // ground
+  L += rect(cx0, groundY - 8, cw, 120, vgrad('#8d8670', '#6d6754'));
+  L += poly([[cx0, groundY + 10], [cx0 + cw, groundY + 10], [cx0 + cw, groundY + 40], [cx0, groundY + 40]], '#a39b84', { op: 0.6 });
+  for (let i = 0; i < 12; i++) L += rect(cx0 + 20 + i * 90, groundY + 14, 60, 4, '#5d5746', { op: 0.5 });
+  L += pline([[250, groundY + 20], [262, groundY + 34], [256, groundY + 50]], '#3b3629', 1.5);
+  for (let i = 0; i < 9; i++) L += path_(`M${cx0 + 40 + i * 55} ${groundY + 12}q3 -16 8 0M${cx0 + 46 + i * 55} ${groundY + 12}q-1 -12 -6 -2`, 'none', { stroke: '#7a8a52', sw: 2 });
+  L += facade(fx, fy, k, 'old');
+  // rusted gate left
+  L += rect(fx - 10, groundY - 52, 90, 50, 'none') ;
+  L += roundTreeDead(cx0 + 90, groundY + 6);
+  add(g(g(L, { clip: clipL }), { clip: clipAll }));
+  // ---------- AFTER (right)
+  let Rr = '';
+  Rr += rect(cx0, cy0, cw, ch, lin('skyn', [[0, '#8fc5e4'], [0.7, '#cfe6ee'], [1, '#f8ead0']], [0, 0, 0, 1]));
+  Rr += circle(960, 230, 130, radial('sunn', [[0, '#fff3cf', 0.95], [1, '#fff3cf', 0]])) + circle(960, 230, 40, '#fff6dc');
+  Rr += cloud(720, 200, 1.1, 0.95) + cloud(1000, 330, 0.9, 0.9);
+  for (let i = 0; i < 8; i++) Rr += rect(cx0 + i * 90, groundY - 140 - (i % 3) * 30, 70, 160, '#8fb0c8', { op: 0.4 });
+  Rr += rect(cx0, groundY - 8, cw, 120, vgrad('#9bb87a', '#7aa05c'));
+  Rr += rect(cx0, groundY + 6, cw, 34, vgrad('#e4dcc7', '#cfc5ab'));
+  for (let i = 0; i < 14; i++) Rr += line(cx0 + 20 + i * 76, groundY + 6, cx0 + 5 + i * 76, groundY + 40, '#b5ab90', 1.2, { op: 0.8 });
+  Rr += facade(fx, fy, k, 'new');
+  Rr += palmTree(1040, groundY, 190, 1.3) + roundTree(870 + 60, groundY + 8, 1.1, C.leaf);
+  for (let i = 0; i < 6; i++) Rr += circle(cx0 + 740 + i * 40, groundY + 52, 14, mix(C.leafD, C.leafL, (i % 3) / 3));
+  add(g(g(Rr, { clip: clipR }), { clip: clipAll }));
+  // divider
+  const dv = clipDef('divcard', rrect(cx0, cy0, cw, ch, 30, '#000'));
+  add(g(line(dTop, cy0, dBot, cy0 + ch, '#000', 14, { op: 0.18, filter: blur(6) }) + line(dTop, cy0, dBot, cy0 + ch, '#fff', 9) + line(dTop, cy0, dBot, cy0 + ch, brassGradH(), 5), { clip: dv }));
+  const mx = (dTop + dBot) / 2, my = cy0 + ch / 2;
+  add(circle(mx + 3, my + 8, 40, '#000', { op: 0.3, filter: blur(6) }), circle(mx, my, 40, lin('knob', [[0, C.brassL], [1, C.brassD]], [0, 0, 1, 1])), circle(mx, my, 33, C.navy), path_(`M${mx - 20} ${my}L${mx - 8} ${my - 9}L${mx - 8} ${my + 9}Z`, C.cream), path_(`M${mx + 20} ${my}L${mx + 8} ${my - 9}L${mx + 8} ${my + 9}Z`, C.cream));
+  // corner tags (icons)
+  add(circle(160, 180, 34, 'rgba(15,34,56,.85)', { stroke: C.brass, sw: 2 }), pline([[146, 168], [158, 182], [152, 192], [166, 202]], '#e5d8b7', 3, { lc: 'round', lj: 'round' }));
+  add(circle(1040, 180, 34, 'rgba(15,34,56,.9)', { stroke: C.brass, sw: 2 }), star4(1040, 180, 18, C.brassL), star4(1056, 166, 7, C.cream));
+  add(rrect(cx0, cy0, cw, ch, 30, 'none', { stroke: C.brass, sw: 3 }));
+  finish('svc-renovation.svg', 'Home renovation', 'A before-and-after split of one house facade: the left half is dated and weathered, the right half is renovated with a modern finish.');
+}
+function roundTreeDead(x, y) {
+  return shadowEll(x, y, 30, 6, 0.25, 4) + path_(`M${x - 5} ${y}L${x - 3} ${y - 90}L${x + 3} ${y - 90}L${x + 5} ${y}Z`, '#4a3d2e') + stroke_(`M${x} ${y - 70}L${x - 30} ${y - 110}M${x} ${y - 60}L${x + 30} ${y - 95}M${x} ${y - 90}L${x - 12} ${y - 130}M${x} ${y - 88}L${x + 14} ${y - 125}`, '#4a3d2e', 4, { lc: 'round' });
+}
+
+// =============================================================================
+// 11. svc-maintenance
+// =============================================================================
+function svcMaintenance() {
+  begin('smt');
+  add(svcBg({ mode: 'navy', r: 350, cy: 440, ground: false }));
+  const k = 1.0, fx = 600 - 260 * k, fy = 545 - 358 * k;
+  add(shadowEll(600, 552, 300, 14, 0.35, 8));
+  add(facade(fx, fy, k, 'new'));
+  add(wrenchBadge(880, 190, 68));
+  add(ellipse(600, 770, 420, 60, '#0a1424', { op: 0.4, filter: blur(16) }));
+  add(spanner(360, 590, 300, 34));
+  add(hammer(840, 590, 300, -34));
+  add(toolbox(430, 615, 340, 165));
+  const nut = (x, y, r) => regPoly(x, y, r, 6, 0, lin('nut', [[0, '#eef1f4'], [1, '#7d838d']], [0, 0, 1, 1]), { stroke: '#555c66', sw: 1.2 }) + circle(x, y, r * 0.42, '#3a3f48') + circle(x, y, r * 0.3, '#6a717c');
+  add(nut(300, 810, 22), nut(342, 830, 14), nut(880, 820, 18));
+  add(screwdriver(1050, 560, 210, 22));
+  finish('svc-maintenance.svg', 'Home maintenance', 'A modern house with a brass tools badge above a foreground of maintenance tools: spanner, hammer, screwdriver and a red toolbox.');
+}
+
+// =============================================================================
+// 12. svc-finishing
+// =============================================================================
+function svcFinishing() {
+  begin('sfn');
+  add(svcBg({ r: 360, cy: 450, ground: false, flip: true }));
+  const cx0 = 100, cy0 = 120, cw = 1000, ch = 640;
+  const clip = clipDef('card', rrect(cx0, cy0, cw, ch, 30, '#000'));
+  add(shadowPoly([[cx0 + 10, cy0 + 24], [cx0 + cw + 10, cy0 + 24], [cx0 + cw + 10, cy0 + ch + 24], [cx0 + 10, cy0 + ch + 24]], 0.35, 16));
+  let sc = '';
+  const wallB = 520; // wall bottom (skirting)
+  // wall base
+  sc += rect(cx0, cy0, cw, wallB - cy0, '#e4d8bd');
+  // zone 1: raw masonry + partial plaster (left)
+  const brk = brickPat('rawbrick', 34, 17, '#b0593a', '#a89e88', { seed: 5 });
+  sc += rect(cx0, cy0 + 70, 330, wallB - cy0 - 70, brk);
+  // plaster being applied (diagonal edge)
+  sc += poly([[cx0 + 150, cy0 + 70], [cx0 + 330, cy0 + 70], [cx0 + 330, wallB], [cx0 + 100, wallB]], vgrad('#bdb7ab', '#a9a498'));
+  reseed(5);
+  for (let i = 0; i < 26; i++) { const yy = cy0 + 80 + i * 14; sc += path_(`M${cx0 + 150 + (i % 6) * 12 + (wallB - yy) * 0.0} ${yy}q40 ${rr(-6, 6)} ${rr(80, 150)} ${rr(-4, 4)}`, 'none', { stroke: i % 2 ? '#d1ccc0' : '#8f8a7d', sw: 3, op: 0.5, lc: 'round' }); }
+  sc += poly([[cx0 + 150, cy0 + 70], [cx0 + 100, wallB]], 'none', { stroke: '#7d786b', sw: 3 });
+  // zone 2: smooth finished wall with moulded panel (center)
+  sc += rect(cx0 + 330, cy0 + 70, 380, wallB - cy0 - 70, vgrad('#f1e8d2', '#e0d3b4'));
+  sc += rect(cx0 + 380, cy0 + 130, 280, 300, 'none', { stroke: '#fbf6ea', sw: 6 }) + rect(cx0 + 380, cy0 + 130, 280, 300, 'none', { stroke: '#c9bb99', sw: 1.4, tf: 'translate(3 3)' });
+  sc += rect(cx0 + 404, cy0 + 154, 232, 252, 'none', { stroke: '#d3c5a3', sw: 1.2 });
+  sc += rect(cx0 + 404, cy0 + 154, 232, 252, 'none', { stroke: '#fbf6ea', sw: 2, tf: 'translate(-1 -1)' });
+  sc += rect(cx0 + 330, cy0 + 70, 380, wallB - cy0 - 70, radial('wlight', [[0, '#fff', 0.3], [1, '#fff', 0]], [0.4, 0.3, 0.7]));
+  // zone 3: wall panel samples (right)
+  const zx = cx0 + 710;
+  sc += rect(zx, cy0 + 70, cw - 710, wallB - cy0 - 70, '#d9cdb2');
+  // slats
+  sc += rect(zx + 14, cy0 + 100, 84, wallB - cy0 - 130, '#6d4529');
+  for (let i = 0; i < 12; i++) sc += rect(zx + 16 + i * 7, cy0 + 100, 5, wallB - cy0 - 130, mix(C.woodL, C.wood, (i * 37 % 10) / 10));
+  // marble panel
+  sc += rect(zx + 108, cy0 + 100, 84, wallB - cy0 - 130, vgrad('#f6f3ec', '#d9d5ca'));
+  sc += path_(`M${zx + 118} ${cy0 + 100}Q${zx + 150} ${cy0 + 200} ${zx + 130} ${cy0 + 280}T${zx + 170} ${wallB - 30}`, 'none', { stroke: '#8f8e8b', sw: 1.6, op: 0.6 }) + path_(`M${zx + 170} ${cy0 + 100}Q${zx + 150} ${cy0 + 160} ${zx + 175} ${cy0 + 230}`, 'none', { stroke: C.brass, sw: 1, op: 0.6 });
+  // fluted
+  sc += rect(zx + 202, cy0 + 100, 84, wallB - cy0 - 130, '#2f6f73');
+  for (let i = 0; i < 14; i++) sc += rect(zx + 202 + i * 6, cy0 + 100, 3.2, wallB - cy0 - 130, lighten('#2f6f73', 0.2), { op: 0.7 }) + rect(zx + 205 + i * 6, cy0 + 100, 2, wallB - cy0 - 130, '#0a2a2f', { op: 0.45 });
+  for (const xx of [zx + 14, zx + 108, zx + 202]) sc += rect(xx - 3, cy0 + 96, 90, 6, C.brass) + rect(xx - 3, wallB - 34, 90, 6, C.brass);
+  // cornice (crown moulding) across the top
+  const cH = 70;
+  sc += rect(cx0, cy0, cw, cH, vgrad('#fbf8f1', '#e1d8c3'));
+  sc += rect(cx0, cy0 + 8, cw, 10, '#fff') + rect(cx0, cy0 + 18, cw, 6, '#d9cfb6') + rect(cx0, cy0 + 34, cw, 4, C.brass) + rect(cx0, cy0 + 40, cw, 18, vgrad('#f0e9d8', '#d3c8ac')) + rect(cx0, cy0 + 58, cw, 12, vgrad('#fbf8f1', '#cdc2a6'));
+  for (let i = 0; i < 42; i++) sc += rect(cx0 + 8 + i * 24, cy0 + 42, 12, 12, '#fff', { rx: 2, op: 0.65 }) + rect(cx0 + 8 + i * 24, cy0 + 51, 12, 3, '#b9ad8f', { op: 0.5 });
+  sc += rect(cx0, cy0 + 70, cw, 8, '#000', { op: 0.12, filter: blur(3) });
+  // skirting
+  sc += rect(cx0, wallB - 28, cw, 28, vgrad('#fbf8f1', '#d9cfb6')) + rect(cx0, wallB - 28, cw, 3, '#fff') + rect(cx0, wallB - 4, cw, 4, '#000', { op: 0.1 });
+  // floor (perspective) with tiles
+  const fy0 = wallB, fy1 = 770;
+  const topL = cx0 - 0, topR = cx0 + cw, botL = cx0 - 220, botR = cx0 + cw + 220;
+  const aF = 1.25; const sT = (t) => (1 - 1 / (1 + aF * t)) / (1 - 1 / (1 + aF));
+  const fm = (u, t) => { const s_ = sT(t); const xl = topL + (botL - topL) * s_, xr = topR + (botR - topR) * s_; return [xl + (xr - xl) * u, fy0 + (fy1 - fy0) * s_]; };
+  sc += poly([fm(0, 0), fm(1, 0), fm(1, 1), fm(0, 1)], vgrad('#c9bfa6', '#b3a88c'));
+  // laid tiles on right 60%: cement-tile pattern
+  const uLaid = 0.42; const nU = 20, nT = 7;
+  const tileCols = ['#f1e8d2', '#27496d', '#d9c08a', '#b5603c'];
+  for (let j = 0; j < nT; j++) for (let i = 0; i < nU; i++) {
+    const u0 = i / nU, u1 = (i + 1) / nU; if (u1 < uLaid) continue;
+    const t0 = j / nT, t1 = (j + 1) / nT;
+    const c = (i + j) % 2 ? '#f1e8d2' : '#27496d';
+    sc += poly([fm(Math.max(u0, uLaid), t0), fm(u1, t0), fm(u1, t1), fm(Math.max(u0, uLaid), t1)], c, { stroke: '#a89a74', sw: 1.2 });
+    // small motif in each tile
+    const mu = (Math.max(u0, uLaid) + u1) / 2, mt = (t0 + t1) / 2; const [mx_, my_] = fm(mu, mt); const sz = 4 + mt * 12;
+    sc += poly([[mx_, my_ - sz * 0.45], [mx_ + sz * 0.8, my_], [mx_, my_ + sz * 0.45], [mx_ - sz * 0.8, my_]], (i + j) % 2 ? '#d9c08a' : '#d9c08a', { op: 0.85 });
+  }
+  // screed on the left with chalk lines + spacers
+  for (let i = 0; i <= nU; i++) { if (i / nU > uLaid) break; const a = fm(i / nU, 0), b = fm(i / nU, 1); sc += line(a[0], a[1], b[0], b[1], '#f4efe6', 1, { op: 0.45, da: '5 5' }); }
+  for (let j = 0; j <= nT; j++) { const a = fm(0, j / nT), b = fm(uLaid, j / nT); sc += line(a[0], a[1], b[0], b[1], '#f4efe6', 1, { op: 0.45, da: '5 5' }); }
+  // mortar edge
+  const [ea, eb] = [fm(uLaid, 0), fm(uLaid, 1)];
+  sc += line(ea[0], ea[1], eb[0], eb[1], '#8f866f', 3);
+  for (let j = 0; j < nT; j++) { const p = fm(uLaid, (j + 0.5) / nT); sc += pline([[p[0] - 5, p[1]], [p[0] + 5, p[1]]], '#e5602a', 2.4, {}) + pline([[p[0], p[1] - 5], [p[0], p[1] + 5]], '#e5602a', 2.4, {}); }
+  // floor sheen
+  sc += poly([fm(0, 0), fm(1, 0), fm(1, 1), fm(0, 1)], lin('fsh', [[0, '#fff', 0.0], [1, '#fff', 0.12]], [0, 0, 0, 1]));
+  // floor shadow at wall base
+  sc += rect(cx0, wallB, cw, 14, lin('fwb', [[0, '#000', 0.25], [1, '#000', 0]], [0, 0, 0, 1]));
+  add(g(sc, { clip }));
+  add(rrect(cx0, cy0, cw, ch, 30, 'none', { stroke: C.brass, sw: 3 }));
+  // foreground tools: plaster trowel with plaster on hawk, tile + notched trowel
+  add(shadowEll(300, 700, 150, 18, 0.3, 8));
+  add(trowel(310, 650, 250, -14, { mortar: true }));
+  add(trowel(850, 705, 240, 10, { notched: true }));
+  // loose tile & spacers
+  add(g(poly([[0, 0], [150, -30], [175, 110], [25, 140]], '#f1e8d2', { stroke: '#a89a74', sw: 2 }) + poly([[18, 18], [132, -6], [150, 94], [36, 118]], '#27496d') + poly([[77, 20], [100, 0], [135, 50], [100, 100], [60, 120], [30, 70]], '#d9c08a', { op: 0.9 }) + poly([[77, 45], [108, 40], [110, 75], [78, 80]], '#f1e8d2'), { tf: 'translate(520 670) rotate(8)' }));
+  add(shadowEll(620, 790, 100, 14, 0.3, 6));
+  finish('svc-finishing.svg', 'Interior and exterior finishing', 'A wall in three stages of finishing, raw masonry, plastered and panelled, with crown cornice and a floor half laid with patterned tiles, plus a plastering trowel and a loose tile.');
+}
+
+// =============================================================================
+// pipes / electrical primitives
+// =============================================================================
+function pipeH(x1, x2, y, th, col, o = {}) { // horizontal pipe with cylindrical shading
+  const gr = lin('pp' + hkey(col + th), [[0, lighten(col, 0.35)], [0.3, col], [1, shade(col, 0.35)]], [0, 0, 0, 1]);
+  return rect(x1, y - th / 2, x2 - x1, th, gr, { stroke: shade(col, 0.4), sw: 0.8 }) + rect(x1, y - th / 2 + th * 0.15, x2 - x1, th * 0.12, '#fff', { op: 0.35 });
+}
+function pipeV(x, y1, y2, th, col) {
+  const gr = lin('ppv' + hkey(col + th), [[0, lighten(col, 0.3)], [0.35, col], [1, shade(col, 0.35)]], [0, 0, 1, 0]);
+  return rect(x - th / 2, y1, th, y2 - y1, gr, { stroke: shade(col, 0.4), sw: 0.8 }) + rect(x - th / 2 + th * 0.15, y1, th * 0.12, y2 - y1, '#fff', { op: 0.35 });
+}
+function elbow(x, y, th, col, quad) { // quad: 'ne','nw','se','sw' : the two arms go toward those directions; quarter-circle joint
+  const r = th * 0.9; const gr = lin('el' + hkey(col), [[0, lighten(col, 0.25)], [1, shade(col, 0.3)]], [0, 0, 1, 1]);
+  return circle(x, y, th * 0.68, gr, { stroke: shade(col, 0.4), sw: 0.8 }) + circle(x - th * 0.15, y - th * 0.15, th * 0.2, '#fff', { op: 0.35 });
+}
+function coupling(x, y, th, col, vertical = false) {
+  return vertical ? rect(x - th * 0.68, y - th * 0.35, th * 1.36, th * 0.7, vgrad(lighten(col, 0.3), shade(col, 0.3)), { rx: 2, stroke: shade(col, 0.45), sw: 0.8 }) : rect(x - th * 0.35, y - th * 0.68, th * 0.7, th * 1.36, hgrad(lighten(col, 0.3), shade(col, 0.3)), { rx: 2, stroke: shade(col, 0.45), sw: 0.8 });
+}
+function valveWheel(x, y, s) {
+  return rect(x - 8 * s, y - 14 * s, 16 * s, 28 * s, brassGradH(), { rx: 3 * s }) + rect(x - 3 * s, y - 34 * s, 6 * s, 22 * s, C.brassD) + ellipse(x, y - 36 * s, 22 * s, 6 * s, '#c0392b', { stroke: '#7d2219', sw: 1.2 }) + rect(x - 3 * s, y - 40 * s, 6 * s, 8 * s, '#7d2219');
+}
+function mcb(x, y, w, h, on = true) { return rect(x, y, w, h, '#f1f3f5', { rx: 2, stroke: '#8b929d', sw: 1 }) + rect(x + w * 0.2, y + h * 0.12, w * 0.6, h * 0.34, on ? '#2b2f36' : '#c0392b', { rx: 2 }) + rect(x + w * 0.28, y + (on ? h * 0.14 : h * 0.3), w * 0.44, h * 0.14, '#555c66', { rx: 1 }) + rect(x + w * 0.2, y + h * 0.62, w * 0.6, 3, '#8b929d', { op: 0.6, rx: 1.5 }) + rect(x + w * 0.2, y + h * 0.75, w * 0.4, 3, '#8b929d', { op: 0.4, rx: 1.5 }); }
+
+// =============================================================================
+// 13. svc-plumbing-electrical
+// =============================================================================
+function svcPlumbElec() {
+  begin('spe');
+  add(svcBg({ mode: 'navy', r: 360, cy: 450, ground: false }));
+  const wx = 150, wy = 130, ww = 900, wh = 640;
+  const clip = clipDef('wall', rrect(wx, wy, ww, wh, 24, '#000'));
+  add(shadowPoly([[wx + 10, wy + 22], [wx + ww + 10, wy + 22], [wx + ww + 10, wy + wh + 22], [wx + 10, wy + wh + 22]], 0.45, 16));
+  // plaster wall
+  let w = rect(wx, wy, ww, wh, vgrad('#f4ecd9', '#e2d6bb'));
+  reseed(3); for (let i = 0; i < 90; i++) w += circle(wx + rnd() * ww, wy + rnd() * wh, rr(1, 3), '#c9bb99', { op: 0.25 });
+  // cutaway (jagged) revealing brick + services
+  const cut = [[wx + 90, wy + 70], [wx + 300, wy + 56], [wx + 420, wy + 80], [wx + 560, wy + 52], [wx + 720, wy + 78], [wx + 810, wy + 60], [wx + 830, wy + 200], [wx + 812, wy + 330], [wx + 836, wy + 450], [wx + 800, wy + 580], [wx + 650, wy + 596], [wx + 520, wy + 574], [wx + 380, wy + 598], [wx + 240, wy + 576], [wx + 100, wy + 590], [wx + 74, wy + 470], [wx + 96, wy + 340], [wx + 70, wy + 210]];
+  w += poly(cut, '#000', { op: 0.25, filter: blur(8), tf: 'translate(6 10)' });
+  w += poly(cut, '#fbf8f0', { stroke: '#cdbf9e', sw: 8, lj: 'round' });
+  const cutId = clipDef('cut', poly(cut, '#000'));
+  let inner = rect(wx, wy, ww, wh, brickPat('pebrick', 52, 26, '#b0593a', '#cdbfa3', { seed: 7 }));
+  inner += rect(wx, wy, ww, wh, lin('ish', [[0, '#000', 0.35], [0.1, '#000', 0], [0.9, '#000', 0], [1, '#000', 0.35]], [0, 0, 1, 0]));
+  inner += rect(wx, wy, ww, wh, lin('isv', [[0, '#000', 0.4], [0.12, '#000', 0], [0.9, '#000', 0], [1, '#000', 0.3]], [0, 0, 0, 1]));
+  // copper pipe network (hot/cold) left side
+  const cu = '#c9703c', cuL = '#e39a62', th = 18;
+  // horizontal main
+  inner += pipeH(wx + 70, wx + 470, wy + 200, th, cu) + pipeV(wx + 470, wy + 200, wy + 420, th, cu) + elbow(wx + 470, wy + 200, th, cu) + pipeH(wx + 470, wx + 560, wy + 420, th, cu) + elbow(wx + 470, wy + 420, th, cu);
+  inner += pipeV(wx + 150, wy + 200, wy + 560, th, cu) + elbow(wx + 150, wy + 200, th, cu);
+  for (const [px, py, v] of [[wx + 150, wy + 330, true], [wx + 310, wy + 200, false], [wx + 470, wy + 320, true], [wx + 520, wy + 420, false]]) inner += coupling(px, py, th, cuL, v);
+  // pipe clamps
+  for (const [px, py, v] of [[wx + 230, wy + 200, false], [wx + 390, wy + 200, false], [wx + 150, wy + 260, true], [wx + 150, wy + 460, true], [wx + 470, wy + 260, true]]) inner += (v ? rect(px - th * 0.75, py - 5, th * 1.5, 10, '#8b929d', { rx: 3, stroke: '#555c66', sw: 0.8 }) + circle(px - th * 0.55, py, 2, '#444') + circle(px + th * 0.55, py, 2, '#444') : rect(px - 5, py - th * 0.75, 10, th * 1.5, '#8b929d', { rx: 3, stroke: '#555c66', sw: 0.8 }) + circle(px, py - th * 0.55, 2, '#444') + circle(px, py + th * 0.55, 2, '#444'));
+  inner += valveWheel(wx + 310, wy + 200 - 6, 1.0);
+  // PVC (white/grey) drain stack with blue-stripe supply
+  const pv = '#e9eef2';
+  inner += pipeV(wx + 560, wy + 80, wy + 600, 34, pv) + rect(wx + 543, wy + 80, 34, 10, '#c3ccd4') + rect(wx + 543, wy + 330, 34, 14, '#c3ccd4', { rx: 2 });
+  inner += pipeH(wx + 400, wx + 560, wy + 520, 26, pv) + coupling(wx + 470, wy + 520, 26, '#c3ccd4', false) + circle(wx + 560, wy + 520, 18, '#d3dae0', { stroke: '#8b929d', sw: 1 });
+  inner += pipeV(wx + 605, wy + 80, wy + 500, 14, '#3b82c4') + pipeH(wx + 605, wx + 660, wy + 500, 14, '#3b82c4');
+  for (let i = 0; i < 4; i++) inner += rect(wx + 560 - 17, wy + 150 + i * 90, 34, 5, '#8b929d', { op: 0.5 });
+  // electrical: conduit + wires on right side
+  const cd = '#8f969f';
+  inner += pipeV(wx + 720, wy + 70, wy + 330, 22, cd) + pipeH(wx + 720, wx + 800, wy + 330, 22, cd) + circle(wx + 720, wy + 330, 15, lighten(cd, 0.15), { stroke: '#555c66', sw: 1 });
+  for (let i = 0; i < 8; i++) inner += rect(wx + 709, wy + 100 + i * 30, 22, 3, '#555c66', { op: 0.45 });
+  // wires hanging out of cut conduit: red, blue, green
+  const wires = [['#d33a2c', 0], ['#2b6fc4', 5], ['#2f9e57', 10]];
+  for (const [c, off] of wires) inner += path_(`M${wx + 715 + off - 5} ${wy + 280}C${wx + 690} ${wy + 360} ${wx + 660 - off * 2} ${wy + 420} ${wx + 690 - off} ${wy + 500}`, 'none', { stroke: c, sw: 3.4, lc: 'round' });
+  add(g(rect(wx, wy, ww, wh, '#000', { op: 0 }), {}));
+  // tap + hose
+  // now compose
+  add(g(w + g(inner, { clip: cutId }) + poly(cut, 'none', { stroke: '#f6efdc', sw: 3, lj: 'round' }), { clip }));
+  add(rrect(wx, wy, ww, wh, 24, 'none', { stroke: C.brass, sw: 3 }));
+  // ---- items in front of wall (surface mounted)
+  // tap (basin mixer) at lower-left on plaster, with water stream and drop
+  { const tx = wx + 150, ty = wy + 640;
+    // wall tap (brass) coming from hidden pipe: place on plaster below the cut
+  }
+  // distribution board (top-right on wall)
+  { const bx = wx + 640, by = wy + 40;
+    add(rect(bx + 6, by + 10, 190, 150, '#000', { op: 0.3, filter: blur(7) }));
+    add(rrect(bx, by, 190, 150, 6, vgrad('#c7ccd3', '#8e959f'), { stroke: '#555c66', sw: 2 }));
+    add(rrect(bx + 10, by + 10, 170, 130, 4, '#2b2f36'));
+    add(rect(bx + 16, by + 56, 158, 4, '#555c66') + rect(bx + 16, by + 112, 158, 4, '#555c66'));
+    for (let r_ = 0; r_ < 2; r_++) for (let i = 0; i < 8; i++) add(mcb(bx + 20 + i * 19.5, by + 18 + r_ * 56, 17, 38, (i + r_) % 5 !== 0));
+    add(rrect(bx + 10, by + 130, 170, 12, 3, '#e9ecef') + rect(bx + 20, by + 134, 60, 3, '#8b929d', { rx: 1.5 }));
+    add(circle(bx + 6, by + 6, 2.4, '#555c66') + circle(bx + 184, by + 6, 2.4, '#555c66') + circle(bx + 6, by + 144, 2.4, '#555c66') + circle(bx + 184, by + 144, 2.4, '#555c66'));
+    // warning triangle
+    add(poly([[bx + 160, by - 2], [bx + 190, by - 2], [bx + 175, by - 24]], '#e8b84a', { stroke: '#2b2f36', sw: 1.4 }) + line(bx + 175, by - 20, bx + 175, by - 11, '#2b2f36', 2) + circle(bx + 175, by - 6, 1.4, '#2b2f36'));
+  }
+  // switch plate + socket (right-bottom, on plaster)
+  { const sx = wx + 770, sy = wy + 480;
+    add(rect(sx + 4, sy + 8, 100, 140, '#000', { op: 0.25, filter: blur(6) }));
+    // switch plate (3 rockers)
+    add(rrect(sx - 4, sy, 108, 70, 8, vgrad('#ffffff', '#e5e2da'), { stroke: '#cfc9b8', sw: 1.5 }));
+    for (let i = 0; i < 3; i++) add(rrect(sx + 8 + i * 30, sy + 10, 24, 50, 5, vgrad('#fbfaf6', '#d6d2c6'), { stroke: '#b5ae9a', sw: 1 }), rect(sx + 12 + i * 30, sy + 14, 16, 18, '#fff', { op: 0.8, rx: 3 }));
+    add(circle(sx + 98, sy + 6, 2, '#b5ae9a') + circle(sx + 98, sy + 64, 2, '#b5ae9a'));
+    add(circle(sx + 20 + 30, sy + 52, 2, '#e5602a'));
+    // socket plate
+    add(rrect(sx - 4, sy + 86, 108, 70, 8, vgrad('#ffffff', '#e5e2da'), { stroke: '#cfc9b8', sw: 1.5 }));
+    add(circle(sx + 50, sy + 121, 24, '#f4f2ea', { stroke: '#b5ae9a', sw: 1.4 }) + rect(sx + 38, sy + 108, 5, 16, '#2b2f36', { rx: 1.5 }) + rect(sx + 57, sy + 108, 5, 16, '#2b2f36', { rx: 1.5 }) + rect(sx + 47.5, sy + 128, 5, 8, '#2b2f36', { rx: 1.5 }));
+    add(circle(sx + 8, sy + 92, 2, '#b5ae9a') + circle(sx + 98, sy + 150, 2, '#b5ae9a'));
+  }
+  // bulb hanging from top via cable: left-center over wall? place at center-top overlapping wall top
+  { const bx = wx + 410, by = wy + 6;
+    add(line(bx, wy - 60, bx, by + 70, '#2b2f36', 3));
+    add(circle(bx, by + 118, 90, radial('bulbg', [[0, '#ffe9a8', 0.75], [1, '#ffe9a8', 0]]), { style: 'mix-blend-mode:screen' }));
+    add(rect(bx - 14, by + 64, 28, 16, hgrad('#555c66', '#9aa1ab'), { rx: 3 }) + rect(bx - 14, by + 80, 28, 8, brassGradH()) + rect(bx - 12, by + 88, 24, 6, brassGradH()));
+    add(path_(`M${bx - 11} ${by + 94}C${bx - 40} ${by + 110} ${bx - 36} ${by + 156} ${bx} ${by + 164}C${bx + 36} ${by + 156} ${bx + 40} ${by + 110} ${bx + 11} ${by + 94}Z`, radial('bulb', [[0, '#fffbe8'], [0.6, '#ffe9a8'], [1, '#f4c85a']], [0.5, 0.45, 0.6]), { stroke: '#e8c25a', sw: 1.2 }));
+    add(path_(`M${bx - 6} ${by + 100}L${bx - 8} ${by + 128}L${bx} ${by + 118}L${bx + 8} ${by + 128}L${bx + 6} ${by + 100}`, 'none', { stroke: '#d68a2a', sw: 1.6, lc: 'round', lj: 'round' }));
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; add(line(bx + Math.cos(a) * 54, by + 130 + Math.sin(a) * 54, bx + Math.cos(a) * 68, by + 130 + Math.sin(a) * 68, '#ffe08a', 2.4, { lc: 'round', op: 0.9 })); }
+  }
+  // tap + water drops (bottom-left)
+  { const tx = wx + 150, ty = wy + 548;
+    const bs = (d, w_, c) => stroke_(d, c, w_, { lc: 'round', lj: 'round' });
+    add(shadowEll(tx + 20, ty + 4, 50, 8, 0.3, 4));
+    // wall flange
+    add(rect(tx - 16, ty - 92, 32, 92, brassGradH(), { rx: 6, stroke: C.brassD, sw: 1 }));
+    // spout (stroke pipe)
+    add(bs(`M${tx} ${ty - 56}H${tx + 62}q30 0 30 30v14`, 24, C.brassD), bs(`M${tx} ${ty - 56}H${tx + 62}q30 0 30 30v14`, 20, C.brass), bs(`M${tx} ${ty - 61}H${tx + 62}q26 0 26 26v10`, 5, C.brassL));
+    add(rect(tx + 80, ty - 14, 24, 12, brassGradH(), { rx: 3 }));
+    // handles
+    add(rect(tx - 4, ty - 92, 8, 16, C.brassD), ellipse(tx, ty - 98, 22, 7, '#3b82c4', { stroke: '#1e5a96', sw: 1.2 }), rect(tx - 4, ty - 4, 8, 4, C.brassD));
+    add(path_(`M${tx + 92} ${ty - 2}q0 22 -1 44`, 'none', { stroke: '#a9d8f3', sw: 5, lc: 'round', op: 0.85 }));
+    add(waterDrop(tx + 92, ty + 56, 16, lin('wd', [[0, '#8fd0f2'], [1, '#2f8fd0']], [0, 0, 0, 1]), { stroke: '#fff', sw: 1.5 }));
+  }
+  finish('svc-plumbing-electrical.svg', 'Plumbing and electrical', 'A wall cutaway revealing copper and PVC pipes with valve and brass tap, conduit and coloured wiring, a distribution board, light switches, a socket and a glowing bulb.');
+}
+
+// =============================================================================
+// 14. svc-painting-waterproofing
+// =============================================================================
+function svcPaintWaterproof() {
+  begin('spw');
+  add(svcBg({ r: 350, cy: 450, flip: true, ground: false }));
+  // ---------- left: painted wall card
+  const lx = 90, ly = 140, lw = 520, lh = 600;
+  const clipL = clipDef('lcard', rrect(lx, ly, lw, lh, 26, '#000'));
+  add(shadowPoly([[lx + 10, ly + 22], [lx + lw + 10, ly + 22], [lx + lw + 10, ly + lh + 22], [lx + 10, ly + lh + 22]], 0.4, 14));
+  let wl = rect(lx, ly, lw, lh, vgrad('#e1dccf', '#cfc9b9'));
+  reseed(6); for (let i = 0; i < 140; i++) wl += circle(lx + rnd() * lw, ly + rnd() * lh, rr(0.8, 2.4), '#a9a291', { op: 0.3 });
+  // fresh stripe (teal)
+  const sx0 = 215, sx1 = 405, sTop = ly, sBot = 505;
+  const teal = '#2f7f84';
+  wl += rect(sx0, sTop, sx1 - sx0, sBot - sTop, lin('wet', [[0, '#3a8d92'], [0.5, '#2f7f84'], [1, '#2a7076']], [0, 0, 1, 0]));
+  wl += rect(sx0, sTop, sx1 - sx0, sBot - sTop, lin('wet2', [[0, '#fff', 0], [0.7, '#fff', 0.0], [1, '#fff', 0.18]], [0, 0, 0, 1]));
+  wl += rect(sx0 + 18, sTop, 14, sBot - sTop - 30, '#fff', { op: 0.16, rx: 7 }) + rect(sx0 + 60, sTop, 5, sBot - sTop - 50, '#fff', { op: 0.1, rx: 2.5 });
+  // roller streak texture
+  for (let i = 0; i < 20; i++) wl += rect(sx0 + 4 + i * 9, sTop, 1.4, sBot - sTop - 12, '#fff', { op: 0.05 });
+  // wet edge at bottom + drips
+  wl += path_(`M${sx0} ${sBot - 6}Q${(sx0 + sx1) / 2} ${sBot + 14} ${sx1} ${sBot - 6}V${sBot - 24}H${sx0}Z`, '#348a8f', { op: 0.9 });
+  for (const [dx, dl] of [[0.18, 46], [0.38, 26], [0.62, 62], [0.82, 32]]) wl += rect(sx0 + (sx1 - sx0) * dx - 4, sBot, 8, dl, teal, { rx: 4 }) + circle(sx0 + (sx1 - sx0) * dx, sBot + dl, 6, teal) + circle(sx0 + (sx1 - sx0) * dx - 2, sBot + dl - 2, 2, '#fff', { op: 0.5 });
+  // masking tape
+  for (const tx of [sx0 - 14, sx1]) wl += rect(tx, ly, 14, sBot - ly + 20, '#f4e4a4', { op: 0.96 }) + rect(tx + 2, ly, 2, sBot - ly + 20, '#fff', { op: 0.5 });
+  // drop cloth shadow / baseboard
+  wl += rect(lx, ly + lh - 90, lw, 90, vgrad('#b6b0a0', '#8f8a7a')) + rect(lx, ly + lh - 94, lw, 6, '#fff');
+  add(g(wl, { clip: clipL }));
+  add(rrect(lx, ly, lw, lh, 26, 'none', { stroke: C.brass, sw: 3 }));
+  // roller
+  add(paintRoller(285, 505, 0.76, -5, '#e4e9ec'));
+  add(g(rrect(0, 0, 0, 0, 0, 'none'), {}));
+  // paint tins
+  add(paintTin(300, 655, 120, 100, '#2f7f84'));
+  add(paintTin(440, 676, 100, 80, '#c9a24b'));
+  // brush leaning
+  add(g(rrect(-7, 0, 14, 90, 6, hgrad(C.woodD, C.woodL), { stroke: C.woodD, sw: 1 }) + rect(-12, -26, 24, 30, hgrad('#c7ccd4', '#7d838d'), { rx: 2 }) + path_('M-11 -26Q0 -78 11 -26Z', '#2f7f84') + rect(-9, -62, 18, 6, '#fff', { op: 0.25 }), { tf: 'translate(580 690) rotate(30)' }));
+  // colour swatch fan (paint chips)
+  { const chips = ['#2f7f84', '#27496d', '#b5603c', '#d9c9a8', '#7c8f6a', '#c9a24b'];
+    chips.forEach((c, i) => { const rot = 10 + i * 17; add(g(rrect(-18, -150, 36, 150, 5, '#fbf8f0', { stroke: '#cfc4aa', sw: 1 }) + rect(-14, -146, 28, 52, c, { rx: 3 }) + rect(-14, -90, 28, 40, lighten(c, 0.35), { rx: 3 }) + rect(-14, -46, 28, 30, lighten(c, 0.62), { rx: 3 }) + circle(0, -8, 4, '#cfc4aa'), { tf: `translate(190 650) rotate(${rot})` })); });
+    add(circle(190, 650, 8, C.brass, { stroke: C.brassD, sw: 1.5 })); }
+  // ---------- right: waterproofing slab section card
+  const rx0 = 640, ry0 = 300, rw = 460, rh = 440;
+  const clipR = clipDef('rcard', rrect(rx0, ry0, rw, rh, 26, '#000'));
+  add(shadowPoly([[rx0 + 10, ry0 + 22], [rx0 + rw + 10, ry0 + 22], [rx0 + rw + 10, ry0 + rh + 22], [rx0 + 10, ry0 + rh + 22]], 0.4, 14));
+  let rr_ = rect(rx0, ry0, rw, rh, lin('rsky', [[0, '#bcd9ea'], [0.55, '#e6eef0'], [1, '#f4ead4']], [0, 0, 0, 1]));
+  rr_ += cloud(rx0 + 100, ry0 + 60, 0.8, 0.85) + cloud(rx0 + 380, ry0 + 100, 0.6, 0.8);
+  // rain
+  for (let i = 0; i < 14; i++) rr_ += line(rx0 + 40 + i * 30, ry0 + 30 + (i % 4) * 22, rx0 + 32 + i * 30, ry0 + 58 + (i % 4) * 22, '#7fb4d6', 2, { op: 0.7, lc: 'round' });
+  // layered slab (oblique)
+  const sxl = rx0 + 36, sxr = rx0 + rw - 125, ytop = ry0 + 190; // front face left/right
+  const dx = 46, dy = -26; // oblique offset
+  const layers = [
+    { h: 34, name: 'tile', fill: brickPat('wptile', 22, 17, '#d9c8a2', '#a89a74', { seed: 3, alt: '#efe3c4' }) },
+    { h: 26, name: 'screed', fill: '#c3b89f' },
+    { h: 14, name: 'mem', fill: lin('mem', [[0, '#34527a'], [1, '#162a46']], [0, 0, 0, 1]) },
+    { h: 40, name: 'ins', fill: '#ecd070' },
+    { h: 74, name: 'slab', fill: lin('slab', [[0, '#b9bcc0'], [1, '#8d9096']], [0, 0, 0, 1]) },
+  ];
+  let yy = ytop; const ys = [];
+  for (const L of layers) { ys.push([yy, L]); yy += L.h; }
+  const yEnd = yy;
+  // right side faces (oblique) first
+  for (const [y0, L] of ys) rr_ += poly([[sxr, y0], [sxr + dx, y0 + dy], [sxr + dx, y0 + dy + L.h], [sxr, y0 + L.h]], shade(L.name === 'tile' ? '#bda982' : L.name === 'mem' ? '#1c3556' : L.name === 'ins' ? '#d9bb4a' : L.name === 'slab' ? '#8d9096' : '#a99f86', 0.18));
+  // top face with tile grid
+  rr_ += poly([[sxl, ytop], [sxr, ytop], [sxr + dx, ytop + dy], [sxl + dx, ytop + dy]], lin('toptile', [[0, '#efe3c4'], [1, '#d3c39c']], [0, 0, 1, 0]));
+  for (let i = 1; i < 12; i++) { const t = i / 12; rr_ += line(sxl + (sxr - sxl) * t, ytop, sxl + (sxr - sxl) * t + dx, ytop + dy, '#a89a74', 1, { op: 0.7 }); }
+  for (let j = 1; j < 3; j++) rr_ += line(sxl + (dx * j) / 3, ytop + (dy * j) / 3, sxr + (dx * j) / 3, ytop + (dy * j) / 3, '#a89a74', 1, { op: 0.7 });
+  // front faces
+  for (const [y0, L] of ys) {
+    rr_ += rect(sxl, y0, sxr - sxl, L.h, L.fill, { stroke: shade('#8d9096', 0.2), sw: 0.8 });
+    if (L.name === 'ins') { reseed(2); for (let i = 0; i < 70; i++) rr_ += circle(sxl + rnd() * (sxr - sxl), y0 + rnd() * L.h, rr(1, 3), '#d6b345', { op: 0.7 }); rr_ += rect(sxl, y0, sxr - sxl, 6, '#fff', { op: 0.25 }); }
+    if (L.name === 'slab') { reseed(4); for (let i = 0; i < 90; i++) rr_ += circle(sxl + rnd() * (sxr - sxl), y0 + rnd() * L.h, rr(0.8, 2.2), rnd() > 0.5 ? '#7d8087' : '#cfd2d6', { op: 0.6 }); for (let i = 0; i < 12; i++) rr_ += circle(sxl + 20 + i * ((sxr - sxl - 40) / 11), y0 + L.h - 14, 4.2, '#4d4f55') + circle(sxl + 20 + i * ((sxr - sxl - 40) / 11) - 1, y0 + L.h - 15, 1.4, '#9a9da3'); }
+    if (L.name === 'mem') { rr_ += rect(sxl, y0, sxr - sxl, 4, '#5e82b4', { op: 0.6 }); }
+  }
+  // membrane top face edge (visible strip) + upstand at left parapet
+  rr_ += poly([[sxl, ys[2][0]], [sxr, ys[2][0]], [sxr + dx, ys[2][0] + dy], [sxl + dx, ys[2][0] + dy]], '#1b3556', { op: 0 });
+  // parapet wall at left
+  rr_ += rect(sxl - 30, ytop - 90, 30, yEnd - ytop + 90 + 60, vgrad('#e6dcc3', '#cdbf9e'), { stroke: '#a89a74', sw: 1 });
+  rr_ += poly([[sxl - 30, ytop - 90], [sxl, ytop - 90], [sxl + 18, ytop - 100], [sxl - 12, ytop - 100]], '#f4ecd9') + rect(sxl, ytop - 90, 0, 0, '#000');
+  rr_ += rect(sxl - 2, ytop - 56, 5, 56, '#1b3556') + rect(sxl - 2, ytop - 56, 3, 56, '#34527a'); // upstand membrane
+  // under-slab wall + plaster ceiling
+  rr_ += rect(sxl - 30, yEnd, sxr - sxl + 30, 70, vgrad('#e8dfc9', '#d4c7a6'));
+  rr_ += rect(sxl - 30, yEnd, sxr - sxl + 30, 8, '#000', { op: 0.12 });
+  // leader lines + abstract label bars at right
+  const lx2 = sxr + dx + 12;
+  ys.forEach(([y0, L], i) => { const yc = y0 + L.h / 2 + dy * 0.2; rr_ += line(sxr + dx - 4, yc + dy * 0.6, lx2 + 6, yc + dy * 0.6, C.brassD, 1, { op: 0.9 }) + circle(sxr + dx - 4, yc + dy * 0.6, 2.4, C.brassD) + rect(lx2 + 8, yc + dy * 0.6 - 2, 26 + (i % 3) * 8, 4, '#2b2f36', { rx: 2, op: 0.7 }); });
+  // water drops landing + splash
+  for (const [x, y, s] of [[sxl + 120, ytop - 72, 12], [sxl + 210, ytop - 112, 9], [sxl + 290, ytop - 62, 12]]) { rr_ += waterDrop(x, y, s, lin('wdr', [[0, '#9ad7f5'], [1, '#2f8fd0']], [0, 0, 0, 1]), { stroke: '#fff', sw: 1.2 }); rr_ += path_(`M${x - 18} ${ytop - 6}q18 -26 36 0`, 'none', { stroke: '#7fb4d6', sw: 2, op: 0.8, lc: 'round' }); }
+  add(g(rr_, { clip: clipR }));
+  add(rrect(rx0, ry0, rw, rh, 26, 'none', { stroke: C.brass, sw: 3 }));
+  // shield with drop
+  { const sx = 860, sy = 250;
+    add(shield(sx + 4, sy + 12, 150, 176, '#000', { op: 0.3, filter: blur(8) }));
+    add(shield(sx, sy, 150, 176, lin('shg', [[0, C.brassL], [1, C.brassD]], [0, 0, 1, 1])));
+    add(shield(sx, sy, 130, 152, lin('shn', [[0, '#27496d'], [1, '#0f2238']], [0, 0, 1, 1])));
+    add(waterDrop(sx, sy + 6, 46, lin('shd', [[0, '#bfe6fb'], [1, '#4aa3dc']], [0, 0, 0, 1]), { stroke: '#fff', sw: 2 }));
+    add(path_(`M${sx - 16} ${sy + 8}q2 18 14 24`, 'none', { stroke: '#fff', sw: 3.5, lc: 'round', op: 0.7 }));
+    add(star4(sx + 72, sy - 70, 12, C.brassL, { op: 0.9 }), star4(sx - 78, sy - 44, 8, C.cream, { op: 0.8 })); }
+  finish('svc-painting-waterproofing.svg', 'Painting and waterproofing', 'A paint roller leaving a fresh teal stripe on a wall with paint tins and colour chips, next to a roof slab cross-section showing waterproof membrane layers beneath a water-drop shield.');
+}
+
+// =============================================================================
+// 15. svc-kitchen-bathroom
+// =============================================================================
+function svcKitchenBath() {
+  begin('skb');
+  add(svcBg({ r: 350, cy: 450, ground: false }));
+  const cx0 = 100, cy0 = 130, cw = 1000, ch = 640, mid = 600;
+  const clip = clipDef('card', rrect(cx0, cy0, cw, ch, 28, '#000'));
+  add(shadowPoly([[cx0 + 10, cy0 + 24], [cx0 + cw + 10, cy0 + 24], [cx0 + cw + 10, cy0 + ch + 24], [cx0 + 10, cy0 + ch + 24]], 0.4, 16));
+  const floorY = 690;
+  let K = '';
+  // ---------------- KITCHEN (left)
+  K += rect(cx0, cy0, mid - cx0, floorY - cy0, vgrad('#f1e8d6', '#e4d7ba'));
+  // backsplash tiles
+  K += rect(cx0, 345, mid - cx0, 165, tilePat('kbs', 36, '#eae2d1', '#d3c8ad', { cols: 6, rows: 3, alt: '#f7f2e6', var: 0.9, seed: 4, gloss: 0.2 }));
+  // upper cabinets (oak)
+  const oak = '#b99671';
+  for (const [ux, uw] of [[cx0 + 12, 190], [mid - 202, 190]]) {
+    K += rect(ux, 160, uw, 175, vgrad(lighten(oak, 0.08), shade(oak, 0.08)), { stroke: shade(oak, 0.3), sw: 1.2 });
+    for (let i = 0; i < 2; i++) { K += rect(ux + 4 + i * (uw / 2 - 2), 164, uw / 2 - 6, 167, vgrad(lighten(oak, 0.12), oak), { stroke: shade(oak, 0.3), sw: 1 }); for (let j = 0; j < 4; j++) K += line(ux + 14 + i * (uw / 2 - 2) + j * 18, 170, ux + 14 + i * (uw / 2 - 2) + j * 18, 325, lighten(oak, 0.25), 1, { op: 0.2 }); K += rect(ux + 10 + i * (uw / 2 - 2), 318, uw / 2 - 18, 4, C.brass, { rx: 2 }); }
+    K += rect(ux, 336, uw, 4, '#ffe3b0', { op: 0.95 }) + rect(ux, 340, uw, 14, '#ffe3b0', { op: 0.25, filter: blur(4) });
+  }
+  // hood + chimney
+  K += rect(cx0 + 220, 130, 170, 200, hgrad('#aeb4be', '#e9edf1'));
+  K += rect(cx0 + 220, 130, 24, 200, '#fff', { op: 0.35 });
+  K += poly([[cx0 + 170, 345], [cx0 + 440, 345], [cx0 + 380, 290], [cx0 + 230, 290]], lin('kh', [[0, '#e6e9ee'], [1, '#aeb3bd']], [0, 0, 0, 1]), { stroke: '#7d838d', sw: 1.2 });
+  K += rect(cx0 + 170, 343, 270, 6, C.brass) + rect(cx0 + 240, 300, 130, 4, '#fff', { op: 0.4, rx: 2 });
+  K += poly([[cx0 + 170, 350], [cx0 + 440, 350], [cx0 + 500, 510], [cx0 + 110, 510]], lin('hoodl', [[0, '#ffe2a8', 0.55], [1, '#ffe2a8', 0]]), { style: 'mix-blend-mode:screen' });
+  // base cabinets navy
+  K += rect(cx0, 525, mid - cx0, floorY - 525, '#10192a');
+  const doors = [[cx0 + 12, 140], [cx0 + 156, 190], [cx0 + 350, 140], [cx0 + 494, 0]];
+  for (const [dx_, dw] of [[cx0 + 10, 150], [cx0 + 164, 150], [cx0 + 318, 150], [cx0 + 472, 20]]) { if (dw < 40) continue; K += rect(dx_, 540, dw, 140, soft('#27496d', 0.06, 0.14), { stroke: '#0f2238', sw: 1.2, rx: 2 }); K += rect(dx_ + dw / 2 - 30, 546, 60, 4, C.brass, { rx: 2 }); }
+  K += rect(cx0 + 164, 612, 150, 2, '#0f2238');
+  K += rect(cx0 + 164, 540, 150, 68, '#2d5078', { stroke: '#0f2238', sw: 1.2, rx: 2 }) + rect(cx0 + 164 + 60, 548, 30, 4, C.brass, { rx: 2 });
+  // worktop
+  K += rect(cx0 - 4, 500, mid - cx0 + 8, 28, vgrad('#fbfaf6', '#d9d6cd')) + rect(cx0 - 4, 524, mid - cx0 + 8, 4, '#a9a69c');
+  K += path_(`M${cx0 + 40} 508q80 -6 160 0`, 'none', { stroke: '#a9a69c', sw: 1, op: 0.5 });
+  // hob + pot
+  K += rect(cx0 + 200, 486, 210, 14, '#12151a', { rx: 3 }) + rect(cx0 + 205, 488, 200, 3, '#fff', { op: 0.18 });
+  K += rect(cx0 + 240, 440, 100, 48, hgrad('#c6cad1', '#80858f'), { rx: 6, stroke: '#4d535d', sw: 1.2 }) + ellipse(cx0 + 290, 440, 50, 8, '#d7dade') + rect(cx0 + 222, 456, 20, 6, '#4d535d', { rx: 3 }) + rect(cx0 + 340, 456, 20, 6, '#4d535d', { rx: 3 });
+  K += path_(`M${cx0 + 280} 430q-12 -30 4 -52t-2 -46`, 'none', { stroke: '#fff', sw: 6, op: 0.45, lc: 'round', filter: blur(2) }) + path_(`M${cx0 + 308} 430q10 -26 -2 -48t6 -40`, 'none', { stroke: '#fff', sw: 5, op: 0.4, lc: 'round', filter: blur(2) });
+  // kettle (brass) + canisters + plant
+  K += shadowEll(cx0 + 450, 500, 38, 6, 0.3, 3) + path_(`M${cx0 + 420} 498q-6 -50 30 -50q36 0 30 50z`, hgrad(C.brassL, C.brassD)) + rect(cx0 + 440, 436, 20, 12, C.brassD, { rx: 3 }) + path_(`M${cx0 + 480} 470q22 -6 26 -26`, 'none', { stroke: C.brass, sw: 6, lc: 'round' }) + path_(`M${cx0 + 424} 466q-14 -4 -8 -24`, 'none', { stroke: C.brass, sw: 5, lc: 'round' }) + ellipse(cx0 + 440, 458, 6, 18, '#fff', { op: 0.35 });
+  for (const [x, h, c] of [[cx0 + 36, 60, '#e9e0c9'], [cx0 + 76, 78, '#d9c8a2'], [cx0 + 116, 50, '#b5603c']]) K += rect(x, 500 - h, 30, h, hgrad(lighten(c, 0.1), shade(c, 0.2)), { rx: 3 }) + rect(x - 1, 500 - h - 6, 32, 8, C.brass, { rx: 2 });
+  K += plantSnake(cx0 + 160, 500, 150, { pot: '#d9c8a2', sc: 0.5 });
+  // utensil rail
+  K += rect(cx0 + 36, 392, 130, 4, C.brass, { rx: 2 });
+  for (let i = 0; i < 4; i++) K += line(cx0 + 52 + i * 32, 396, cx0 + 52 + i * 32, 404, C.brass, 2) + (i % 2 ? rect(cx0 + 49 + i * 32, 404, 6, 40, C.woodL, { rx: 3 }) : ellipse(cx0 + 52 + i * 32, 424, 12, 16, '#8a8f98', { stroke: '#555a62', sw: 1.2 }) + rect(cx0 + 50 + i * 32, 408, 4, 8, '#555a62'));
+  // floor
+  K += rect(cx0, floorY, mid - cx0, 90, lin('kfl', [[0, '#d9cfbb'], [1, '#bdb29a']], [0, 0, 0, 1]));
+  for (let i = 0; i < 8; i++) K += line(cx0 + i * 70, floorY, cx0 - 40 + i * 78, floorY + 90, '#a89c82', 1, { op: 0.5 });
+  K += line(cx0, floorY + 35, mid, floorY + 35, '#a89c82', 1, { op: 0.5 });
+  K += rect(cx0, floorY, mid - cx0, 12, '#000', { op: 0.18, filter: blur(4) });
+  // pendant
+  K += line(cx0 + 460, cy0, cx0 + 460, 215, '#2b2f36', 2) + path_(`M${cx0 + 430} 255A30 28 0 0 1 ${cx0 + 490} 255Z`, hgrad(C.brassL, C.brassD)) + ellipse(cx0 + 460, 255, 30, 5, '#fff2c8') + ellipse(cx0 + 460, 280, 56, 36, radial('pnd', [[0, '#ffe2a8', 0.5], [1, '#ffe2a8', 0]]), { style: 'mix-blend-mode:screen' });
+  // ---------------- BATHROOM (right)
+  let B = '';
+  B += rect(mid, cy0, cx0 + cw - mid, floorY - cy0, vgrad('#dfe5e1', '#cbd4cf'));
+  // big tile wall w/ sage lower band
+  B += rect(mid, 330, cx0 + cw - mid, floorY - 330, tilePat('bz', 46, '#6f8a79', '#4d6557', { cols: 6, rows: 4, alt: '#8ba597', var: 0.9, seed: 9, gloss: 0.22 }));
+  for (let i = 0; i < 8; i++) B += line(mid + i * 70, cy0, mid + i * 70, 330, '#aeb9b3', 1, { op: 0.6 });
+  for (const yy of [220]) B += line(mid, yy, cx0 + cw, yy, '#aeb9b3', 1, { op: 0.6 });
+  B += rect(mid, 326, cx0 + cw - mid, 8, C.brass);
+  // towel ladder (left)
+  B += rect(mid + 32, 380, 5, 220, C.brass) + rect(mid + 100, 380, 5, 220, C.brass);
+  for (let i = 0; i < 5; i++) B += rect(mid + 32, 396 + i * 44, 73, 5, brassGradH(), { rx: 2 });
+  B += rect(mid + 40, 340, 58, 74, '#f6f1e6', { stroke: '#cfc4aa', sw: 1, rx: 3 }) + rect(mid + 40, 346, 58, 5, C.brass) + rect(mid + 40, 442, 58, 76, '#b5603c', { rx: 3, stroke: '#7d3a1e', sw: 1 }) + rect(mid + 40, 450, 58, 4, '#e8cc84');
+  // mirror (round) w/ backlight
+  const mxc = 830, myc = 280;
+  B += circle(mxc, myc, 150, radial('bmg', [[0.55, '#ffe6b5', 0.7], [1, '#ffe6b5', 0]]), { style: 'mix-blend-mode:screen' }) + circle(mxc, myc, 108, '#fff3d6', { filter: blur(3) }) + circle(mxc, myc, 104, C.brass) + circle(mxc, myc, 98, lin('bmr', [[0, '#e5eff2'], [1, '#b2c8d0']], [0, 0, 1, 1])) + poly([[mxc - 70, myc - 80], [mxc - 30, myc - 92], [mxc - 8, myc + 90], [mxc - 50, myc + 84]], '#fff', { op: 0.28 });
+  // vanity
+  B += shadowEll(mxc, 636, 160, 12, 0.3, 8) + rect(mxc - 140, 470, 280, 8, vgrad('#fbfaf6', '#d9d6cd')) + rect(mxc - 140, 476, 280, 4, '#a9a69c');
+  B += rect(mxc - 130, 480, 260, 130, hgrad('#7a4e2f', '#5e3a22'), { stroke: '#3a2412', sw: 1.2 });
+  for (let i = 0; i < 12; i++) B += line(mxc - 118 + i * 21, 486, mxc - 118 + i * 21, 604, lighten(C.walnut, 0.25), 1, { op: 0.2 });
+  B += rect(mxc - 120, 490, 240, 52, 'none', { stroke: '#3a2412', sw: 1.2 }) + rect(mxc - 120, 548, 240, 52, 'none', { stroke: '#3a2412', sw: 1.2 }) + rect(mxc - 36, 512, 72, 4, C.brass, { rx: 2 }) + rect(mxc - 36, 570, 72, 4, C.brass, { rx: 2 });
+  B += rect(mxc - 100, 618, 200, 10, '#ffd9a0', { op: 0.8, filter: blur(4) });
+  // basin + tap
+  B += path_(`M${mxc - 52} 450Q${mxc - 50} 472 ${mxc} 472Q${mxc + 50} 472 ${mxc + 52} 450Z`, hgrad('#cfc9bd', '#f8f6f0')) + ellipse(mxc, 450, 52, 10, '#f8f6f0') + ellipse(mxc, 451, 44, 7, '#bdb7ab');
+  B += stroke_(`M${mxc} 450V412q0 -14 14 -14h12`, C.brassD, 11, { lc: 'round', lj: 'round' }) + stroke_(`M${mxc} 450V412q0 -14 14 -14h12`, C.brass, 8, { lc: 'round', lj: 'round' }) + stroke_(`M${mxc} 446V414`, C.brassL, 2.4, { lc: 'round', op: 0.8 });
+  B += rect(mxc - 112, 452, 14, 18, '#efe8d8', { rx: 3 }) + rect(mxc - 108, 444, 6, 10, C.brass);
+  B += vase(mxc + 104, 470, 140, '#d9cdb2', { h: 0.22, w: 0.12, branch: true, bloom: C.leaf, seed: 4 });
+  // shower enclosure (right)
+  const gx0 = 990, gx1 = 1085;
+  B += rect(gx0, 190, gx1 - gx0, floorY - 190, lin('gl', [[0, '#d6ecf3', 0.35], [1, '#bcdbe6', 0.2]], [0, 0, 1, 1]), { stroke: '#23272e', sw: 4 }) + poly([[gx0 + 10, floorY], [gx0 + 36, floorY], [gx0 + 62, 190], [gx0 + 36, 190]], '#fff', { op: 0.2 });
+  B += rect(gx0 - 3, 186, gx1 - gx0 + 6, 6, '#23272e');
+  B += line(gx0 + 60, 190, gx0 + 60, 140, C.brass, 6, { lc: 'round' }) + ellipse(gx0 + 58, 210, 36, 8, brassGradH(), { stroke: C.brassD, sw: 1 });
+  reseed(10); for (let i = 0; i < 24; i++) B += line(gx0 + 30 + rnd() * 56, 216, gx0 + 30 + rnd() * 56 + rr(-3, 3), 216 + rr(90, 400), '#e6f4fa', 1.2, { op: rr(0.25, 0.6) });
+  // floor + mat
+  B += rect(mid, floorY, cx0 + cw - mid, 90, lin('bfl', [[0, '#c9c4b6'], [1, '#aaa493']], [0, 0, 0, 1]));
+  for (let i = 0; i < 7; i++) B += line(mid + i * 78, floorY, mid - 40 + i * 86, floorY + 90, '#8f8977', 1, { op: 0.5 });
+  B += line(mid, floorY + 40, cx0 + cw, floorY + 40, '#8f8977', 1, { op: 0.5 });
+  B += rect(mxc - 90, floorY + 14, 180, 24, '#e6dcc5', { rx: 3, stroke: '#cfc4aa', sw: 1 });
+  for (let i = 0; i < 8; i++) B += rect(mxc - 80 + i * 21, floorY + 16, 5, 20, i % 2 ? C.brass : C.navy3, { op: 0.8 });
+  B += rect(mid, floorY, cx0 + cw - mid, 12, '#000', { op: 0.18, filter: blur(4) });
+  add(g(K + B, { clip }));
+  // divider
+  add(rect(mid - 7, cy0, 14, ch, '#000', { op: 0.25, filter: blur(6) }), rect(mid - 5, cy0, 10, ch, brassGradH()));
+  const by_ = 732;
+  add(circle(mid + 3, by_ + 6, 50, '#000', { op: 0.3, filter: blur(7) }), circle(mid, by_, 50, lin('db', [[0, C.brassL], [1, C.brassD]], [0, 0, 1, 1])), circle(mid, by_, 43, C.navy));
+  // icons in divider badge: pot (left) / drop (right)
+  add(path_(`M${mid - 36} ${by_ - 6}h20v14q0 8 -10 8t-10 -8z`, C.cream) + rect(mid - 39, by_ - 9, 26, 4, C.brassL, { rx: 2 }) + rect(mid - 14, by_ - 4, 8, 3, C.cream, { rx: 1.5 }));
+  add(waterDrop(mid + 20, by_ + 2, 16, lin('bd', [[0, '#bfe6fb'], [1, '#4aa3dc']], [0, 0, 0, 1])));
+  add(rrect(cx0, cy0, cw, ch, 28, 'none', { stroke: C.brass, sw: 3 }));
+  finish('svc-kitchen-bathroom.svg', 'Kitchen and bathroom fit-outs', 'A split composition: a modern navy kitchen with oak wall cabinets, hob and chimney on the left, and a bathroom with a floating walnut vanity, round backlit mirror, towel rail and glass shower on the right.');
+}
+
+// =============================================================================
+// 16. svc-grey-structure
+// =============================================================================
+function svcGreyStructure() {
+  begin('sgs');
+  add(svcBg({ mode: 'navy', r: 355, cy: 450, flip: true, ground: false }));
+  ISO.ox = 600; ISO.oy = 262; ISO.s = 28;
+  const conc = { top: '#c4c5c4', left: '#a7a9ab', right: '#828488' };
+  const concD = { top: '#b6b7b6', left: '#9a9c9e', right: '#76787c' };
+  // plinth / foundation slab
+  add(shadowPoly([isoP(-1, -1, 0), isoP(13, -1, 0), isoP(13, 10, 0), isoP(-1, 10, 0)].map((p) => [p[0] + 12, p[1] + 26]), 0.4, 14));
+  add(isoBox(-1.2, -1.2, -0.9, 14.4, 11.4, 0.9, { top: '#8a7a64', left: '#6a5a46', right: '#52452f' }, { topFill: lin('soil', [[0, '#a89774'], [1, '#8d7d5b']], [0, 0, 1, 1]) }));
+  add(isoBox(0, 0, 0, 12, 9, 0.35, conc));
+  // draw order: back to front. columns at x:0,6,12(edge) y:0,9
+  const xs = [0.2, 5.8, 11.4], ys = [0.2, 8.4]; const cw = 0.6; const h1 = 3.4, zb = 0.35;
+  // back wall (y=0) brickwork partial between columns 0..6 up to z=2.4 (stepped) and right bay up to 1.2
+  const brickWall = (plane, a0, a1, y_or_x, z0, z1, stepped) => {
+    let s = '';
+    const bh = 0.26; const rows = Math.round((z1 - z0) / bh);
+    for (let r = 0; r < rows; r++) {
+      const zc = z0 + r * bh; let ua = a0, ub = a1; if (stepped) { const cut = Math.max(0, (r - rows * 0.55)) * 0.45; ub = a1 - cut; if (ub <= ua) continue; }
+      const col = r % 2 ? '#b0593a' : '#a4502f';
+      s += plane === 'L' ? isoL(y_or_x, ua, ub, zc, zc + bh, col, { stroke: '#cdbf9e', sw: 0.9 }) : isoR(y_or_x, ua, ub, zc, zc + bh, shade(col, 0.2), { stroke: '#b3a584', sw: 0.9 });
+      const n = Math.floor((ub - ua) / 0.5);
+      for (let i = 0; i < n; i++) { const jx = ua + i * 0.5 + (r % 2 ? 0.25 : 0); if (jx < ub) s += plane === 'L' ? isoL(y_or_x, jx, jx + 0.02, zc, zc + bh, '#cdbf9e') : isoR(y_or_x, jx, jx + 0.02, zc, zc + bh, '#b3a584'); }
+    }
+    return s;
+  };
+  // back columns (y=0 row) first
+  const col = (x, y, z0, z1, rebar) => {
+    let s = isoBox(x, y, z0, cw, cw, z1 - z0, conc);
+    for (let i = 0; i < 6; i++) { const a = z0 + (z1 - z0) * (0.2 + i * 0.13); s += isoL(y + cw, x + 0.04, x + cw - 0.04, a, a + 0.02, '#8f9195', { op: 0.35 }); }
+    if (rebar) { const [bx, by] = isoP(x + cw / 2, y + cw / 2, z1); for (const [dx, dy] of [[-8, 0], [-3, -5], [3, 0], [8, -5]]) s += line(bx + dx, by + dy, bx + dx, by + dy - 62, '#6e5a46', 2.2, { lc: 'round' }) + line(bx + dx - 0.8, by + dy, bx + dx - 0.8, by + dy - 62, '#c9a678', 0.8, { op: 0.8 }); for (let k = 0; k < 4; k++) s += pline([[bx - 9, by - 6 - k * 14], [bx + 9, by - 6 - k * 14 - 1]], '#3a3f48', 1.2, {}); }
+    return s;
+  };
+  // ground floor frame
+  for (const x of xs) add(col(x, ys[0], zb, zb + h1, false));
+  // back wall brick (between col0 and col1)
+  add(brickWall('L', xs[0] + cw, xs[1], ys[0] + cw, zb, zb + 2.5, true));
+  add(brickWall('L', xs[1] + cw, xs[2], ys[0] + cw, zb, zb + 1.2, false));
+  // left wall (x = xs[0]) is the side facing left-down? the visible right face is x max; left face is y max. so side wall at x=xs[2]+cw (right side) bricks
+  add(brickWall('R', ys[0] + cw, ys[1], xs[2] + cw, zb, zb + 1.6, true));
+  // beams along y at back (y=0) between columns at z top
+  const zbeam = zb + h1;
+  add(isoBox(xs[0], ys[0], zbeam - 0.55, xs[2] + cw - xs[0], cw, 0.55, concD));
+  add(isoBox(xs[2], ys[0], zbeam - 0.55, cw, ys[1] + cw - ys[0], 0.55, concD));
+  // front columns y = ys[1]
+  for (const x of xs) add(col(x, ys[1], zb, zb + h1, false));
+  add(isoBox(xs[0], ys[1], zbeam - 0.55, xs[2] + cw - xs[0], cw, 0.55, concD));
+  add(isoBox(xs[0], ys[0], zbeam - 0.55, cw, ys[1] + cw - ys[0], 0.55, concD));
+  // middle column line / beams
+  add(isoBox(xs[1], ys[0], zbeam - 0.55, cw, ys[1] + cw - ys[0], 0.55, concD));
+  // slab: covers x 0..6.4 fully; right half shows shuttering + rebar mesh
+  const zs = zbeam;
+  add(isoBox(xs[0], ys[0], zs, xs[1] + cw - xs[0], ys[1] + cw - ys[0], 0.4, conc));
+  // right bay: shuttering (plywood sheet) with rebar mesh
+  add(isoT(zs + 0.02, xs[1] + cw, xs[2] + cw, ys[0], ys[1] + cw, '#c7a46e'));
+  for (let i = 0; i <= 14; i++) { const x = xs[1] + cw + 0.15 + i * ((xs[2] + cw - xs[1] - cw - 0.3) / 14); const a = isoP(x, ys[0] + 0.1, zs + 0.15), b = isoP(x, ys[1] + cw - 0.1, zs + 0.15); add(line(a[0], a[1], b[0], b[1], '#5a4a3a', 1.6)); }
+  for (let j = 0; j <= 18; j++) { const y = ys[0] + 0.1 + j * ((ys[1] + cw - ys[0] - 0.2) / 18); const a = isoP(xs[1] + cw + 0.15, y, zs + 0.2), b = isoP(xs[2] + cw - 0.15, y, zs + 0.2); add(line(a[0], a[1], b[0], b[1], '#6e5a46', 1.6)); }
+  // slab edge highlight
+  // upper columns on slab (left bay) with exposed rebar
+  for (const [x, y] of [[xs[0], ys[0]], [xs[1], ys[0]], [xs[0], ys[1]], [xs[1], ys[1]]]) add(col(x, y, zs + 0.4, zs + 0.4 + 2.2, true));
+  // second-floor beams stubs
+  add(isoBox(xs[0], ys[0], zs + 0.4 + 1.65, xs[1] + cw - xs[0], cw, 0.55, concD));
+  add(isoBox(xs[0], ys[1], zs + 0.4 + 1.65, xs[1] + cw - xs[0], cw, 0.55, concD));
+  // props under slab edge (shuttering props) on the right bay front side
+  for (const [x, y] of [[8.4, 8.4], [10.0, 8.4], [8.4, 4.5], [10.4, 4.5]]) { const a = isoP(x, y, zb), b = isoP(x, y, zs - 0.02); add(line(a[0], a[1], b[0], b[1], '#d9822b', 3.6), line(a[0] - 4, a[1], a[0] + 4, a[1], '#6a6e75', 3)); for (let k = 0; k < 3; k++) { const m = isoP(x, y, zb + 0.6 + k * 0.9); add(circle(m[0], m[1], 2.4, '#5a5f68')); } }
+  // scaffolding bar on the front-left
+  // ladder leaning on slab
+  { const [ax, ay] = isoP(-0.6, 5.2, zb), [bx, by] = isoP(-0.3, 3.6, zs); add(line(ax, ay, bx, by, '#d9a050', 4.5, { lc: 'round' }), line(ax + 16, ay + 6, bx + 16, by + 6, '#d9a050', 4.5, { lc: 'round' })); for (let k = 1; k < 9; k++) { const t = k / 9; add(line(ax + (bx - ax) * t, ay + (by - ay) * t, ax + (bx - ax) * t + 16, ay + (by - ay) * t + 6, '#b87c30', 3)); } }
+  // foreground: rebar bundle (iso cylinders)
+  { const bx = 150, by = 770; reseed(2);
+    add(shadowEll(bx + 80, by + 28, 190, 14, 0.4, 8));
+    const rows = [[0, 0], [1, 0], [2, 0], [3, 0], [0.5, -1], [1.5, -1], [2.5, -1], [1, -2], [2, -2]];
+    // bars lying along iso x direction (towards upper right)
+    for (let i = 0; i < 4; i++) for (const [cx_, cy_] of rows) { const x0 = bx + cx_ * 11 - cy_ * 5, y0 = by + cy_ * 10 - cx_ * 0; }
+    const L = 330;
+    rows.forEach(([cx_, cy_], idx) => { const x0 = bx + cx_ * 15, y0 = by + cy_ * 13 - cx_ * 7; const x1 = x0 + L * 0.866, y1 = y0 - L * 0.5; add(line(x0, y0, x1, y1, '#4f4033', 13, { lc: 'round' }), line(x0, y0 - 1, x1, y1 - 1, '#8a6e52', 9.5, { lc: 'round' }), line(x0, y0 - 3.4, x1, y1 - 3.4, '#c9a678', 1.8, { lc: 'round', op: 0.7 })); add(circle(x0, y0, 6.2, '#6a5238', { stroke: '#3a2f24', sw: 1 })); for (let k = 0; k < 9; k++) { const t = 0.05 + k * 0.11; add(path_(`M${r1(x0 + (x1 - x0) * t)} ${r1(y0 + (y1 - y0) * t - 4.5)}l1.4 0`, 'none', { stroke: '#3a2f24', sw: 0.8, op: 0.5 })); } });
+    // ties
+    for (const t of [0.25, 0.7]) { const px = bx + 12 + L * 0.866 * t, py = by - 4 - L * 0.5 * t; add(g(ellipse(0, 0, 44, 30, 'none', { stroke: '#2b2f36', sw: 3.5, op: 0.9 }), { tf: `translate(${px - 6} ${py + 2}) rotate(-30)` })); }
+  }
+  // brick stack (foreground right) + hard hat
+  { ISO.ox = 850; ISO.oy = 715; ISO.s = 28;
+    for (let r = 0; r < 4; r++) for (let i = 0; i < 3; i++) add(isoBox(i * 1.05, r % 2 ? 0.1 : 0, r * 0.32, 1, 0.5, 0.3, { top: '#c46a45', left: '#b0593a', right: '#8d4529' }));
+    for (let r = 0; r < 3; r++) for (let i = 0; i < 3; i++) add(isoBox(i * 1.05, 0.55, r * 0.32, 1, 0.5, 0.3, { top: '#c46a45', left: '#b0593a', right: '#8d4529' }));
+    add(isoBox(0, 1.2, 0, 3, 1, 0.1, { top: '#8a6e52', left: '#6a5238', right: '#52412d' }));
+    // hard hat
+    const hx = 1040, hy = 730;
+    add(shadowEll(hx, hy + 26, 70, 11, 0.35, 5));
+    add(path_(`M${hx - 62} ${hy + 18}Q${hx - 62} ${hy - 44} ${hx} ${hy - 48}Q${hx + 62} ${hy - 44} ${hx + 62} ${hy + 18}Z`, lin('hat', [[0, '#ffd04a'], [1, '#e0a216']], [0, 0, 1, 1]), { stroke: '#a0720f', sw: 1.4 }));
+    add(path_(`M${hx - 18} ${hy - 46}Q${hx} ${hy - 54} ${hx + 18} ${hy - 46}V${hy + 18}H${hx - 18}Z`, '#f2b92a', { stroke: '#a0720f', sw: 1 }));
+    add(path_(`M${hx - 40} ${hy - 30}Q${hx - 28} ${hy - 40} ${hx - 22} ${hy - 20}`, 'none', { stroke: '#fff', sw: 4, op: 0.5, lc: 'round' }));
+    add(path_(`M${hx - 72} ${hy + 18}Q${hx} ${hy + 4} ${hx + 72} ${hy + 18}Q${hx + 76} ${hy + 30} ${hx + 60} ${hy + 30}Q${hx} ${hy + 16} ${hx - 60} ${hy + 30}Q${hx - 76} ${hy + 30} ${hx - 72} ${hy + 18}Z`, '#e0a216', { stroke: '#a0720f', sw: 1.2 }));
+  }
+  finish('svc-grey-structure.svg', 'Grey structure construction', 'An isometric reinforced-concrete frame under construction with columns, beams and slab, rebar mesh and exposed column bars, partial brickwork, props, a ladder, rebar bundle, brick stack and a hard hat.');
+}
+
+// =============================================================================
+// 17. svc-turnkey
+// =============================================================================
+function svcTurnkey() {
+  begin('stk');
+  add(svcBg({ r: 350, cy: 440, ground: false, flip: true }));
+  const k = 1.12, fx = 600 - 260 * k + 10, fy = 600 - 358 * k;
+  add(shadowEll(600, 606, 340, 16, 0.4, 10));
+  add(facade(fx, fy, k, 'new'));
+  // gate posts and lawn strip
+  add(rect(fx - 20, 596, 520 * k + 40, 8, '#cfc3a4') + rect(fx - 20, 600, 520 * k + 40, 3, '#000', { op: 0.12 }));
+  // checklist clipboard (right)
+  { const bx = 835, by = 360;
+    add(g(rrect(0, 0, 270, 380, 18, '#000', { op: 0.35, filter: blur(14) }), { tf: `translate(${bx + 14} ${by + 26}) rotate(5)` }));
+    let cb = rrect(0, 0, 270, 380, 18, lin('cbd', [[0, '#8a5a38'], [1, '#5f3a22']], [0, 0, 1, 1]), { stroke: '#3a2412', sw: 2 });
+    cb += rrect(18, 36, 234, 326, 8, vgrad('#fffdf8', '#efe8d6'), { stroke: '#d9cfb6', sw: 1.2 });
+    // clip
+    cb += rrect(76, -12, 118, 52, 10, brassGradH(), { stroke: C.brassD, sw: 1.5 }) + rrect(96, 2, 78, 14, 5, C.navy) + circle(135, 26, 7, '#e8cc84', { stroke: C.brassD, sw: 1 });
+    for (let i = 0; i < 5; i++) {
+      const yy = 68 + i * 58; const done = true;
+      cb += checkCircle(54, yy + 18, 19, C.brass, '#fff') + rect(86, yy + 6, 140 - (i % 3) * 20, 7, '#2b3a50', { rx: 3.5, op: 0.85 }) + rect(86, yy + 22, 96 - (i % 2) * 22, 5, '#9aa4b2', { rx: 2.5, op: 0.8 }) + line(36, yy + 46, 236, yy + 46, '#d9cfb6', 1, { op: 0.8 });
+    }
+    add(g(cb, { tf: `translate(${bx} ${by}) rotate(5)` })); }
+  // brass key (left), with navy handover tag
+  { const kx = 215, ky = 330;
+    // tag string + tag
+    add(path_(`M${kx - 4} ${ky - 40}C${kx - 70} ${ky - 90} ${kx - 120} ${ky - 40} ${kx - 100} ${ky + 20}`, 'none', { stroke: C.brass, sw: 3, op: 0 }));
+    add(brassKey(kx, ky, 470, 12));
+    // tag hanging from the bow
+    add(g(circle(0, 0, 5, C.brassD) + line(0, 0, 0, 36, '#d9cdb0', 2.5) + path_('M-30 36L30 36L36 118Q0 130 -36 118Z', lin('tag', [[0, '#27496d'], [1, '#0f2238']], [0, 0, 1, 1]), { stroke: C.brass, sw: 2.5, lj: 'round' }) + circle(0, 54, 7, C.cream, { stroke: C.brass, sw: 1.5 }) + path_('M-16 96L0 78L16 96V108H-16Z', C.brassL) + rect(-4, 98, 8, 10, '#27496d'), { tf: `translate(${kx - 100} ${ky + 170}) rotate(-12)` })); }
+  // sparkle accents
+  add(star4(300, 215, 20, C.brass, { op: 0.95 }), star4(955, 270, 14, C.brass, { op: 0.9 }), star4(180, 640, 12, C.brassL, { op: 0.9 }), star4(1060, 640, 18, C.brassL, { op: 0.9 }));
+  finish('svc-turnkey.svg', 'Turnkey home delivery', 'A completed modern house beside a large brass key with a handover tag and a clipboard checklist with every item ticked.');
+}
+
+// =============================================================================
 // INTERIOR helpers
 // =============================================================================
 // False-ceiling tray with warm LED cove
@@ -782,7 +1423,7 @@ function livingRoom() {
   // ceiling downlights
   add(downlights(cam, [[-2.2, 2.4], [2.2, 2.4], [-2.2, 4.2], [2.2, 4.2], [-2.2, 5.6], [2.2, 5.6]], 2.57));
   add(finishLayer({ vig: 0.34, glow: '#ffd9a0', glowOp: 0.14, gx: 0.5, gy: 0.35 }));
-  finish('interior-living-room.svg', 'Modern living room', 'A bright modern Pakistani living and TV lounge with an L-shaped sofa, patterned rug, marble and walnut TV feature wall with LED strip, brass chandelier, large window with curtains and indoor plants.');
+  finish('interior-living-room.svg', 'Modern living room', 'A bright modern Pakistani living and TV lounge with an L-shaped sofa, patterned rug, marble and walnut TV feature wall with LED strip, brass chandelier, large window with curtains and indoor plants.', [1.06, 700, 520, -34]);
 }
 
 // Wood plank floor in perspective
@@ -951,7 +1592,7 @@ function bedroom() {
   { const [x, y0] = cam.P(0, 2.7, 4.4); const k = cam.s(4.4); add(drumPendant(x, y0, k, 0.75, 0.36, 0.28)); }
   add(downlights(cam, [[-1.8, 2.4], [1.8, 2.4], [-1.8, 4.2], [1.8, 4.2]], 2.54));
   add(finishLayer({ vig: 0.36, glow: '#ffd9a0', glowOp: 0.12, gx: 0.5, gy: 0.4 }));
-  finish('interior-bedroom.svg', 'Master bedroom', 'A calm master bedroom with a padded navy headboard wall, a bed dressed in layered linen, nightstands with brass lamps, a walnut wardrobe, sheer curtains at the window and a patterned rug.');
+  finish('interior-bedroom.svg', 'Master bedroom', 'A calm master bedroom with a padded navy headboard wall, a bed dressed in layered linen, nightstands with brass lamps, a walnut wardrobe, sheer curtains at the window and a patterned rug.', [1.14, 600, 600, -50]);
 }
 
 // Tile pattern (fronto-parallel only). ts = tile size px; returns fill url
@@ -1176,7 +1817,7 @@ function kitchen() {
   for (const x of [-0.95, 0, 0.95]) { const [px, py] = cam.P(x, 2.7, 3.55); const k = cam.s(3.55); add(pendantDome(px, py, k, 0.8, 0.17, C.brass)); }
   add(downlights(cam, [[-1.9, 2.3], [1.9, 2.3], [-1.9, 4.2], [1.9, 4.2], [0, 5.4]], 2.52));
   add(finishLayer({ vig: 0.34, glow: '#ffe0a8', glowOp: 0.12, gx: 0.5, gy: 0.35 }));
-  finish('interior-kitchen.svg', 'Modern kitchen', 'A modern handleless kitchen with navy base cabinets, marble island with bar stools, hob and chimney hood, tiled backsplash, brass pendant lights and a bright window.');
+  finish('interior-kitchen.svg', 'Modern kitchen', 'A modern handleless kitchen with navy base cabinets, marble island with bar stools, hob and chimney hood, tiled backsplash, brass pendant lights and a bright window.', [1.12, 600, 600, -44]);
 }
 
 // large-format tile wall on any surface (grid lines + soft veining)
@@ -1339,7 +1980,7 @@ function bathroom() {
     add(rrect(x - 0.18 * k, y - 0.44 * k, 0.36 * k, 0.12 * k, 4, '#f4efe6', { stroke: '#cfc4aa', sw: 1 }), rrect(x - 0.16 * k, y - 0.5 * k, 0.32 * k, 0.1 * k, 4, '#b5603c'), rrect(x - 0.15 * k, y - 0.54 * k, 0.3 * k, 0.07 * k, 3, '#e8dcc0')); }
   add(downlights(cam, [[-1.4, 2.5], [0, 2.5], [1.4, 2.5], [-0.6, 4.1], [0.6, 4.1]], 2.48));
   add(finishLayer({ vig: 0.34, glow: '#ffe0a8', glowOp: 0.12, gx: 0.5, gy: 0.35 }));
-  finish('interior-bathroom.svg', 'Modern bathroom', 'A modern bathroom with a floating walnut vanity, round backlit mirror, large-format stone tiles, a glass shower enclosure with rain shower, brass towel rail and a plant.');
+  finish('interior-bathroom.svg', 'Modern bathroom', 'A modern bathroom with a floating walnut vanity, round backlit mirror, large-format stone tiles, a glass shower enclosure with rain shower, brass towel rail and a plant.', [1.1, 600, 620, -36]);
 }
 
 // crockery on a shelf (back-wall fronto-parallel surface only)
@@ -1584,7 +2225,7 @@ function dining() {
   { const [x, y0] = cam.P(0, 2.78, 4.3); const k = cam.s(4.3); add(ringChandelier(x, y0, k, { r: 0.75, drop: 0.45, n: 14 })); }
   add(downlights(cam, [[-2.2, 2.5], [2.2, 2.5], [-2.2, 5.2], [2.2, 5.2], [0, 2.3]], 2.6));
   add(finishLayer({ vig: 0.42, glow: '#ffc882', glowOp: 0.2, gx: 0.5, gy: 0.4 }));
-  finish('interior-dining.svg', 'Dining room', 'A warm dining room with a six-seat marble-top table, upholstered chairs, a statement brass chandelier, a lit crockery display cabinet and an arched niche.');
+  finish('interior-dining.svg', 'Dining room', 'A warm dining room with a six-seat marble-top table, upholstered chairs, a statement brass chandelier, a lit crockery display cabinet and an arched niche.', [1.14, 600, 620, -46]);
 }
 
 // =============================================================================
@@ -1724,10 +2365,10 @@ function hammer(x, y, len, rot, o = {}) {
   // grip
   s += rrect(-hw * 1.15, hl * 0.55, hw * 2.3, hl * 0.5, hw, hgrad('#1a2a40', '#27496d'));
   for (let i = 0; i < 6; i++) s += line(-hw * 1.1, hl * 0.6 + i * hl * 0.07, hw * 1.1, hl * 0.6 + i * hl * 0.07, '#0f2238', 1.2, { op: 0.6 });
-  // head
-  const hx = len * 0.2, hh = len * 0.1;
-  s += path_(`M${r1(-hx)} ${r1(-hl * 0.1 - hh)}L${r1(hx * 0.65)} ${r1(-hl * 0.1 - hh)}Q${r1(hx * 1.1)} ${r1(-hl * 0.1 - hh)} ${r1(hx * 1.1)} ${r1(-hl * 0.1 - hh * 0.5)}L${r1(hx * 1.1)} ${r1(-hl * 0.1 + hh * 0.3)}L${r1(hx * 0.65)} ${r1(-hl * 0.1 + hh * 0.3)}L${r1(-hx * 0.2)} ${r1(-hl * 0.1 + hh * 0.3)}L${r1(-hx * 0.2)} ${r1(-hl * 0.1 + hh * 0.3)}Q${r1(-hx * 0.8)} ${r1(-hl * 0.1 + hh * 0.3)} ${r1(-hx * 1.2)} ${r1(-hl * 0.1 + hh * 0.9)}Q${r1(-hx * 1.2)} ${r1(-hl * 0.1 - hh * 0.2)} ${r1(-hx)} ${r1(-hl * 0.1 - hh)}Z`, steelGrad(), { stroke: '#4d535d', sw: 1.2 });
-  s += rect(hx * 0.65, -hl * 0.1 - hh * 0.9, hx * 0.45, hh * 1.1, shade('#9aa1ab', 0.1), { rx: 2 });
+  // head (claw hammer)
+  const bw = len * 0.1, bh = len * 0.14, fw = len * 0.09, cl = len * 0.24, y0 = -hl * 0.1;
+  s += path_(`M${r1(-bw)} ${r1(y0 - bh)}L${r1(bw + fw)} ${r1(y0 - bh)}L${r1(bw + fw)} ${r1(y0)}L${r1(-bw)} ${r1(y0)}Q${r1(-bw - cl * 0.6)} ${r1(y0 - bh * 0.1)} ${r1(-bw - cl)} ${r1(y0 + bh * 0.55)}Q${r1(-bw - cl * 0.7)} ${r1(y0 - bh * 0.55)} ${r1(-bw)} ${r1(y0 - bh)}Z`, lin('hmh', [[0, '#f4f6f8'], [0.5, '#aeb4be'], [1, '#6a717c']], [0, 0, 0, 1]), { stroke: '#4d535d', sw: 1.2 });
+  s += rect(bw + fw * 0.2, y0 - bh, fw * 0.8, bh, '#8b929d', { op: 0.9 }) + rect(-bw + 4, y0 - bh + 4, bw * 2 + fw - 8, 5, '#fff', { op: 0.5, rx: 2 });
   return g(s, { tf: `translate(${r1(x)} ${r1(y)}) rotate(${rot})` });
 }
 function screwdriver(x, y, len, rot, handle = '#b5603c') {
@@ -1755,13 +2396,12 @@ function toolbox(x, y, w, h, col = '#a8372d') {
 }
 function paintRoller(x, y, sc, rot, col = '#c9a24b') {
   let s = '';
-  s += path_(`M0 ${r1(60 * sc)}v${r1(50 * sc)}`, 'none', { stroke: '#5a616c', sw: 5 * sc });
-  s += path_(`M${r1(150 * sc)} ${r1(10 * sc)}H${r1(170 * sc)}V${r1(50 * sc)}H0`, 'none', { stroke: '#7d8590', sw: 6 * sc, lj: 'round', lc: 'round' });
+  s += path_(`M${r1(150 * sc)} ${r1(6 * sc)}H${r1(187 * sc)}V${r1(46 * sc)}`, 'none', { stroke: '#7d8590', sw: 6 * sc, lj: 'round', lc: 'round' });
   s += rrect(-90 * sc, -28 * sc, 250 * sc, 62 * sc, 14 * sc, vgrad(lighten(col, 0.3), shade(col, 0.15)), { stroke: shade(col, 0.35), sw: 1.5 });
   for (let i = 0; i < 12; i++) s += rect(-84 * sc + i * 20 * sc, -26 * sc, 3 * sc, 58 * sc, '#fff', { op: 0.08 });
   s += rect(-80 * sc, -20 * sc, 230 * sc, 9 * sc, '#fff', { op: 0.3, rx: 4 });
   s += rrect(-96 * sc, -26 * sc, 10 * sc, 58 * sc, 4 * sc, '#4a2c1a');
-  s += rrect(176 * sc, 40 * sc, 22 * sc, 150 * sc, 8 * sc, hgrad('#1f3d5e', '#35618e'), { stroke: '#0f2238', sw: 1.5 });
+  s += rrect(176 * sc, 44 * sc, 22 * sc, 150 * sc, 8 * sc, hgrad('#1f3d5e', '#35618e'), { stroke: '#0f2238', sw: 1.5 });
   return g(s, { tf: `translate(${r1(x)} ${r1(y)}) rotate(${rot})` });
 }
 function paintTin(x, y, w, h, col, o = {}) {
@@ -1776,12 +2416,20 @@ function paintTin(x, y, w, h, col, o = {}) {
   return s;
 }
 function trowel(x, y, len, rot, o = {}) {
-  const bw = len * 0.34, bl = len * 0.62;
-  let s = path_(`M${r1(-bw / 2)} 0L${r1(bw / 2)} 0L${r1(bw * 0.42)} ${r1(bl)}Q0 ${r1(bl + bw * 0.28)} ${r1(-bw * 0.42)} ${r1(bl)}Z`, steelGradH(), { stroke: '#555c66', sw: 1.2 });
-  s += path_(`M${r1(-bw * 0.12)} 0L${r1(bw * 0.08)} 0L${r1(bw * 0.02)} ${r1(bl * 0.9)}L${r1(-bw * 0.16)} ${r1(bl * 0.85)}Z`, '#fff', { op: 0.3 });
-  s += path_(`M${r1(-4)} ${r1(-4)}L${r1(4)} ${r1(-4)}L${r1(5)} ${r1(-len * 0.12)}L${r1(-5)} ${r1(-len * 0.12)}Z`, '#6b717c');
-  s += rrect(-bw * 0.17, -len * 0.38, bw * 0.34, len * 0.27, bw * 0.12, hgrad(C.woodD, C.woodL), { stroke: C.woodD, sw: 1 });
-  s += rect(-bw * 0.05, -len * 0.36, bw * 0.08, len * 0.22, '#fff', { op: 0.2, rx: 2 });
+  // plastering / tiling trowel: rectangular blade with raised wooden handle (local: blade centred at origin, long axis x)
+  const bl = len, bh = len * 0.32; let s = '';
+  s += shadowPoly([[-bl / 2 + 10, bh / 2 + 18], [bl / 2 + 10, bh / 2 + 18], [bl / 2 - 6, bh / 2 + 34], [-bl / 2 + 2, bh / 2 + 34]], 0.0, 4);
+  // blade
+  let bd = `M${r1(-bl / 2)} ${r1(-bh / 2)}H${r1(bl / 2 - 8)}Q${r1(bl / 2)} ${r1(-bh / 2)} ${r1(bl / 2)} ${r1(-bh / 2 + 8)}V${r1(bh / 2)}`;
+  if (o.notched) { const n = 11, st = bl / n; for (let i = 0; i < n; i++) { const xr = bl / 2 - i * st; bd += `L${r1(xr)} ${r1(bh / 2 + 8)}L${r1(xr - st / 2)} ${r1(bh / 2 + 8)}L${r1(xr - st / 2)} ${r1(bh / 2)}L${r1(xr - st)} ${r1(bh / 2)}`; } bd += `L${r1(-bl / 2)} ${r1(bh / 2)}Z`; }
+  else bd = `M${r1(-bl / 2)} ${r1(-bh / 2)}H${r1(bl / 2 - 8)}Q${r1(bl / 2)} ${r1(-bh / 2)} ${r1(bl / 2)} ${r1(-bh / 2 + 8)}V${r1(bh / 2 - 8)}Q${r1(bl / 2)} ${r1(bh / 2)} ${r1(bl / 2 - 8)} ${r1(bh / 2)}H${r1(-bl / 2 + 8)}Q${r1(-bl / 2)} ${r1(bh / 2)} ${r1(-bl / 2)} ${r1(bh / 2 - 8)}Z`;
+  s += path_(bd, lin('trb', [[0, '#f4f6f8'], [0.45, '#b8bec7'], [1, '#7d848f']], [0, 0, 0, 1]), { stroke: '#5a616c', sw: 1.4 });
+  s += rect(-bl / 2 + 8, -bh / 2 + 5, bl - 24, 5, '#fff', { op: 0.5, rx: 2.5 });
+  // posts + handle
+  for (const px of [-bl * 0.16, bl * 0.16]) s += rect(px - 3, -bh / 2 - 14, 6, 16, hgrad('#8b929d', '#c9ced6')) + circle(px, -bh / 2 + 2, 3.5, '#5a616c');
+  s += rrect(-bl * 0.28, -bh / 2 - 38, bl * 0.56, 26, 12, hgrad(C.woodD, C.woodL), { stroke: C.woodD, sw: 1.2 });
+  s += rrect(-bl * 0.24, -bh / 2 - 34, bl * 0.48, 7, 3.5, '#fff', { op: 0.22 });
+  if (o.mortar) s += path_(`M${r1(-bl * 0.3)} ${r1(bh * 0.1)}q${r1(bl * 0.1)} ${r1(-bh * 0.5)} ${r1(bl * 0.3)} ${r1(-bh * 0.38)}q${r1(bl * 0.25)} ${r1(bh * 0.1)} ${r1(bl * 0.3)} ${r1(bh * 0.32)}q${r1(-bl * 0.3)} ${r1(bh * 0.14)} ${r1(-bl * 0.6)} ${r1(bh * 0.06)}z`, '#d8d1c0', { stroke: '#b5ad98', sw: 1 });
   return g(s, { tf: `translate(${r1(x)} ${r1(y)}) rotate(${rot})` });
 }
 // brass key (ornate bow, long shaft)
@@ -1807,9 +2455,11 @@ function shield(x, y, w, h, fill, o = {}) {
 }
 function waterDrop(x, y, s, fill, o = {}) { return path_(`M${r1(x)} ${r1(y - s)}C${r1(x + s * 0.2)} ${r1(y - s * 0.55)} ${r1(x + s * 0.75)} ${r1(y - s * 0.1)} ${r1(x + s * 0.75)} ${r1(y + s * 0.3)}A${r1(s * 0.75)} ${r1(s * 0.75)} 0 0 1 ${r1(x - s * 0.75)} ${r1(y + s * 0.3)}C${r1(x - s * 0.75)} ${r1(y - s * 0.1)} ${r1(x - s * 0.2)} ${r1(y - s * 0.55)} ${r1(x)} ${r1(y - s)}Z`, fill, o); }
 function wrenchBadge(x, y, r) {
-  return circle(x + 4, y + 8, r, '#000', { op: 0.25, filter: blur(7) }) + circle(x, y, r, lin('badge', [[0, C.brassL], [1, C.brassD]], [0, 0, 1, 1])) + circle(x, y, r * 0.86, C.navy, { stroke: C.brassL, sw: 2 }) +
-    g(path_(wrenchPath(r * 0.26, r * 0.13, r * 0.02, r * 0.72, r * 0.1), C.cream), { tf: `translate(${r1(x - r * 0.2)} ${r1(y - r * 0.5)}) rotate(40 ${r1(r * 0.0)} ${r1(r * 0.5)})` }) +
-    g(path_(wrenchPath(r * 0.26, r * 0.13, r * 0.02, r * 0.72, r * 0.1), C.brassL), { tf: `translate(${r1(x + r * 0.2)} ${r1(y - r * 0.5)}) rotate(-40 ${r1(r * 0.0)} ${r1(r * 0.5)})` });
+  const wr = (c) => path_(wrenchPath(r * 0.3, r * 0.15, r * 0.02, r * 0.78, r * 0.1), c, { stroke: C.brassD, sw: 1 });
+  const sdr = `<rect x="${r1(-r * 0.07)}" y="${r1(-r * 0.62)}" width="${r1(r * 0.14)}" height="${r1(r * 0.4)}" rx="${r1(r * 0.05)}" fill="${C.cream}"/><rect x="${r1(-r * 0.025)}" y="${r1(-r * 0.2)}" width="${r1(r * 0.05)}" height="${r1(r * 0.8)}" fill="${C.cream}"/>`;
+  return circle(x + 4, y + 8, r, '#000', { op: 0.3, filter: blur(7) }) + circle(x, y, r, lin('badge', [[0, C.brassL], [1, C.brassD]], [0, 0, 1, 1])) + circle(x, y, r * 0.86, C.navy, { stroke: C.brassL, sw: 2 }) +
+    g(sdr, { tf: `translate(${r1(x)} ${r1(y)}) rotate(-45)` }) +
+    g(wr(C.brassL), { tf: `translate(${r1(x)} ${r1(y)}) rotate(45) translate(0 ${r1(-r * 0.46)})` });
 }
 // brick pattern (flat)
 function brickPat(name, bw, bh, base, mortar, o = {}) {
@@ -1968,7 +2618,8 @@ function isoHouse(ox, oy, s, o = {}) {
   out += isoPoly([[B.x + 2.2, B.y + B.d, B.z + 0.58], [B.x + 3.0, B.y + B.d, B.z + 0.58], [B.x + 3.9, B.y + B.d, B.z + 2.42], [B.x + 3.1, B.y + B.d, B.z + 2.42]], '#fff', { op: 0.25 });
   // roof slab (overhang)
   out += isoBox(B.x - 0.3, B.y - 0.3, B.z + B.h, B.w + 0.7, B.d + 0.6, 0.35, { top: '#cfc7b4', left: '#fbf8f1', right: '#dcd5c3' });
-  out += isoT(B.z + B.h + 0.36, B.x + 0.6, B.x + 1.8, B.y + 1.0, B.y + 2.2, '#27496d');
+  out += isoBox(B.x + 0.6, B.y + 1.0, B.z + B.h + 0.35, 1.3, 1.2, 0.8, { top: '#3d6590', left: '#27496d', right: '#1c3856' });
+  out += isoBox(B.x + 3.0, B.y + 3.4, B.z + B.h + 0.35, 1.8, 1.2, 0.15, { top: '#27496d', left: '#1c3856', right: '#15293f' });
   // ground floor details (left face y = 6)
   out += isoL(A.d, 3.6, 6.5, 0.3, 2.8, '#1d2127') + isoL(A.d, 3.68, 6.42, 0.38, 2.72, glass);
   out += isoL(A.d, 5.05 - 0.03, 5.05 + 0.03, 0.38, 2.72, '#1d2127');
@@ -2013,18 +2664,18 @@ function svcNewHome() {
   add(isoT(0.03, 2.5, 8.3, 8.8, 9.9, '#d6ccb4'));
   for (let i = 0; i < 6; i++) add(isoT(0.04, 8.45, 10.45, 6.7 + i * 0.7, 6.7 + i * 0.7 + 0.05, '#a89d82', { op: 0.7 }));
   for (let i = 0; i < 4; i++) add(isoT(0.04, 7.2 + i * 0.01, 8.4, 6.1 + i * 0.62, 6.1 + i * 0.62 + 0.45, '#e2d9c3'));
+  // plot boundary outline (dashed brass), drawn on the ground
+  const m = 0.45; const pts = [[m, m, 0.03], [PW - m, m, 0.03], [PW - m, PD - m, 0.03], [m, PD - m, 0.03]];
+  const stake = (x, y) => {
+    const [px, py] = isoP(x, y, 0.03);
+    return ellipse(px, py + 1, 8, 3, '#000', { op: 0.25, filter: blur(2) }) + rect(px - 2.5, py - 46, 5, 46, lin('stk', [[0, '#d9b57e'], [1, '#a8814e']], [0, 0, 1, 0])) + poly([[px - 2.5, py - 46], [px + 2.5, py - 46], [px, py - 51]], '#d9b57e') + rect(px - 3, py - 40, 6, 12, '#e5602a') + path_(`M${r1(px + 2.5)} ${r1(py - 38)}q16 -4 22 4q-14 2 -22 10z`, '#e5602a');
+  };
+  const str = (a, b) => { const p = isoP(a[0], a[1], 1.45), q = isoP(b[0], b[1], 1.45); return line(p[0], p[1], q[0], q[1], '#f4efe6', 1.2, { op: 0.9 }); };
+  add(poly(pts.map((p) => isoP(...p)), 'none', { stroke: C.brass, sw: 3, da: '12 8', lj: 'round', op: 0.95 }));
+  add(stake(m, m), str([m, m], [PW - m, m]), str([m, m], [m, PD - m]), stake(PW - m, m), stake(m, PD - m));
   // house
   { const [hx, hy] = isoP(2.3, 1.6, 0); add(isoHouse(hx, hy, ISO.s)); }
-  // plot boundary outline (dashed brass) + string line
-  const m = 0.45; const pts = [[m, m, 0.03], [PW - m, m, 0.03], [PW - m, PD - m, 0.03], [m, PD - m, 0.03]];
-  add(poly(pts.map((p) => isoP(...p)), 'none', { stroke: C.brass, sw: 3, da: '12 8', lj: 'round', op: 0.95 }));
-  // stakes with tape flags
-  for (const [x, y] of [[m, m], [PW - m, m], [PW - m, PD - m], [m, PD - m]]) {
-    const [px, py] = isoP(x, y, 0.03);
-    add(ellipse(px, py + 1, 8, 3, '#000', { op: 0.25, filter: blur(2) }), rect(px - 2.5, py - 46, 5, 46, lin('stk', [[0, '#d9b57e'], [1, '#a8814e']], [0, 0, 1, 0])), poly([[px - 2.5, py - 46], [px + 2.5, py - 46], [px, py - 51]], '#d9b57e'), rect(px - 3, py - 40, 6, 12, '#e5602a'), path_(`M${r1(px + 2.5)} ${r1(py - 38)}q16 -4 22 4q-14 2 -22 10z`, '#e5602a'));
-  }
-  // string line between stakes (slightly above ground)
-  add(poly(pts.map((p) => isoP(p[0], p[1], 1.45)), 'none', { stroke: '#f4efe6', sw: 1.2, op: 0.9 }));
+  add(str([PW - m, m], [PW - m, PD - m]), str([m, PD - m], [PW - m, PD - m]), stake(PW - m, PD - m));
   // trees / landscaping
   for (const [x, y, sc] of [[12.8, 1.6, 1], [13.2, 8.6, 0.8], [1.2, 9.8, 0.8]]) { const [px, py] = isoP(x, y, 0); add(roundTree(px, py, 0.7 * sc, C.leaf)); }
   { const [px, py] = isoP(12.2, 5.2, 0); add(palmTree(px, py, 130, 0.9)); }
@@ -2053,6 +2704,337 @@ function svcNewHome() {
 }
 
 // =============================================================================
+// apartment block / townhouse (front elevation)
+// =============================================================================
+function aptBlock(x, y, w, floors, o = {}) {
+  const fh = o.fh ?? 76; const col = o.col || '#eadfc6'; const acc = o.acc || C.navy2;
+  const H = floors * fh + (o.ground ?? 70); const top = y - H;
+  let s = '';
+  s += shadowEll(x + w / 2, y + 2, w * 0.58, 8, 0.28, 6);
+  // body
+  s += rect(x, top, w, H, vgrad(lighten(col, 0.12), shade(col, 0.08)));
+  // side shading
+  s += rect(x, top, w * 0.06, H, '#000', { op: 0.06 }) + rect(x + w * 0.94, top, w * 0.06, H, '#000', { op: 0.12 });
+  // roof parapet
+  s += rect(x - 5, top - 14, w + 10, 14, lighten(col, 0.25)) + rect(x - 5, top - 3, w + 10, 3, shade(col, 0.2));
+  s += rect(x - 5, top - 1, w + 10, 1.6, '#ffe3b0', { op: 0.9 });
+  // rooftop tanks & mumty
+  if (o.tanks !== false) {
+    const tx = x + w * 0.15; s += rect(tx, top - 40, 36, 26, '#2b2f36', { rx: 4 }) + ellipse(tx + 18, top - 40, 18, 4, '#454b56') + rect(tx + 4, top - 14, 4, 6, '#5a616c') + rect(tx + 28, top - 14, 4, 6, '#5a616c');
+    s += rect(x + w * 0.55, top - 34, 48, 20, shade(col, 0.1)) + rect(x + w * 0.55, top - 36, 48, 3, lighten(col, 0.3));
+  }
+  // ground floor
+  const gy = y - (o.ground ?? 70);
+  s += rect(x, gy, w, (o.ground ?? 70), vgrad(shade(acc, 0.0), shade(acc, 0.25)));
+  // lobby
+  const lw = Math.min(90, w * 0.3); const lx = x + w / 2 - lw / 2;
+  s += rect(lx, gy + 12, lw, (o.ground ?? 70) - 12, '#12202f') + rect(lx + 4, gy + 16, lw - 8, (o.ground ?? 70) - 16, lin('lob' + x, [[0, '#ffe7b8'], [1, '#e1a96a']], [0, 0, 0, 1])) + rect(lx + lw / 2 - 1.2, gy + 16, 2.4, (o.ground ?? 70) - 16, '#12202f');
+  s += rect(lx - 14, gy + 4, lw + 28, 8, C.brass) + rect(lx - 14, gy + 10, lw + 28, 3, '#0a1424', { op: 0.35 });
+  s += ellipse(lx + lw / 2, gy + 40, lw * 0.9, 34, radial('lbg' + x, [[0, '#ffe3a8', 0.4], [1, '#ffe3a8', 0]]), { style: 'mix-blend-mode:screen' });
+  // shop/garage side bays
+  const bayW = (w - lw - 28) / 2 - 14;
+  for (const bx of [x + 10, x + w - 10 - bayW]) { s += rect(bx, gy + 18, bayW, (o.ground ?? 70) - 18, lin('bay', [[0, '#9fc4d8'], [1, '#5f8aa4']], [0, 0, 1, 1])) + rect(bx + bayW / 2 - 1, gy + 18, 2, (o.ground ?? 70) - 18, '#1d2127') + poly([[bx, gy + 18 + 50], [bx + bayW * 0.4, gy + 18], [bx + bayW * 0.6, gy + 18], [bx + bayW * 0.2, gy + 18 + 50]], '#fff', { op: 0.18 }); }
+  // floors
+  for (let f = 0; f < floors; f++) {
+    const fy = gy - (f + 1) * fh;
+    s += rect(x - 2, fy + fh - 5, w + 4, 6, lighten(col, 0.3)) + rect(x - 2, fy + fh + 1, w + 4, 2, shade(col, 0.2), { op: 0.6 });
+    const units = Math.max(2, Math.round(w / 110));
+    const uw = w / units;
+    for (let u = 0; u < units; u++) {
+      const ux = x + u * uw;
+      // balcony on alternating units
+      if ((u + f) % 2 === 0 || units === 2) {
+        s += rect(ux + uw * 0.1, fy + 10, uw * 0.8, fh - 20, '#12202f', { rx: 1 }) + rect(ux + uw * 0.12, fy + 12, uw * 0.76, fh - 24, lin('bw' + f, [[0, '#a9cbdf'], [1, '#6a94ae']], [0, 0, 1, 1]));
+        s += rect(ux + uw * 0.5 - 1, fy + 12, 2, fh - 24, '#12202f') + poly([[ux + uw * 0.12, fy + fh - 12], [ux + uw * 0.35, fy + 12], [ux + uw * 0.5, fy + 12], [ux + uw * 0.27, fy + fh - 12]], '#fff', { op: 0.2 });
+        s += rect(ux + uw * 0.04, fy + fh - 28, uw * 0.92, 24, '#cfe5ee', { op: 0.45, stroke: '#1d2127', sw: 1.2 }) + rect(ux + uw * 0.04, fy + fh - 30, uw * 0.92, 3, '#1d2127');
+        // plant on balcony
+        if ((u + f) % 3 === 0) s += circle(ux + uw * 0.2, fy + fh - 31, 7, C.leaf) + circle(ux + uw * 0.26, fy + fh - 36, 6, C.leafL);
+      } else {
+        s += rect(ux + uw * 0.22, fy + 14, uw * 0.56, fh - 34, '#12202f', { rx: 1 }) + rect(ux + uw * 0.25, fy + 17, uw * 0.5, fh - 40, lin('ww' + f, [[0, '#a9cbdf'], [1, '#6a94ae']], [0, 0, 1, 1]));
+        s += rect(ux + uw * 0.5 - 1, fy + 17, 2, fh - 40, '#12202f') + rect(ux + uw * 0.2, fy + fh - 20, uw * 0.6, 5, C.white);
+        if ((f + u) % 3 === 1) s += rect(ux + uw * 0.3, fy + fh - 17, uw * 0.4, 12, '#d6d2c4', { stroke: '#9a9686', sw: 1, rx: 1 });
+      }
+      // pilaster
+      s += rect(ux - 2, fy, 4, fh, shade(col, 0.1), { op: 0.7 });
+    }
+  }
+  // side feature band
+  s += rect(x + w - 24, top, 14, H - (o.ground ?? 70), acc, { op: 0.9 });
+  for (let f = 0; f < floors * 2; f++) s += rect(x + w - 24, top + 14 + f * fh / 2, 14, 3, C.brass, { op: 0.8 });
+  return s;
+}
+function townhouse(x, y, w, h, col, door, o = {}) {
+  let s = shadowEll(x + w / 2, y + 2, w * 0.6, 6, 0.25, 4);
+  s += rect(x, y - h, w, h, vgrad(lighten(col, 0.1), shade(col, 0.1)));
+  s += rect(x - 4, y - h - 10, w + 8, 10, lighten(col, 0.28)) + rect(x - 4, y - h - 2, w + 8, 2.4, '#ffe3b0', { op: 0.85 });
+  // first floor window + balcony
+  s += rect(x + w * 0.14, y - h + 18, w * 0.72, h * 0.3, '#12202f', { rx: 1 }) + rect(x + w * 0.17, y - h + 21, w * 0.66, h * 0.3 - 6, lin('th' + x, [[0, '#a9cbdf'], [1, '#6a94ae']], [0, 0, 1, 1]));
+  s += rect(x + w * 0.5 - 1, y - h + 21, 2, h * 0.3 - 6, '#12202f') + rect(x + w * 0.1, y - h + 18 + h * 0.3, w * 0.8, 6, C.white);
+  s += rect(x + w * 0.08, y - h + 18 + h * 0.3 - 12, w * 0.84, 14, 'none', { stroke: '#1d2127', sw: 1.4 });
+  // ground: door & gate
+  s += rect(x + w * 0.12, y - h * 0.4, w * 0.32, h * 0.4, door) + rect(x + w * 0.12, y - h * 0.4, w * 0.32, 3, shade(door, 0.4));
+  for (let i = 1; i < 4; i++) s += rect(x + w * 0.12 + i * w * 0.08, y - h * 0.4, 1.4, h * 0.4, shade(door, 0.3), { op: 0.5 });
+  s += rect(x + w * 0.38, y - h * 0.2, 3, 8, C.brass, { rx: 1.5 });
+  s += rect(x + w * 0.54, y - h * 0.34, w * 0.34, h * 0.14, '#12202f', { rx: 1 }) + rect(x + w * 0.56, y - h * 0.32, w * 0.3, h * 0.1, lin('tw', [[0, '#a9cbdf'], [1, '#6a94ae']], [0, 0, 1, 1]));
+  s += rect(x + w * 0.1, y - h * 0.4 - 6, w * 0.36, 6, '#1d2127');
+  s += ellipse(x + w * 0.28, y - h * 0.4 - 12, 12, 8, radial('tl' + x, [[0, '#ffe3a8', 0.5], [1, '#ffe3a8', 0]]), { style: 'mix-blend-mode:screen' });
+  return s;
+}
+
+// =============================================================================
+// 7. svc-residential-building
+// =============================================================================
+function svcResidential() {
+  begin('srb');
+  add(svcBg({ mode: 'navy', r: 360, cy: 450, flip: true, ground: false }));
+  // framed street scene card
+  const cx0 = 110, cy0 = 150, cw = 980, ch = 600;
+  const clip = clipDef('card', rrect(cx0, cy0, cw, ch, 28, '#000'));
+  add(rrect(cx0 - 4, cy0 - 4, cw + 8, ch + 8, 32, 'none', { stroke: C.brass, sw: 3 }));
+  add(shadowPoly([[cx0 + 10, cy0 + 24], [cx0 + cw + 10, cy0 + 24], [cx0 + cw + 10, cy0 + ch + 24], [cx0 + 10, cy0 + ch + 24]], 0.4, 16));
+  let sc = '';
+  const groundY = 668;
+  sc += rect(cx0, cy0, cw, ch, lin('sky', [[0, '#bfd9e8'], [0.6, '#e8eee9'], [1, '#f8e8cf']], [0, 0, 0, 1]));
+  sc += circle(930, 270, 120, radial('sun', [[0, '#fff3cf', 0.95], [1, '#fff3cf', 0]]));
+  sc += circle(930, 270, 36, '#fff6dc');
+  sc += cloud(300, 220, 1.2, 0.85) + cloud(640, 190, 0.9, 0.8) + cloud(820, 330, 0.8, 0.7);
+  // far skyline silhouettes
+  reseed(41);
+  for (let i = 0; i < 18; i++) { const bx = cx0 + i * 56 + rr(-10, 10), bw = rr(36, 60), bh = rr(110, 250); sc += rect(bx, groundY - bh, bw, bh, '#8aa4b8', { op: 0.38 }); for (let j = 0; j < Math.floor(bh / 26); j++) sc += rect(bx + 6, groundY - bh + 8 + j * 26, bw - 12, 4, '#fff', { op: 0.18 }); }
+  // far trees line
+  for (let i = 0; i < 20; i++) sc += circle(cx0 + 20 + i * 50, groundY - 18, 28, '#7c9a78', { op: 0.65 });
+  // buildings
+  sc += aptBlock(380, groundY, 330, 4, { col: '#eadfc6', acc: '#1c3a5e' });
+  sc += aptBlock(730, groundY, 260, 3, { col: '#d5dfe0', acc: '#27496d', tanks: false });
+  // right wing: boundary wall + gate
+  // left townhouses
+  sc += townhouse(135, groundY, 112, 190, '#c5ac84', '#6a4a2e');
+  sc += townhouse(250, groundY, 112, 190, '#27496d', '#d9cdb0');
+  // trees and street
+  sc += roundTree(375, groundY - 6, 1.2, C.leaf) + roundTree(715, groundY - 6, 1.1, C.leafD) + roundTree(1010, groundY - 4, 1.0, C.leaf);
+  // road
+  sc += rect(cx0, groundY, cw, 90, vgrad('#4a5058', '#2b2f36'));
+  sc += rect(cx0, groundY, cw, 10, '#cfc7b4') + rect(cx0, groundY + 10, cw, 3, '#8a8474');
+  for (let i = 0; i < 9; i++) sc += rect(cx0 + 20 + i * 112, groundY + 56, 62, 5, '#f4efe6', { op: 0.85, rx: 2 });
+  sc += carSide(600, groundY + 40, 0.9, '#e8e3d8');
+  sc += carSide(930, groundY + 36, 0.8, '#27496d');
+  sc += lampPost(300, groundY, 190);
+  sc += lampPost(1050, groundY, 190);
+  // foreground hedge
+  for (let i = 0; i < 12; i++) sc += circle(cx0 + 20 + i * 86, groundY + 6, 16, mix(C.leafD, C.leaf, (i % 3) / 3));
+  add(g(sc, { clip }));
+  // glass sheen on card
+  add(rrect(cx0, cy0, cw, ch, 28, 'none', { stroke: '#fff', sw: 1, op: 0.3 }));
+  // small badge: building icon (brass circle)
+  add(circle(1030, 175, 46, '#000', { op: 0.25, filter: blur(7) }), circle(1030, 170, 46, lin('rb', [[0, C.brassL], [1, C.brassD]], [0, 0, 1, 1])), circle(1030, 170, 39, C.navy));
+  add(rect(1012, 150, 20, 40, C.cream, { rx: 2 }), rect(1030, 162, 18, 28, C.brassL, { rx: 2 }));
+  for (let i = 0; i < 4; i++) add(rect(1016, 155 + i * 9, 5, 4, C.navy), rect(1024, 155 + i * 9, 5, 4, C.navy));
+  finish('svc-residential-building.svg', 'Residential buildings', 'A street scene with a four-storey apartment block, a second residential block and a row of townhouses with trees, parked cars and street lights.');
+}
+
+// =============================================================================
+// drafting helpers
+// =============================================================================
+function doorSwing(x, y, w, dir, o = {}) { // door in a horizontal wall at (x,y) opening width w; dir: 1 swing down, -1 swing up; hinge left
+  const col = o.col || '#1b2a3d';
+  return line(x, y, x + w, y, '#fbfaf6', 7) + line(x, y, x, y + dir * w, col, 1.4) + path_(`M${r1(x + w)} ${r1(y)}A${r1(w)} ${r1(w)} 0 0 ${dir > 0 ? 1 : 0} ${r1(x)} ${r1(y + dir * w)}`, 'none', { stroke: col, sw: 0.9, da: '3 2' });
+}
+function doorSwingV(x, y, h, dir, o = {}) { // vertical wall
+  const col = o.col || '#1b2a3d';
+  return line(x, y, x, y + h, '#fbfaf6', 7) + line(x, y, x + dir * h, y, col, 1.4) + path_(`M${r1(x)} ${r1(y + h)}A${r1(h)} ${r1(h)} 0 0 ${dir > 0 ? 0 : 1} ${r1(x + dir * h)} ${r1(y)}`, 'none', { stroke: col, sw: 0.9, da: '3 2' });
+}
+function planWin(x, y, w, horizontal = true) {
+  return horizontal ? rect(x, y - 4, w, 8, '#fbfaf6') + line(x, y - 4, x + w, y - 4, '#1b2a3d', 1) + line(x, y + 4, x + w, y + 4, '#1b2a3d', 1) + line(x, y, x + w, y, '#4a90b8', 1.4) :
+    rect(x - 4, y, 8, w, '#fbfaf6') + line(x - 4, y, x - 4, y + w, '#1b2a3d', 1) + line(x + 4, y, x + 4, y + w, '#1b2a3d', 1) + line(x, y, x, y + w, '#4a90b8', 1.4);
+}
+function dimLine(x1, y1, x2, y2, col = C.brassD, label = true) {
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy); const nx = -dy / L, ny = dx / L;
+  let s = line(x1, y1, x2, y2, col, 1) + line(x1 + nx * 6, y1 + ny * 6, x1 - nx * 6, y1 - ny * 6, col, 1) + line(x2 + nx * 6, y2 + ny * 6, x2 - nx * 6, y2 - ny * 6, col, 1);
+  s += line(x1 + nx * 3 - dx / L * 4, y1 + ny * 3 - dy / L * 4, x1 - nx * 3 + dx / L * 4, y1 - ny * 3 + dy / L * 4, col, 1.6) + line(x2 + nx * 3 - dx / L * 4, y2 + ny * 3 - dy / L * 4, x2 - nx * 3 + dx / L * 4, y2 - ny * 3 + dy / L * 4, col, 1.6);
+  if (label) { const mx = (x1 + x2) / 2, my = (y1 + y2) / 2; s += rect(mx - 14, my - 3, 28, 6, '#fbfaf6') + rect(mx - 10, my - 1.2, 20, 2.4, col, { rx: 1.2, op: 0.8 }); }
+  return s;
+}
+function bedSym(x, y, w, h, col = '#c9d8e3') { // top-down bed
+  return rect(x, y, w, h, '#fff', { stroke: '#1b2a3d', sw: 1.2, rx: 2 }) + rect(x + 2, y + 2, w - 4, h * 0.22, col, { rx: 3, stroke: '#1b2a3d', sw: 0.8 }) + rect(x + 2, y + h * 0.35, w - 4, h * 0.63, col, { rx: 2, op: 0.55 }) + line(x + 2, y + h * 0.35, x + w - 2, y + h * 0.35, '#1b2a3d', 0.8);
+}
+function sofaSym(x, y, w, h) { return rrect(x, y, w, h, 5, '#d7c8a4', { stroke: '#1b2a3d', sw: 1.2 }) + rrect(x + 3, y + 3, w - 6, h * 0.28, 3, '#bfae85', { stroke: '#1b2a3d', sw: 0.8 }) + line(x + w / 3, y + h * 0.3, x + w / 3, y + h - 3, '#1b2a3d', 0.7) + line(x + (2 * w) / 3, y + h * 0.3, x + (2 * w) / 3, y + h - 3, '#1b2a3d', 0.7); }
+
+// =============================================================================
+// 8. svc-design-planning
+// =============================================================================
+function svcDesign() {
+  begin('sdp');
+  add(svcBg({ r: 350, cy: 450 }));
+  // wooden board shadow
+  add(rrect(180, 150, 840, 600, 22, '#000', { op: 0.3, filter: blur(16), tf: 'translate(12 22) rotate(-2 600 450)' }));
+  // drafting board (navy-green mat)
+  add(g(rrect(165, 130, 870, 640, 24, lin('board', [[0, '#315b88'], [1, '#17304f']], [0, 0, 1, 1]), { stroke: C.brass, sw: 3 }), { tf: 'rotate(-2 600 450)' }));
+  // main paper
+  const px = 230, py = 170, pw = 740, ph = 560;
+  let paper = '';
+  paper += rect(px, py, pw, ph, vgrad('#fffdf8', '#f1ebdc'), { stroke: '#d9cfb6', sw: 1.2 });
+  // faint grid
+  for (let i = 1; i < pw / 20; i++) paper += line(px + i * 20, py, px + i * 20, py + ph, '#a9c1d6', i % 5 ? 0.4 : 0.9, { op: i % 5 ? 0.35 : 0.5 });
+  for (let j = 1; j < ph / 20; j++) paper += line(px, py + j * 20, px + pw, py + j * 20, '#a9c1d6', j % 5 ? 0.4 : 0.9, { op: j % 5 ? 0.35 : 0.5 });
+  // title block
+  paper += rect(px + pw - 220, py + ph - 70, 200, 52, 'none', { stroke: '#1b2a3d', sw: 1.4 }) + line(px + pw - 220, py + ph - 44, px + pw - 20, py + ph - 44, '#1b2a3d', 1) + line(px + pw - 120, py + ph - 44, px + pw - 120, py + ph - 18, '#1b2a3d', 1);
+  paper += textLines(px + pw - 212, py + ph - 62, 120, 2, '#1b2a3d', 3, 9) + textLines(px + pw - 212, py + ph - 36, 80, 2, '#1b2a3d', 2.5, 8, { op: 0.6 }) + textLines(px + pw - 112, py + ph - 36, 80, 2, '#1b2a3d', 2.5, 8, { op: 0.6 });
+  paper += circle(px + pw - 40, py + ph - 100, 14, 'none', { stroke: '#1b2a3d', sw: 1.2 }) + path_(`M${px + pw - 40} ${py + ph - 114}L${px + pw - 34} ${py + ph - 100}L${px + pw - 40} ${py + ph - 104}L${px + pw - 46} ${py + ph - 100}Z`, '#1b2a3d');
+  // PLAN (origin)
+  const ox = px + 70, oy = py + 80;
+  let plan = '';
+  // room fills
+  const fill = (x, y, w, h, c) => rect(ox + x, oy + y, w, h, c);
+  plan += fill(0, 0, 250, 170, '#efe3c4') + fill(250, 0, 150, 170, '#e7dcc3') + fill(400, 0, 120, 170, '#dfe9e6') + fill(0, 205, 180, 165, '#f4ead0') + fill(180, 205, 90, 165, '#d6e6ee') + fill(270, 205, 130, 165, '#eee2c4') + fill(400, 205, 120, 165, '#eee2c4') + fill(0, 170, 520, 35, '#f6f2e8');
+  // hatch tile in bath & kitchen
+  for (let i = 0; i < 9; i++) plan += line(ox + 180 + i * 10, oy + 205, ox + 180 + i * 10, oy + 370, '#fff', 0.8, { op: 0.6 });
+  // furniture
+  plan += sofaSym(ox + 24, oy + 100, 120, 40) + sofaSym(ox + 20, oy + 28, 40, 80).replace('', '');
+  plan += rect(ox + 80, oy + 62, 54, 28, '#fff', { stroke: '#1b2a3d', sw: 1, rx: 2 }); // coffee table
+  plan += rect(ox + 180, oy + 18, 50, 8, '#222', { rx: 1 }); // tv
+  plan += rect(ox + 262, oy + 56, 78, 46, '#fff', { stroke: '#1b2a3d', sw: 1.2, rx: 3 }); // dining table
+  for (let i = 0; i < 3; i++) plan += rect(ox + 270 + i * 24, oy + 40, 16, 12, '#d7c8a4', { stroke: '#1b2a3d', sw: 0.8, rx: 3 }) + rect(ox + 270 + i * 24, oy + 106, 16, 12, '#d7c8a4', { stroke: '#1b2a3d', sw: 0.8, rx: 3 });
+  // kitchen counters L
+  plan += rect(ox + 404, oy + 8, 108, 20, '#fff', { stroke: '#1b2a3d', sw: 1.2 }) + rect(ox + 492, oy + 8, 20, 100, '#fff', { stroke: '#1b2a3d', sw: 1.2 });
+  for (let i = 0; i < 4; i++) plan += circle(ox + 424 + (i % 2) * 18, oy + 18 - (i > 1 ? 0 : 0) + 0, 0, 'none');
+  plan += circle(ox + 450, oy + 18, 6, 'none', { stroke: '#1b2a3d', sw: 1 }) + circle(ox + 468, oy + 18, 6, 'none', { stroke: '#1b2a3d', sw: 1 }) + rect(ox + 496, oy + 60, 12, 24, '#cfe3ee', { stroke: '#1b2a3d', sw: 1, rx: 4 });
+  plan += rect(ox + 410, oy + 60, 70, 36, '#fff', { stroke: '#1b2a3d', sw: 1.2, rx: 3 }) + circle(ox + 445, oy + 78, 8, 'none', { stroke: '#1b2a3d', sw: 1 }); // island
+  // beds
+  plan += bedSym(ox + 40, oy + 230, 84, 100, '#c9d8e3') + rect(ox + 12, oy + 236, 22, 22, '#fff', { stroke: '#1b2a3d', sw: 1 }) + rect(ox + 130, oy + 236, 22, 22, '#fff', { stroke: '#1b2a3d', sw: 1 });
+  plan += bedSym(ox + 302, oy + 232, 66, 90, '#e4cdb2') + bedSym(ox + 426, oy + 232, 66, 90, '#cfe0cf');
+  // wardrobes
+  plan += rect(ox + 6, oy + 342, 100, 22, '#fff', { stroke: '#1b2a3d', sw: 1 }) + line(ox + 56, oy + 342, ox + 56, oy + 364, '#1b2a3d', 0.8);
+  plan += rect(ox + 274, oy + 342, 80, 22, '#fff', { stroke: '#1b2a3d', sw: 1 }) + rect(ox + 404, oy + 342, 80, 22, '#fff', { stroke: '#1b2a3d', sw: 1 });
+  // bath: tub, wc, basin
+  plan += rrect(ox + 188, oy + 214, 74, 34, 8, '#fff', { stroke: '#1b2a3d', sw: 1.2 }) + rrect(ox + 194, oy + 220, 62, 22, 8, 'none', { stroke: '#1b2a3d', sw: 0.8 }) + ellipse(ox + 226, oy + 300, 12, 15, '#fff', { stroke: '#1b2a3d', sw: 1.2 }) + rect(ox + 216, oy + 282, 20, 8, '#fff', { stroke: '#1b2a3d', sw: 1.2, rx: 2 }) + rrect(ox + 190, oy + 330, 28, 22, 6, '#fff', { stroke: '#1b2a3d', sw: 1.2 }) + circle(ox + 204, oy + 341, 5, 'none', { stroke: '#1b2a3d', sw: 0.8 });
+  // stairs
+  for (let i = 0; i < 9; i++) plan += line(ox + 130 + i * 8, oy + 138, ox + 130 + i * 8, oy + 166, '#1b2a3d', 0.9);
+  plan += rect(ox + 130, oy + 138, 72, 28, 'none', { stroke: '#1b2a3d', sw: 1.2 }) + path_(`M${ox + 134} ${oy + 152}L${ox + 198} ${oy + 152}`, 'none', { stroke: '#b5603c', sw: 1.2 }) + path_(`M${ox + 192} ${oy + 147}L${ox + 198} ${oy + 152}L${ox + 192} ${oy + 157}`, 'none', { stroke: '#b5603c', sw: 1.2 });
+  // walls: outer thick, inner thinner
+  const W1 = '#1b2a3d';
+  plan += rect(ox - 4, oy - 4, 528, 378, 'none', { stroke: W1, sw: 8 });
+  const iw = (x1, y1, x2, y2) => line(ox + x1, oy + y1, ox + x2, oy + y2, W1, 5);
+  plan += iw(250, 0, 250, 170) + iw(400, 0, 400, 170) + iw(0, 170, 520, 170) + iw(0, 205, 520, 205) + iw(180, 205, 180, 370) + iw(270, 205, 270, 370) + iw(400, 205, 400, 370);
+  // door openings and windows (draw over walls)
+  plan += doorSwing(ox + 195, oy + 170, 36, -1) + doorSwing(ox + 78, oy + 205, 34, 1) + doorSwing(ox + 192, oy + 205, 30, 1).replace('', '') + doorSwing(ox + 296, oy + 205, 34, 1) + doorSwing(ox + 420, oy + 205, 34, 1);
+  plan += doorSwingV(ox + 250, oy + 40, 34, 1) + doorSwing(ox + 300, oy - 0, 0, 1).replace('', '');
+  plan += doorSwing(ox + 90, oy + 370, 40, -1);
+  plan += planWin(ox + 30, oy, 80) + planWin(ox + 130, oy, 70) + planWin(ox + 430, oy, 60) + planWin(ox + 330, oy, 50) + planWin(ox + 520, oy + 40, 60, false) + planWin(ox, oy + 80, 60, false) + planWin(ox, oy + 240, 70, false) + planWin(ox + 300, oy + 370, 50) + planWin(ox + 430, oy + 370, 50) + planWin(ox + 520, oy + 240, 60, false);
+  // dimension lines
+  plan += dimLine(ox, oy - 26, ox + 520, oy - 26) + dimLine(ox - 28, oy, ox - 28, oy + 370);
+  plan += dimLine(ox, oy - 14, ox + 250, oy - 14, C.brassD, false) + dimLine(ox + 250, oy - 14, ox + 520, oy - 14, C.brassD, false);
+  // north arrow
+  paper += g(plan, {});
+  paper += g(circle(0, 0, 18, 'none', { stroke: '#1b2a3d', sw: 1.2 }) + path_('M0 -26L7 0L0 -6L-7 0Z', '#1b2a3d') + path_('M0 -26L7 0L0 -6Z', C.brass), { tf: `translate(${px + 54} ${py + 58})` });
+  paper += textLines(px + 100, py + 30, 150, 2, '#1b2a3d', 4, 12, { op: 0.8 });
+  add(g(paper, { tf: 'rotate(-2 600 450)' }));
+  // blueprint peeking out (top-right)
+  add(g(poly([[900, 120], [1070, 100], [1085, 250], [915, 270]], lin('bp', [[0, '#2f6aa3'], [1, '#1a4577']], [0, 0, 1, 1]), { stroke: '#102c4a', sw: 1.2 }) + poly([[925, 140], [1050, 124], [1062, 228], [937, 245]], 'none', { stroke: '#e6f2fa', sw: 1.6 }) + poly([[950, 160], [1030, 150], [1036, 200], [957, 208]], 'none', { stroke: '#e6f2fa', sw: 1.2 }), { op: 0 }));
+  // --- tools on the board
+  // scale ruler (triangular), along bottom
+  { const rx = 250, ry = 760;
+    add(g(rect(0, 0, 560, 38, lin('ruler', [[0, '#f8f2e2'], [1, '#e3d8bd']], [0, 0, 0, 1]), { rx: 4, stroke: '#a89a74', sw: 1.2 }) + rect(0, 28, 560, 10, C.brass, { rx: 3, op: 0.9 }), { tf: `translate(${rx} ${ry - 20}) rotate(-2 280 20)` }));
+    let ticks = ''; for (let i = 0; i <= 56; i++) ticks += line(8 + i * 9.4, 0, 8 + i * 9.4, i % 10 === 0 ? 16 : i % 5 === 0 ? 11 : 7, '#2b2f36', i % 10 === 0 ? 1.4 : 1);
+    for (let i = 0; i < 6; i++) ticks += rect(8 + i * 94 - 5, 19, 10, 3, '#2b2f36', { rx: 1.5, op: 0.8 });
+    add(g(ticks, { tf: `translate(${rx} ${ry - 20}) rotate(-2 280 20)` })); }
+  // set square (translucent)
+  { add(g(poly([[0, 0], [200, 0], [0, 150]], 'rgba(255,170,90,0.45)', { stroke: '#c26a2a', sw: 2, lj: 'round' }) + poly([[34, 32], [128, 32], [34, 100]], 'rgba(255,255,255,0.45)', { stroke: '#c26a2a', sw: 1.4 }) + path_('M18 120L18 60M28 120L28 70', 'none', { stroke: '#c26a2a', sw: 0 }) + line(0, 0, 200, 0, '#fff', 2, { op: 0.6 }), { tf: 'translate(120 600) rotate(-14)' })); }
+  // pencil
+  { const L = 330;
+    add(g(shadowEll(L / 2 + 6, 14, L / 2, 8, 0.25, 6) + rect(0, 0, L - 60, 22, hgrad('#27496d', '#183250'), { rx: 2 }) + rect(0, 0, L - 60, 6, '#fff', { op: 0.25 }) + rect(10, 0, 3, 22, C.brass) + rect(L - 150, 0, 40, 22, hgrad(C.brassL, C.brassD)) + path_(`M${L - 60} 0L${L} 11L${L - 60} 22Z`, '#e4c99a') + path_(`M${L - 28} 4.6L${L} 11L${L - 28} 17.4Z`, '#2b2f36') + path_(`M${L - 60} 0L${L - 40} 7L${L - 60} 11Z`, '#fff', { op: 0.25 }) + rect(L - 128, 0, 6, 22, C.brassD, { op: 0.6 }) + rect(L - 118, 0, 6, 22, C.brassD, { op: 0.6 }) + path_('M-10 3Q-14 11 -10 19H0V3Z', '#d96b5a') + rect(0, 3, 4, 16, '#b94f40'), { tf: 'translate(700 640) rotate(-28)' })); }
+  // compass (divider)
+  { add(g(shadowEll(0, 150, 60, 12, 0.25, 6) + path_('M-6 0L6 0L18 160L8 160Z', steelGrad(), { stroke: '#555c66', sw: 1 }) + path_('M-6 0L6 0L-18 160L-8 160Z', steelGradH(), { stroke: '#555c66', sw: 1 }) + path_('M-16 160L-18 176L-8 160Z', '#2b2f36') + path_('M18 160L20 190L8 160Z', '#2b2f36') + circle(0, 0, 11, brassGradH(), { stroke: C.brassD, sw: 1 }) + rect(-4, -34, 8, 28, hgrad('#27496d', '#183250'), { rx: 3 }) + circle(0, -36, 7, brassGradH()) + path_('M-14 70Q0 78 14 70', 'none', { stroke: C.brassD, sw: 2.2 }), { tf: 'translate(930 520) rotate(18)' })); }
+  // eraser
+  add(g(rrect(0, 0, 50, 24, 4, '#f4efe6', { stroke: '#cfc4aa', sw: 1 }) + rect(0, 0, 18, 24, '#27496d', { rx: 4 }) + rect(14, 0, 4, 24, '#27496d'), { tf: 'translate(640 748) rotate(8)' }));
+  finish('svc-design-planning.svg', 'Design and planning', 'A drafting board with a detailed floor plan, dimension lines, pencil, set square, scale ruler and compass.');
+}
+
+// =============================================================================
+// 9. svc-architectural-design
+// =============================================================================
+function elevationLines(x, y, k, col = '#1b2a3d') {
+  const sw = 1.5 / k; let s = '';
+  const L = (a, b, c, d, w, o) => line(a, b, c, d, col, w ?? sw, o);
+  const R_ = (a, b, c, d, f = 'none', w, o) => rect(a, b, c, d, f, { stroke: col, sw: w ?? sw, ...o });
+  // construction lines
+  for (const yy of [30, 60, 202, 358]) s += line(-70, yy, 590, yy, C.brassD, 0.8 / k, { da: `${6 / k} ${4 / k}`, op: 0.9 });
+  for (const xx of [18, 160, 502]) s += line(xx, 10, xx, 380, C.brassD, 0.8 / k, { da: `${6 / k} ${4 / k}`, op: 0.6 });
+  s += R_(0, 210, 520, 148, '#f7f0e0') + R_(-6, 202, 536, 14, '#fff', sw * 1.2) + R_(18, 60, 484, 142, '#fbf6ea') + R_(8, 48, 504, 14, '#fff', sw * 1.2) + R_(26, 30, 468, 20, '#f7f0e0');
+  // stone hatching left
+  for (let i = 0; i < 12; i++) s += L(0, 220 + i * 11, 160, 220 + i * 11, 0.6 / k, { op: 0.6 });
+  s += R_(0, 210, 160, 148, 'none', sw * 1.1);
+  // slats
+  for (let i = 0; i < 17; i++) s += L(20 + i * 8.1, 62, 20 + i * 8.1, 200, 0.7 / k, { op: 0.7 });
+  s += R_(18, 60, 140, 142, 'none', sw * 1.1);
+  // windows
+  s += R_(176, 80, 300, 100, '#dbe8ef') + L(251, 80, 251, 180) + L(326, 80, 326, 180) + L(401, 80, 401, 180) + R_(172, 152, 316, 30, 'none') + L(172, 166, 488, 166, 0.7 / k);
+  s += R_(278, 240, 190, 90, '#dbe8ef') + L(341, 240, 341, 330) + L(404, 240, 404, 330);
+  s += R_(176, 238, 72, 120, '#e8d9bc') + L(212, 238, 212, 358, 0.8 / k);
+  s += R_(60, 16, 70, 14, '#e5ecf2');
+  // diagonals for glass
+  for (const [a, b, c, d] of [[176, 80, 300, 100], [278, 240, 190, 90]]) { s += L(a + 14, b + d - 8, a + 52, b + 8, 0.7 / k, { op: 0.5 }); }
+  // dimension chain
+  s += dimLineS(-30, 30, -30, 358, k) + dimLineS(0, 384, 520, 384, k);
+  return g(s, { tf: `translate(${r1(x)} ${r1(y)}) scale(${k})` });
+}
+function dimLineS(x1, y1, x2, y2, k) { return g(dimLine(x1, y1, x2, y2), {}).replace('stroke-width="1"', `stroke-width="${r1(1 / k)}"`); }
+function swatch(x, y, w, h, kind, rot) {
+  let s = shadowEll(w / 2 + 4, h + 4, w * 0.55, 6, 0.0, 4);
+  let inner = rrect(0, 0, w, h, 8, '#fbf8f0', { stroke: '#cfc4aa', sw: 1.2 });
+  const cid = clipDef('sw' + kind + Math.round(x), rrect(6, 6, w - 12, h - 26, 5, '#000'));
+  let t = '';
+  if (kind === 'wood') { t += rect(0, 0, w, h, '#9a6a42'); for (let i = 0; i < 14; i++) t += path_(`M0 ${6 + i * 9}Q${w / 2} ${2 + i * 9 + (i % 3) * 3} ${w} ${6 + i * 9}`, 'none', { stroke: i % 2 ? '#7a4e2f' : '#b98558', sw: 1.6, op: 0.7 }); }
+  if (kind === 'marble') { t += rect(0, 0, w, h, '#f1eee6'); t += path_(`M10 0Q${w * 0.4} ${h * 0.3} ${w * 0.3} ${h * 0.6}T${w * 0.7} ${h}`, 'none', { stroke: '#8f8e8b', sw: 1.6, op: 0.6 }) + path_(`M${w * 0.6} 0Q${w * 0.8} ${h * 0.3} ${w * 0.55} ${h * 0.5}`, 'none', { stroke: '#a39f98', sw: 1.2, op: 0.5 }) + path_(`M10 0Q${w * 0.4} ${h * 0.3} ${w * 0.3} ${h * 0.6}`, 'none', { stroke: C.brass, sw: 0.8, op: 0.7 }); }
+  if (kind === 'brick') { t += rect(0, 0, w, h, brickPat('swb', 18, 9, '#b0593a', '#d6c6a8', { seed: 4 })); }
+  if (kind === 'brass') { t += rect(0, 0, w, h, lin('swbr', [[0, C.brassL], [0.5, C.brass], [1, C.brassD]], [0, 0, 1, 1])); for (let i = 0; i < 14; i++) t += line(0, i * 8, w, i * 8 - 12, '#fff', 0.8, { op: 0.25 }); }
+  if (kind === 'stone') { t += rect(0, 0, w, h, '#a9a193'); reseed(8); for (let i = 0; i < 26; i++) t += circle(rr(0, w), rr(0, h), rr(1, 4), mix('#7f786b', '#d1c9b8', rnd()), { op: 0.7 }); }
+  if (kind === 'teal') { t += rect(0, 0, w, h, C.teal); t += rect(0, 0, w, h, tilePat('swz', 14, '#2f6f73', '#1f4f55', { cols: 4, rows: 4, alt: '#5a9aa0', var: 0.8, seed: 2 })); }
+  if (kind === 'plaster') { t += rect(0, 0, w, h, '#e6dac0'); reseed(5); for (let i = 0; i < 30; i++) t += ellipse(rr(0, w), rr(0, h), rr(3, 9), rr(1, 3), rnd() > 0.5 ? '#fff' : '#cdbf9e', { op: 0.35 }); }
+  inner += g(t, { clip: cid, tf: 'translate(0 0)' });
+  inner += rect(10, h - 16, w * 0.5, 3, '#2b2f36', { rx: 1.5, op: 0.7 }) + rect(10, h - 9, w * 0.3, 3, '#2b2f36', { rx: 1.5, op: 0.4 });
+  inner += circle(w / 2, 8, 3.2, C.brass);
+  return g(s + inner, { tf: `translate(${r1(x)} ${r1(y)}) rotate(${rot})` });
+}
+function svcArchitectural() {
+  begin('sad');
+  add(svcBg({ mode: 'navy', r: 340, cx: 700, cy: 430, flip: false }));
+  // left: elevation drawing sheet
+  { const sx = 90, sy = 190;
+    add(g(rect(0, 0, 400, 520, '#000', { op: 0.35, filter: blur(14) }), { tf: `translate(${sx + 12} ${sy + 20}) rotate(-4)` }));
+    let sheet = rect(0, 0, 400, 520, vgrad('#fffdf8', '#f1ead9'), { stroke: '#d9cfb6', sw: 1.2 });
+    for (let i = 1; i < 20; i++) sheet += line(i * 20, 0, i * 20, 520, '#b6c9db', i % 5 ? 0.4 : 0.8, { op: 0.4 });
+    for (let j = 1; j < 26; j++) sheet += line(0, j * 20, 400, j * 20, '#b6c9db', j % 5 ? 0.4 : 0.8, { op: 0.4 });
+    sheet += elevationLines(52, 150, 0.62);
+    sheet += textLines(24, 28, 160, 2, '#1b2a3d', 4, 12, { op: 0.8 }) + rect(24, 66, 40, 3, C.brass);
+    sheet += rect(24, 440, 352, 60, 'none', { stroke: '#1b2a3d', sw: 1.2 }) + line(24, 470, 376, 470, '#1b2a3d', 1) + line(220, 440, 220, 500, '#1b2a3d', 1) + textLines(32, 450, 150, 2, '#1b2a3d', 3, 9, { op: 0.7 }) + textLines(230, 450, 120, 2, '#1b2a3d', 3, 9, { op: 0.7 }) + textLines(32, 478, 140, 2, '#1b2a3d', 2.5, 8, { op: 0.5 });
+    add(g(sheet, { tf: `translate(${sx} ${sy}) rotate(-4)` })); }
+  // right: iso model on a wooden base
+  ISO.ox = 745; ISO.oy = 300; ISO.s = 25;
+  { add(shadowPoly([isoP(-1, -1, 0), isoP(15, -1, 0), isoP(15, 13, 0), isoP(-1, 13, 0)].map((p) => [p[0] + 14, p[1] + 36]), 0.35, 14));
+    // base plate (wood) with brass edge
+    add(isoBox(-1.2, -1.2, -0.9, 15.4, 12.4, 0.9, { top: '#caa77a', left: '#8a5a38', right: '#6a4228' }, { topFill: lin('mbase', [[0, '#f0e3c6'], [1, '#e1d0aa']], [0, 0, 1, 1]) }));
+    add(isoL(11.2, -1.2, 14.2, -0.9, -0.82, C.brass));
+    add(isoGrid(-0.6, -0.6, 14.4, 11.2, 12, 10, '#bda980', 0.8, 0.4));
+    // model lawn insert
+    add(isoT(0.02, 0.4, 13.4, 0.4, 10.2, '#e9efdc', { op: 0.9 }));
+    const [hx, hy] = isoP(2.4, 1.2, 0);
+    add(isoHouse(hx, hy, ISO.s, { wall: '#fbf8f1', wood: '#c19a6b' }));
+    // wireframe overlay lines (design process)
+    const w = [[2.4, 1.2, 0], [11.4, 1.2, 0], [11.4, 7.2, 0], [2.4, 7.2, 0]];
+    add(poly(w.map((p) => isoP(...p)), 'none', { stroke: '#3d6590', sw: 1.4, da: '5 4', op: 0.7 }));
+    // model trees (white spheres on sticks)
+    for (const [x, y] of [[0.9, 9.2], [13, 1.6], [12.7, 9.0], [0.9, 2.2]]) { const [px, py] = isoP(x, y, 0.02); add(shadowEll(px, py, 12, 4, 0.2, 2), rect(px - 1, py - 22, 2, 22, '#8a6a4a'), circle(px, py - 30, 12, radial('mt' + Math.round(px), [[0, '#d9e6c8'], [1, '#97b383']], [0.35, 0.3, 0.8]))); }
+    // path
+    add(isoT(0.03, 7.4, 9.0, 7.2, 10.2, '#d9ceb0'));
+  }
+  // swatch fan (bottom left-center)
+  { const kinds = ['wood', 'marble', 'brick', 'brass', 'stone', 'teal'];
+    kinds.forEach((kd, i) => add(swatch(430 + i * 32, 730 - Math.sin(i * 0.6) * 10, 110, 130, kd, -30 + i * 14)));
+    add(circle(500, 800, 10, C.brass, { stroke: C.brassD, sw: 1.5 })); }
+  finish('svc-architectural-design.svg', 'Architectural design', 'An isometric architectural model of a modern house on a wooden base beside a front-elevation drawing and a fan of material swatches.');
+}
+
+// =============================================================================
 // run
 // =============================================================================
 const JOBS = {
@@ -2062,6 +3044,17 @@ const JOBS = {
   'interior-bathroom': () => bathroom(),
   'interior-dining': () => dining(),
   'svc-new-home': () => svcNewHome(),
+  'svc-residential-building': () => svcResidential(),
+  'svc-design-planning': () => svcDesign(),
+  'svc-architectural-design': () => svcArchitectural(),
+  'svc-renovation': () => svcRenovation(),
+  'svc-maintenance': () => svcMaintenance(),
+  'svc-finishing': () => svcFinishing(),
+  'svc-plumbing-electrical': () => svcPlumbElec(),
+  'svc-painting-waterproofing': () => svcPaintWaterproof(),
+  'svc-kitchen-bathroom': () => svcKitchenBath(),
+  'svc-grey-structure': () => svcGreyStructure(),
+  'svc-turnkey': () => svcTurnkey(),
 };
 const want = process.argv.slice(2);
 for (const [name, fn] of Object.entries(JOBS)) {
