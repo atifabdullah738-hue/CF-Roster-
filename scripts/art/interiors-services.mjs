@@ -546,14 +546,17 @@ function marbleOn(Sf, u0, u1, v0, v1, o = {}) {
   const cid = clipDef('mrb' + tag, sq(Sf, u0, u1, v0, v1, '#000'));
   let v = ''; reseed(o.seed ?? 9);
   const du = u1 - u0, dv = v1 - v0;
+  const bez = (p0, p1, p2, p3, t) => { const m = 1 - t; return [m * m * m * p0[0] + 3 * m * m * t * p1[0] + 3 * m * t * t * p2[0] + t * t * t * p3[0], m * m * m * p0[1] + 3 * m * m * t * p1[1] + 3 * m * t * t * p2[1] + t * t * t * p3[1]]; };
   for (let i = 0; i < (o.n ?? 6); i++) {
-    let u = u0 + du * rnd(), vv = v0; const pts = [[u, vv]];
-    const steps = 9;
-    for (let j = 1; j <= steps; j++) { u += du * rr(-0.12, 0.09); vv = v0 + (dv * j) / steps; pts.push([u, vv]); }
-    const sp2 = pts.map((p) => Sf.map(p[0], p[1]));
-    const d = 'M' + sp2.map((p) => r1(p[0]) + ' ' + r1(p[1])).join('L');
-    v += stroke_(d, o.vein || '#9b9a97', rr(0.7, 1.8), { op: rr(0.25, 0.6), lj: 'round' });
-    if (rnd() > 0.5) v += stroke_(d, '#c9a24b', 0.6, { op: 0.35 });
+    const p0 = [u0 + du * rnd(), v1 + dv * 0.02], p3 = [u0 + du * rnd(), v0 - dv * 0.02];
+    const p1 = [u0 + du * rr(-0.2, 1.2), v1 - dv * rr(0.2, 0.5)], p2 = [u0 + du * rr(-0.2, 1.2), v0 + dv * rr(0.2, 0.5)];
+    const pts = []; for (let j = 0; j <= 18; j++) pts.push(Sf.map(...bez(p0, p1, p2, p3, j / 18)));
+    const d = 'M' + pts.map((p) => r1(p[0]) + ' ' + r1(p[1])).join('L');
+    const w = rr(0.8, 1.6), op = rr(0.14, 0.3);
+    v += stroke_(d, o.vein || '#8f8e8b', w * 4, { op: op * 0.35, lj: 'round', lc: 'round', filter: blur(2) });
+    v += stroke_(d, o.vein || '#8f8e8b', w, { op, lj: 'round', lc: 'round' });
+    if (rnd() > 0.45) v += stroke_(d, '#c9a24b', 0.6, { op: 0.4 });
+    if (rnd() > 0.5) { const q = Sf.map(...bez(p0, p1, p2, p3, 0.5)); v += stroke_(`M${r1(q[0])} ${r1(q[1])}l${r1(rr(-30, 30))} ${r1(rr(-30, 30))}`, o.vein || '#8f8e8b', 0.8, { op: 0.3 }); }
   }
   s += g(v, { clip: cid });
   return s;
@@ -562,6 +565,45 @@ function marbleOn(Sf, u0, u1, v0, v1, o = {}) {
 function ledOn(Sf, u0, v0, u1, v1, col = '#ffd9a0', w = 2.2) {
   const a = Sf.map(u0, v0), b = Sf.map(u1, v1);
   return line(a[0], a[1], b[0], b[1], col, w * 5, { op: 0.28, filter: blur(4), lc: 'round' }) + line(a[0], a[1], b[0], b[1], '#fff3d6', w, { lc: 'round' });
+}
+// Soft veining on a polished floor (perspective)
+function floorVeins(cam, R, size = 1.2, n = 26, col = '#a39379') {
+  reseed(77); let s = '';
+  for (let i = 0; i < n; i++) {
+    let x = rr(-R.W, R.W), z = rr(R.Zn + 0.3, R.Zb - 0.3); const pts = [];
+    const ang = rr(0, Math.PI);
+    for (let j = 0; j < 7; j++) { pts.push(cam.P(x, 0, z)); x += Math.cos(ang + rr(-0.5, 0.5)) * rr(0.15, 0.4); z += Math.sin(ang + rr(-0.5, 0.5)) * rr(0.1, 0.3); if (z > R.Zb - 0.05) z = R.Zb - 0.05; if (z < R.Zn) z = R.Zn; }
+    s += pline(pts, col, rr(0.6, 1.2), { op: rr(0.06, 0.14), lj: 'round', lc: 'round', filter: blur(0.8) });
+  }
+  return s;
+}
+// Upholstered armchair (box based). Faces the camera.
+function armchair(cam, x0, x1, z0, z1, col, o = {}) {
+  const c = (cl) => ({ front: cl, top: lighten(cl, 0.14), left: shade(cl, 0.24), right: lighten(cl, 0.05) });
+  const dark = shade(col, 0.08);
+  let s = shadowPoly([cam.P(x0 + 0.08, 0, z0), cam.P(x1 + 0.08, 0, z0), cam.P(x1 + 0.2, 0, z1), cam.P(x0 + 0.2, 0, z1)], 0.38, 8);
+  const lg = 0.1;
+  for (const [x, z] of [[x0 + 0.08, z0 + 0.08], [x1 - 0.08, z0 + 0.08], [x0 + 0.08, z1 - 0.08], [x1 - 0.08, z1 - 0.08]]) s += cam.box(x - 0.02, x + 0.02, 0, lg + 0.02, z - 0.02, z + 0.02, C.brass, { flat: true });
+  s += cam.box(x0, x1, lg, 0.4, z0, z1, c(col), { rx: 0.04 });
+  s += cam.box(x0, x1, 0.4, 0.88, z1 - 0.22, z1, c(dark), { rx: 0.1 });
+  s += cam.box(x0, x0 + 0.14, 0.4, 0.62, z0, z1 - 0.22, c(dark), { rx: 0.06 });
+  s += cam.box(x1 - 0.14, x1, 0.4, 0.62, z0, z1 - 0.22, c(dark), { rx: 0.06 });
+  s += cam.box(x0 + 0.14, x1 - 0.14, 0.4, 0.5, z0 + 0.02, z1 - 0.22, c(lighten(col, 0.08)), { rx: 0.05 });
+  s += cam.box(x0 + 0.12, x1 - 0.12, 0.5, 0.85, z1 - 0.34, z1 - 0.22, c(lighten(col, 0.05)), { rx: 0.08 });
+  return s;
+}
+// round pouf / ottoman
+function pouf(cam, cx, cz, rad, h, col, o = {}) {
+  const [x, y] = cam.P(cx, 0, cz); const k = cam.s(cz);
+  const gr = lin('pf' + hkey(col), [[0, shade(col, 0.22)], [0.35, lighten(col, 0.1)], [1, shade(col, 0.32)]], [0, 0, 1, 0]);
+  const ry = rad * k * 0.3;
+  let s = shadowEll(x + 6, y, rad * k * 1.1, ry * 1.0, 0.38, 8);
+  s += path_(`M${r1(x - rad * k)} ${r1(y - h * k)}L${r1(x - rad * k)} ${r1(y)}A${r1(rad * k)} ${r1(ry)} 0 0 0 ${r1(x + rad * k)} ${r1(y)}L${r1(x + rad * k)} ${r1(y - h * k)}Z`, gr);
+  s += ellipse(x, y - h * k, rad * k, ry, lighten(col, 0.12));
+  s += ellipse(x, y - h * k, rad * k * 0.82, ry * 0.8, lighten(col, 0.18), { op: 0.7 });
+  s += circle(x, y - h * k, 3, shade(col, 0.2));
+  if (o.band) s += path_(`M${r1(x - rad * k)} ${r1(y - h * k * 0.55)}A${r1(rad * k)} ${r1(ry)} 0 0 0 ${r1(x + rad * k)} ${r1(y - h * k * 0.55)}`, 'none', { stroke: o.band, sw: 2, op: 0.9 });
+  return s;
 }
 // Round-rect style items drawn in screen space for rugs/cushions
 function cushion(x, y, w, h, col, rot = 0, kind = 0, o = {}) {
@@ -581,14 +623,15 @@ function cushion(x, y, w, h, col, rot = 0, kind = 0, o = {}) {
 // =============================================================================
 function livingRoom() {
   begin('ilr');
-  const cam = new Cam(560, 600, 392, 1.25);
+  const cam = new Cam(725, 600, 452, 1.25);
   const R = { W: 3.2, H: 2.75, Zb: 6.0, Zn: 1.0, wall: vgrad('#efe6d5', '#e2d6bf') };
   R.wallB = vgrad('#f1e8d8', '#e6dbc5');
-  R.floor = vgrad('#d8cdb9', '#efe8dc');
+  R.floor = vgrad('#cfc2a9', '#e8dfcc');
   const Sb = surfBack(cam, R.Zb), SL = surfL(cam, R.W), SR = surfR(cam, R.W);
   add(roomShell(cam, R));
   // floor marble grid + sheen
   add(floorGrid(cam, R, 1.2, '#a89b82', 1.2, 0.35, 0.0, 0));
+  add(floorVeins(cam, R, 1.2, 14, '#a39379'));
   add(floorSheen(cam, R, 0.4));
   add(ceilingTray(cam, R, 0.65, 0.18));
 
@@ -626,7 +669,7 @@ function livingRoom() {
   const wallPanel = '#2a2118';
   add(slatsOn(SR, 3.25, 5.95, 0.0, 2.75, C.walnut, 46, { alt: C.woodL, seed: 4 }));
   // marble slab
-  add(marbleOn(SR, 3.95, 5.35, 0.42, 2.55, { tag: 'tv', seed: 12, n: 7 }));
+  add(marbleOn(SR, 3.95, 5.35, 0.42, 2.55, { tag: 'tv', seed: 12, n: 5 }));
   add(sq(SR, 3.95, 5.35, 2.55, 2.58, C.brass));
   // LED strips
   add(ledOn(SR, 3.95, 0.42, 5.35, 0.42));
@@ -639,15 +682,16 @@ function livingRoom() {
   add(sp(SR, [[4.17, 1.04], [4.5, 1.04], [4.3, 1.6], [4.17, 1.6]], '#fff', { op: 0.07 }));
   add(sq(SR, 4.15, 5.15, 1.02, 1.03, '#222a38'));
   // floating console with underglow
-  add(cam.box(R.W - 0.42, R.W, 0.34, 0.6, 3.75, 5.75, { front: C.walnut, top: lighten(C.walnut, 0.2), left: shade(C.walnut, 0.2), right: lighten(C.walnut, 0.05) }, { flat: true }));
+  add(cam.box(R.W - 0.4, R.W, 0.34, 0.58, 3.95, 5.65, { front: C.walnut, top: lighten(C.walnut, 0.2), left: shade(C.walnut, 0.2), right: lighten(C.walnut, 0.05) }, { flat: true }));
   // right face of console (facing -X) is the inward face (not visible from camera at x=0: box x0>0 -> left face visible)
-  add(sq(SR, 3.75, 5.75, 0.3, 0.34, '#ffe3b0', { op: 0.9, filter: blur(3) }));
+  add(sq(SR, 3.95, 5.65, 0.3, 0.34, '#ffe3b0', { op: 0.9, filter: blur(3) }));
   // decor on console
   { const [bx, by] = cam.P(R.W - 0.2, 0.6, 4.2); const k = cam.s(4.2); add(vase(bx, by, k * 1.3, C.teal, { h: 0.34, w: 0.16 })); }
   { const [bx, by] = cam.P(R.W - 0.2, 0.6, 5.35); const k = cam.s(5.35); add(books(bx, by, k * 1.1, 3), `<g transform="translate(${r1(bx)} ${r1(by - 0.1 * k)})">${ellipse(0, 0, 0.04 * k, 0.04 * k, C.brass)}</g>`); }
   // niche shelving at far-right of wall near corner
+  add(roomShade(cam, R, { ao: 0.22 }));
   // ---- floor lighting patch from the window
-  add(cam.quad([[-2.4, 0, 5.95], [2.4, 0, 5.95], [1.6, 0, 2.2], [-3.4, 0, 2.2]], lin('winlight', [[0, '#fff6dc', 0.5], [1, '#fff6dc', 0]], [0, 0, 0, 1]), { style: 'mix-blend-mode:screen', filter: blur(5) }));
+  add(cam.quad([[-2.4, 0, 5.95], [2.4, 0, 5.95], [1.6, 0, 2.2], [-3.4, 0, 2.2]], lin('winlight', [[0, '#fff6dc', 0.7], [1, '#fff6dc', 0]], [0, 0, 0, 1]), { style: 'mix-blend-mode:screen', filter: blur(5) }));
 
   // ---- rug
   const rx0 = -2.3, rx1 = 2.1, rz0 = 2.75, rz1 = 5.15;
@@ -718,12 +762,183 @@ function livingRoom() {
     add(tableLamp(x, y - 0.53 * k, k * 1.0, { shade: '#f6ead0' }));
   }
   // floor lamp (arc) by chaise? skip. Pendant chandelier:
-  { const [x, y0] = cam.P(0, 2.75, 4.6); const k = cam.s(4.6); add(chandelier(x, y0, k, { arms: 8, r: 0.5, drop: 0.55, crystals: true })); }
+  { const [x, y0] = cam.P(0, 2.75, 4.6); const k = cam.s(4.6); add(chandelier(x, y0, k, { arms: 8, r: 0.75, drop: 0.55, crystals: true })); }
+  // foreground: armchair + pouf
+  add(armchair(cam, 1.25, 2.1, 3.15, 4.05, '#c9ad7f'));
+  { const [x, y] = cam.P(1.67, 0.62, 3.35); const k = cam.s(3.45); add(cushion(x, y, 0.34 * k, 0.34 * k, C.navy2, 5, 2, { line: C.brassL })); }
+  add(pouf(cam, -1.95, 3.4, 0.27, 0.38, '#b5603c', { band: C.brassL }));
   // ceiling downlights
   add(downlights(cam, [[-2.2, 2.4], [2.2, 2.4], [-2.2, 4.2], [2.2, 4.2], [-2.2, 5.6], [2.2, 5.6]], 2.57));
-  add(roomShade(cam, R, { ao: 0.22 }));
   add(finishLayer({ vig: 0.34, glow: '#ffd9a0', glowOp: 0.14, gx: 0.5, gy: 0.35 }));
   finish('interior-living-room.svg', 'Modern living room', 'A bright modern Pakistani living and TV lounge with an L-shaped sofa, patterned rug, marble and walnut TV feature wall with LED strip, brass chandelier, large window with curtains and indoor plants.');
+}
+
+// Wood plank floor in perspective
+function floorPlanks(cam, R, wd = 0.2, base = C.oak, o = {}) {
+  const { W, Zb, Zn = 1.0 } = R; let s = ''; reseed(o.seed ?? 31);
+  const nCol = Math.round((2 * W) / wd);
+  for (let i = 0; i < nCol; i++) {
+    let z = Zn;
+    const x0 = -W + i * wd, x1 = x0 + wd;
+    let first = true;
+    while (z < Zb - 0.001) {
+      const len = first ? rr(0.4, 1.6) : rr(0.9, 2.0); first = false;
+      const z1 = Math.min(Zb, z + len);
+      const c = mix(darken(base, 0.04), lighten(base, 0.12), rnd());
+      s += cam.fq(x0, x1, z, z1, c, { stroke: shade(c, 0.22), sw: 0.6, so: 0.5 });
+      z = z1;
+    }
+  }
+  return s;
+}
+// Bedroom nightstand with drawer, brass pulls
+function nightstand(cam, x0, x1, z0, z1, col = C.walnut) {
+  let s = shadowPoly([cam.P(x0 + 0.05, 0, z0), cam.P(x1 + 0.1, 0, z0), cam.P(x1 + 0.12, 0, z1), cam.P(x0 + 0.05, 0, z1)], 0.35, 5);
+  s += cam.box(x0, x1, 0.12, 0.55, z0, z1, { front: col, top: lighten(col, 0.22), left: shade(col, 0.22), right: lighten(col, 0.04) }, { rx: 0.015 });
+  for (const [x, z] of [[x0 + 0.04, z0 + 0.04], [x1 - 0.04, z0 + 0.04]]) s += cam.box(x - 0.015, x + 0.015, 0, 0.13, z - 0.015, z + 0.015, C.brass, { flat: true });
+  const a = cam.P(x0, 0.55, z0), b = cam.P(x1, 0.12, z0);
+  const w = b[0] - a[0], hh = b[1] - a[1];
+  s += rect(a[0] + w * 0.08, a[1] + hh * 0.1, w * 0.84, hh * 0.38, shade(col, 0.1), { rx: 2, stroke: shade(col, 0.3), sw: 0.8 });
+  s += rect(a[0] + w * 0.08, a[1] + hh * 0.54, w * 0.84, hh * 0.38, shade(col, 0.1), { rx: 2, stroke: shade(col, 0.3), sw: 0.8 });
+  s += rect(a[0] + w * 0.38, a[1] + hh * 0.26, w * 0.24, 2.4, C.brassL, { rx: 1 });
+  s += rect(a[0] + w * 0.38, a[1] + hh * 0.7, w * 0.24, 2.4, C.brassL, { rx: 1 });
+  return s;
+}
+
+// =============================================================================
+// 2. BEDROOM
+// =============================================================================
+function bedroom() {
+  begin('ibd');
+  const cam = new Cam(740, 600, 450, 1.5);
+  const R = { W: 3.0, H: 2.7, Zb: 6.0, Zn: 1.0, wall: vgrad('#eee5d3', '#e0d3ba') };
+  R.wallB = '#1c3454';
+  const Sb = surfBack(cam, R.Zb), SL = surfL(cam, R.W), SR = surfR(cam, R.W);
+  R.floor = '#c0996c';
+  add(roomShell(cam, R));
+  add(floorPlanks(cam, R, 0.2, '#b99468'));
+  add(floorSheen(cam, R, 0.35));
+  add(ceilingTray(cam, R, 0.6, 0.16, '#ffd9a8'));
+
+  // ---- headboard wall: padded navy panels with brass inlay
+  const panelCol = '#203a5c';
+  add(sq(Sb, -2.45, 2.45, 0, 2.7, shade(panelCol, 0.25)));
+  const pw = 0.8;
+  for (let i = 0; i < 6; i++) {
+    const u0 = -2.4 + i * 0.8, u1 = u0 + 0.76;
+    const gid = lin('pn' + i, [[0, lighten(panelCol, 0.12)], [0.5, panelCol], [1, shade(panelCol, 0.2)]], [0, 0, 1, 0]);
+    add(sq(Sb, u0, u1, 0.1, 2.55, gid));
+    // quilting buttons / diamond stitching
+    for (let j = 0; j < 7; j++) add(sc(Sb, (u0 + u1) / 2, 0.35 + j * 0.34, 0.02, 0.02, C.brass));
+    add(sl(Sb, u0 + 0.02, 0.1, u0 + 0.02, 2.55, lighten(panelCol, 0.28), 1.2, { op: 0.35 }));
+    add(sq(Sb, u1 - 0.012, u1 + 0.015, 0.1, 2.55, C.brass));
+  }
+  add(ledOn(Sb, -2.45, 2.62, 2.45, 2.62, '#ffd9a0', 2));
+  add(ledOn(Sb, -2.45, 0.05, 2.45, 0.05, '#ffd9a0', 1.4));
+  // side wall back portions: pale wall regions beyond panel (left/right of -2.45..2.45) already wall color via wallB? fill them
+  add(sq(Sb, -3.0, -2.45, 0, 2.7, vgrad('#e8dcc4', '#d9c9a8')), sq(Sb, 2.45, 3.0, 0, 2.7, vgrad('#e8dcc4', '#d9c9a8')));
+  add(sq(Sb, -2.5, -2.45, 0, 2.7, C.brass), sq(Sb, 2.45, 2.5, 0, 2.7, C.brass));
+
+  // ---- left wall: wardrobe (depth 0.62)
+  const wd = 0.62; const SL2 = surfL(cam, R.W - wd);
+  // wardrobe shadow & body
+  add(cam.frect(-R.W, -R.W + wd, 0, 2.55, 3.45, hgrad('#4a2e1b', '#6a4328')));
+  add(sq(SL2, 3.45, 6.0, 0, 2.55, vgrad('#7a4e2f', '#5f3a22')));
+  const doorW = (6.0 - 3.45) / 4;
+  for (let i = 0; i < 4; i++) {
+    const a = 3.45 + i * doorW + 0.01, b = a + doorW - 0.02;
+    if (i === 2) {
+      add(sq(SL2, a, b, 0.08, 2.5, lin('mirr', [[0, '#cfe0e6'], [0.5, '#a9c3cf'], [1, '#d6e4e8']], [0, 0, 1, 1])));
+      add(sp(SL2, [[a, 0.08], [a + 0.3, 0.08], [a + 0.12, 2.5], [a, 2.5]], '#fff', { op: 0.25 }));
+      add(sq(SL2, a, b, 0.08, 0.1, C.brass), sq(SL2, a, b, 2.48, 2.5, C.brass));
+    } else {
+      const col = i % 2 ? '#7d5030' : '#8a5a38';
+      add(sq(SL2, a, b, 0.08, 2.5, col, { stroke: shade(col, 0.3), sw: 1 }));
+      // veneer grain
+      for (let j = 0; j < 7; j++) add(sl(SL2, a + 0.03 + j * doorW * 0.13, 0.12, a + 0.03 + j * doorW * 0.13, 2.45, lighten(col, 0.18), 1, { op: 0.25 }));
+      add(sq(SL2, a + 0.05, b - 0.05, 0.13, 2.45, 'none', { stroke: shade(col, 0.2), sw: 1, op: 0.7 }));
+    }
+    add(sq(SL2, b - 0.07, b - 0.055, 0.9, 1.5, C.brass));
+  }
+  add(sq(SL2, 3.45, 6.0, 2.55, 2.59, shade(C.walnut, 0.3)));
+  // wardrobe top LED
+  add(ledOn(SL2, 3.45, 2.52, 6.0, 2.52, '#ffd9a0', 1.6));
+  // wardrobe front returns on wall
+  // ---- right wall: window + curtains
+  add(sq(SR, 3.35, 5.85, 0.0, 2.7, 'none'));
+  add(windowOn(SR, 4.0, 5.55, 0.55, 2.35, { cols: 2, tag: 'bd', seed: 9, t: 0.04 }));
+  add(sq(SR, 3.95, 5.6, 0.5, 0.55, C.white));
+  add(curtainOn(SR, 3.9, 5.65, 2.5, 0.04, '#f8f3ea', 12, { sheer: true, sway: 0 }));
+  add(curtainOn(SR, 3.55, 4.1, 2.58, 0.04, '#9c8a63', 6));
+  add(curtainOn(SR, 5.55, 6.0, 2.58, 0.04, '#9c8a63', 6));
+  add(rodOn(SR, 3.5, 6.0, 2.62));
+  // radiator/ console under window? plant by window later
+  add(roomShade(cam, R, { ao: 0.25 }));
+
+  // ---- window light patch on floor
+  add(cam.quad([[R.W, 0, 5.55], [R.W, 0, 4.0], [0.6, 0, 2.6], [0.6, 0, 4.0]], lin('bwl', [[0, '#fff3d4', 0.65], [1, '#fff3d4', 0]], [1, 0, 0, 1]), { style: 'mix-blend-mode:screen', filter: blur(5) }));
+
+  // ---- rug
+  const rx0 = -2.35, rx1 = 2.35, rz0 = 2.7, rz1 = 5.7;
+  add(shadowPoly([cam.P(rx0 + 0.05, 0, rz0), cam.P(rx1 + 0.05, 0, rz0), cam.P(rx1 + 0.08, 0, rz1), cam.P(rx0 + 0.08, 0, rz1)], 0.28, 4));
+  add(rugPaint((u, v) => cam.P(rx0 + u * (rx1 - rx0), 0, rz0 + (1 - v) * (rz1 - rz0)), { field: '#e5d9bf', field2: '#d4c19a', border: '#c9a24b', accent: '#203a5c', motif: '#a8372d' }, { asp: (rz1 - rz0) / (rx1 - rx0), nU: 16, nV: 6 }));
+
+  // ---- nightstands
+  add(nightstand(cam, -2.0, -1.4, 5.35, 6.0));
+  add(nightstand(cam, 1.4, 2.0, 5.35, 6.0));
+  // lamps and decor
+  { const k = cam.s(5.65); let [x, y] = cam.P(-1.7, 0.55, 5.65); add(tableLamp(x, y, k * 1.15, { shade: '#f7edd6' })); [x, y] = cam.P(1.7, 0.55, 5.65); add(tableLamp(x, y, k * 1.15, { shade: '#f7edd6' }));
+    [x, y] = cam.P(-1.5, 0.55, 5.6); add(books(x, y, k * 1.3, 3)); [x, y] = cam.P(1.52, 0.55, 5.6); add(vase(x, y, k * 1.3, C.sage, { h: 0.22, w: 0.1, branch: true, bloom: '#f0e6d0' })); }
+  // pendants beside bed
+  for (const sx of [-1.7, 1.7]) { const [x, y0] = cam.P(sx, 2.54, 5.7); const k = cam.s(5.7); add(pendantDome(x, y0, k, 0.6, 0.17, C.brass)); }
+
+  // ---- BED
+  const bedW = 1.0; const linen = '#f6f1e6';
+  const L = (cl) => ({ front: cl, top: lighten(cl, 0.1), left: shade(cl, 0.2), right: cl });
+  add(shadowPoly([cam.P(-bedW - 0.25, 0, 3.8), cam.P(bedW + 0.35, 0, 3.8), cam.P(bedW + 0.45, 0, 6.0), cam.P(-bedW - 0.15, 0, 6.0)], 0.4, 10));
+  // headboard (tall, upholstered cream, wraps)
+  add(cam.box(-1.35, 1.35, 0.1, 1.38, 5.85, 6.0, L('#c9b48b'), { rx: 0.05 }));
+  // brass trim on headboard top
+  add(cam.box(-1.35, 1.35, 1.38, 1.4, 5.85, 6.0, C.brass, { flat: true }));
+  // headboard channels
+  for (let i = 0; i < 6; i++) { const u = -1.35 + 0.45 * (i + 0.5); add(cam.frect(u - 0.015, u + 0.015, 0.7, 1.33, 5.85, shade('#c9b48b', 0.18), { op: 0.7 })); }
+  // base platform
+  add(cam.box(-bedW - 0.05, bedW + 0.05, 0.08, 0.36, 3.82, 5.9, L('#6b4528'), { rx: 0.02 }));
+  // mattress
+  add(cam.box(-bedW, bedW, 0.36, 0.6, 3.88, 5.88, L('#efe9dc'), { rx: 0.05 }));
+  // duvet (layered): linen with fold
+  add(cam.box(-bedW - 0.03, bedW + 0.03, 0.28, 0.66, 3.85, 5.15, L(linen), { rx: 0.06 }));
+  // folded-back top sheet band
+  add(cam.hq(-bedW - 0.03, bedW + 0.03, 4.7, 5.15, 0.665, lin('fold', [[0, '#ffffff'], [1, '#e6dfcf']])));
+  add(cam.quad([[-bedW - 0.03, 0.665, 4.7], [bedW + 0.03, 0.665, 4.7], [bedW + 0.03, 0.62, 4.7], [-bedW - 0.03, 0.62, 4.7]], '#ddd3be'));
+  // quilting lines on duvet top
+  for (let i = 1; i < 5; i++) { const x = -bedW + (2 * bedW * i) / 5; const a = cam.P(x, 0.667, 3.9), b = cam.P(x, 0.667, 4.65); add(line(a[0], a[1], b[0], b[1], '#d9cfba', 1.3, { op: 0.9 })); }
+  // throw runner over the bed (navy with brass stripes)
+  add(cam.hq(-bedW - 0.03, bedW + 0.03, 4.0, 4.5, 0.67, lin('runner', [[0, '#35618e'], [1, '#1f3d5e']])));
+  add(cam.quad([[-bedW - 0.03, 0.67, 4.0], [bedW + 0.03, 0.67, 4.0], [bedW + 0.03, 0.6, 4.0], [-bedW - 0.03, 0.6, 4.0]], '#1b3556'));
+  for (const zz of [4.06, 4.44]) { const a = cam.P(-bedW - 0.03, 0.672, zz), b = cam.P(bedW + 0.03, 0.672, zz); add(line(a[0], a[1], b[0], b[1], C.brass, 2)); }
+  for (let i = 0; i <= 28; i++) { const x = -bedW - 0.03 + (2 * (bedW + 0.03) * i) / 28; const a = cam.P(x, 0.6, 4.0), b = cam.P(x, 0.53, 4.0); add(line(a[0], a[1], b[0], b[1], C.brassL, 1.2)); }
+  // pillows
+  const pz = 5.55; const kp = cam.s(pz);
+  const pillow = (x, h, w, hh, col, rot, kind) => { const [px, py] = cam.P(x, h, pz); return cushion(px, py - hh * kp / 2, w * kp, hh * kp, col, rot, kind, { line: C.brass }); };
+  add(pillow(-0.55, 0.62, 0.62, 0.52, '#faf6ee', -2, 0));
+  add(pillow(0.55, 0.62, 0.62, 0.52, '#faf6ee', 2, 0));
+  add(pillow(-0.55, 0.6, 0.62, 0.42, '#e9e1cf', -1, 0));
+  { const zz = 5.0, kk = cam.s(zz); const mk = (x, col, rot, kind, w) => { const [px, py] = cam.P(x, 0.66, zz); return cushion(px, py - 0.14 * kk, w * kk, 0.28 * kk, col, rot, kind, { line: C.brassL }); };
+    add(mk(-0.62, '#27496d', -3, 2, 0.5)); add(mk(0.62, '#b5603c', 3, 1, 0.5)); add(mk(0.0, '#c9a24b', 0, 3, 0.4)); }
+
+  // ---- bench at foot of bed
+  add(shadowPoly([cam.P(-0.7, 0, 2.95), cam.P(0.85, 0, 2.95), cam.P(0.9, 0, 3.4), cam.P(-0.65, 0, 3.4)], 0.35, 6));
+  for (const [x, z] of [[-0.68, 3.0], [0.68, 3.0], [-0.68, 3.3], [0.68, 3.3]]) add(cam.box(x - 0.025, x + 0.025, 0, 0.18, z - 0.025, z + 0.025, C.brass, { flat: true }));
+  add(cam.box(-0.75, 0.75, 0.16, 0.4, 2.95, 3.35, L('#8f9f7e'), { rx: 0.05 }));
+  add(cam.frect(-0.75, 0.75, 0.34, 0.36, 2.95, C.brass));
+
+  // plant & chair at right window corner
+  { const [x, y] = cam.P(2.55, 0, 5.9); add(plantSnake(x, y, cam.s(5.9) * 1.25, { pot: '#b9a77f', sc: 1.25 })); }
+  { const [x, y] = cam.P(-2.55, 0, 3.3); }
+  add(downlights(cam, [[-1.8, 2.4], [1.8, 2.4], [-1.8, 4.2], [1.8, 4.2]], 2.54));
+  add(finishLayer({ vig: 0.36, glow: '#ffd9a0', glowOp: 0.12, gx: 0.5, gy: 0.4 }));
+  finish('interior-bedroom.svg', 'Master bedroom', 'A calm master bedroom with a padded navy headboard wall, a bed dressed in layered linen, nightstands with brass lamps, a walnut wardrobe, sheer curtains at the window and a patterned rug.');
 }
 
 // =============================================================================
@@ -731,6 +946,7 @@ function livingRoom() {
 // =============================================================================
 const JOBS = {
   'interior-living-room': () => livingRoom(),
+  'interior-bedroom': () => bedroom(),
 };
 const want = process.argv.slice(2);
 for (const [name, fn] of Object.entries(JOBS)) {
