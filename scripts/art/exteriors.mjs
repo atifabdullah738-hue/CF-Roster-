@@ -76,7 +76,7 @@ const TH = {
     refl: 0.24, tint: ['#5a3f8a', 0.12], road: ['#3f4150', '#31333f'], foot: '#8f8794', shadow: '#10162e', warm: 0.9, lights: true,
   },
   night: {
-    sky: [[0, '#060d1e'], [0.6, '#12223e'], [1, '#243a5c']], sun: [0.8, 0.14, '#f4f2e6', '#9ab8e0'], cloud: ['#2a3c5c', '#16233c'],
+    sky: [[0, '#0b1a38'], [0.55, '#1d3a66'], [1, '#34598a']], sun: [0.84, 0.14, '#f4f2e6', '#9ab8e0'], cloud: ['#2a3c5c', '#16233c'],
     far: '#18253f', tree: ['#0e2230', '#173a3c', '#2a5a48'], lawn: ['#1c3a30', '#142e28'], glass: [[0, '#3c5a80'], [0.5, '#1e3454'], [1, '#0c1a2e']],
     refl: 0.18, tint: ['#10264a', 0.22], road: ['#222833', '#181d27'], foot: '#4a5566', shadow: '#050a14', warm: 1.0, lights: true, stars: true,
   },
@@ -270,7 +270,7 @@ function cloud(S, x, y, s, th, o = {}) {
   }
   return G(G(b) + G(a), { fl: S.blur(2.4), op: o.op ?? 0.92 });
 }
-function sky(S, th, { horizon, sunVisible = true, clouds = [], stars = th.stars } = {}) {
+function sky(S, th, { horizon, sunVisible = true, clouds = [], stars = th.stars, noMoon = false } = {}) {
   const { W } = S; const hz = horizon;
   S.add(R(0, 0, W, hz + 60, S.grad(th.sky, 'v')));
   const sx = th.sun[0] * W, sy = th.sun[1] * hz;
@@ -279,7 +279,7 @@ function sky(S, th, { horizon, sunVisible = true, clouds = [], stars = th.stars 
     for (let i = 0; i < 110; i++) { const y = r() * hz * 0.75; s += C(r() * W, y, 0.6 + r() * 1.2, '#fff', { op: (0.25 + r() * 0.65).toFixed(2) }); }
     S.add(s);
   }
-  if (sunVisible) {
+  if (sunVisible && !noMoon) {
     S.add(C(sx, sy, 380, S.rgrad([[0, th.sun[3], 0.7], [0.35, th.sun[3], 0.24], [1, th.sun[3], 0]]), {}));
     S.add(C(sx, sy, 80, S.rgrad([[0, th.sun[2], 0.95], [1, th.sun[2], 0]])));
     S.add(C(sx, sy, th.stars ? 30 : 24, th.sun[2]));
@@ -713,7 +713,7 @@ function planter(S, x, y, w, h, { fill = B.char, plants = true, th = S.th, flowe
 }
 function pergola(S, x, y, w, h, { col = '#3a3d44', slats = 9, depth = 14 } = {}) { // x,y top-left; h = height to underside of beam
   let s = '';
-  s += R(x, y + h, 5, -h, col) + R(x + w - 5, y + h, 5, -h, col);
+  s += R(x, y, 5, h, col) + R(x + w - 5, y, 5, h, col);
   s += R(x - 8, y, w + 16, 7, col) + R(x - 8, y, w + 16, 1.4, '#fff', { op: 0.2 });
   for (let i = 0; i < slats; i++) { const sx = x - 6 + (i * (w + 12 - 4)) / (slats - 1); s += R(sx, y - 5, 4, 5, col); }
   return s;
@@ -736,7 +736,7 @@ function lamp(S, x, y, h, { on = true, arm = 40, col = '#2d3138' } = {}) { // st
 }
 function glow(S, x, y, r, col = '#ffd27a', op = 0.6) { return C(x, y, r, S.rgrad([[0, col, op], [1, col, 0]])); }
 function uplight(S, x, y, w, h, col = '#ffe0a0', op = 0.5) { // cone of light going up from (x,y)
-  return POLY([[x - 4, y], [x + 4, y], [x + w / 2, y - h], [x - w / 2, y - h]], S.grad([[0, col, op], [1, col, 0]], 'v'));
+  return G(POLY([[x - 4, y], [x + 4, y], [x + w / 2, y - h], [x - w / 2, y - h]], S.grad([[0, col, op], [1, col, 0]], 'v')), { fl: S.blur(7) });
 }
 
 /* ------------------------------------------------------------------ */
@@ -1546,4 +1546,191 @@ scenes['house-fusion-luxury'] = () => {
   S.add(carSide(S, 160, 886, 0.8, '#2b3038'));
   finish(S);
   S.write('house-fusion-luxury.svg');
+};
+
+function ledStrip(S, x1, y1, x2, y2, col = '#ffe2a8', w = 2.4, g = 5) {
+  return G(L(x1, y1, x2, y2, col, w * 3.2, { cap: 'round' }), { fl: S.blur(g), op: 0.75 }) + L(x1, y1, x2, y2, '#fffdf2', w, { cap: 'round' }) + L(x1, y1, x2, y2, col, w * 1.8, { cap: 'round', op: 0.5 });
+}
+function moon(S, x, y, r = 30) {
+  return C(x, y, r * 6, S.rgrad([[0, '#bcd2f0', 0.45], [1, '#bcd2f0', 0]])) + C(x, y, r, '#f6f4e8') + C(x - 9, y - 6, 6, '#dcd8c6', { op: 0.8 }) + C(x + 8, y + 9, 8, '#dcd8c6', { op: 0.7 }) + C(x + 10, y - 12, 4, '#dcd8c6', { op: 0.7 }) + C(x - 4, y + 14, 3.4, '#dcd8c6', { op: 0.6 });
+}
+function lightPool(S, x, y, rx, ry, col = '#ffd890', op = 0.5) { return E(x, y, rx, ry, S.rgrad([[0, col, op], [1, col, 0]])); }
+
+scenes['house-night-facade'] = () => {
+  const S = new Svg('hnf', 1200, 900, { title: 'Modern house facade at night with LED lighting', desc: 'A modern double-storey house at night: warm interior light glowing through large glazing, a cantilevered upper volume edged with LED strips, a timber panel lit from behind, wall-washer and uplighting on trees and boundary wall, glowing gate pillars and a moonlit sky.', seed: 10, th: 'night' });
+  const th = S.th; const { W, H } = S;
+  sky(S, th, { horizon: 650, noMoon: true, clouds: [[260, 140, 1.4, 0.55], [820, 100, 1.2, 0.5], [1000, 240, 0.9, 0.4]] });
+  farBlocks(S, 676, th, { op: 0.5, seed: 61, col: '#1a2c4a' }); farTrees(S, 684, th, { h: 80, op: 0.9, seed: 62, col: '#10223a' });
+  const X = 250, Wd = 700, GY = 670, fh = 188, sl = 16;
+  const y1 = GY - fh, s1 = y1 - sl, y2 = s1 - 176, s2 = y2 - sl, par = s2 - 24;
+  neighbor(S, 20, 690, 205, 2, th, { col: '#cfc8bc', seed: 3, floorH: 150 }); neighbor(S, 985, 690, 215, 3, th, { col: '#c4bdb0', seed: 4, floorH: 140 });
+  forecourt(S, GY, 90);
+  S.add(tank(S, X + 90, par + 30, 62, 74, { stand: 8 }), solarRow(S, X + 400, par + 6, 4, 58, 30, 6));
+  S.add(vol(S, X, par, Wd, GY - par, { fill: '#e9e3d6' }));
+  // porch
+  const pw = 270;
+  S.add(R(X, y1, pw, fh, '#1c1815'), R(X, y1, pw, fh, woodPat(S, { name: 'w10n', sw: 13, colors: ['#6b4a30', '#5d3f28', '#74532f'] }), { op: 0.55 }));
+  S.add(R(X, GY - 6, pw, 6, '#555048'), carFront(S, X + 134, GY - 4, 184, '#30363e'));
+  S.add(R(X + pw - 4, y1, 14, fh, '#2a2d33'));
+  // entry
+  const ex = X + pw + 10;
+  S.add(vol(S, ex, y1, 130, fh, { fill: '#33363d', tex: boardPat(S, { name: 'bd10', col: '#000' }), edge: false }));
+  S.add(door(S, ex + 20, GY - 170, 90, 170, { style: 'dark', handle: B.brass, panels: 1 }));
+  // lounge window
+  const lx = ex + 150;
+  S.add(R(lx - 10, y1 + 14, 272, fh - 14, '#d8d0be'));
+  // upper box
+  S.add(vol(S, X + 50, y2, Wd - 20, 176, { fill: '#3a3e45', tex: boardPat(S, { name: 'bd10', col: '#000' }), edge: false }));
+  S.add(slab(S, X + 40, s1, Wd + 30, sl, { fill: '#2b2f36', shy: 24 }));
+  S.add(slab(S, X + 40, par - 6, Wd + 30, 14, { fill: '#2b2f36', shy: 8 }));
+  S.add(R(X + 70, y2 + 20, 184, 136, woodPat(S, { name: 'w10n2', sw: 13 })));
+  S.add(vol(S, X, y1, 0, 0, {}));
+  // facade-level night darkness
+  S.add(R(0, 0, W, H, S.grad([[0, '#050c1c', 0.28], [0.5, '#050c1c', 0.5], [1, '#050c1c', 0.66]], 'v')));
+  // === lights ===
+  // lit windows
+  S.add(win(S, lx, y1 + 24, 252, fh - 34, { cols: 4, rows: 1, transom: 0.14, frame: '#1f2227', fw: 4.4, sill: false, mode: 'hot', interior: 'lounge', seed: 4 }));
+  for (const gx of [lx + 60, lx + 190]) S.add(glow(S, gx, y1 + 60, 80, '#ffe3a8', 0.5));
+  S.add(win(S, X + 296, y2 + 20, 330, 136, { cols: 4, rows: 1, transom: 0.2, frame: '#1f2227', fw: 4.4, sill: false, mode: 'warm', interior: 'pendant', seed: 6 }));
+  S.add(glow(S, X + 460, y2 + 80, 160, '#ffd890', 0.35));
+  S.add(R(X + 70, y2 + 20, 184, 136, S.grad([[0, '#ffcf80', 0.3], [1, '#ff9a3c', 0.5]], 'v')), R(X + 70, y2 + 20, 184, 136, woodPat(S, { name: 'w10n2', sw: 13 }), { op: 0.0 }));
+  S.add(R(X + 70, y2 + 20, 184, 136, 'none', { stroke: '#15171b', 'stroke-width': 5 }));
+  for (let i = 0; i <= 184 / 13; i++) S.add(R(X + 70 + i * 13, y2 + 20, 4, 136, '#1a1512', { op: 0.9 }));
+  S.add(glow(S, X + 162, y2 + 88, 150, '#ffb868', 0.35));
+  S.add(win(S, ex + 20 - 30, y1 + 20, 24, 150, { cols: 1, rows: 4, frame: '#1f2227', fw: 3, sill: false, mode: 'hot', depth: false }));
+  S.add(door(S, ex + 20, GY - 170, 90, 170, { style: 'dark', handle: B.brass, panels: 1 }));
+  S.add(R(ex + 20, GY - 170, 90, 170, '#000', { op: 0.35 }), R(ex + 20, GY - 170, 90, 170, S.grad([[0, '#fff', 0.1], [1, '#000', 0]], 'h')));
+  S.add(ledStrip(S, ex + 14, GY - 176, ex + 14, GY + 2, '#ffe2a8', 2.4), ledStrip(S, ex + 116, GY - 176, ex + 116, GY + 2, '#ffe2a8', 2.4));
+  S.add(R(ex + 20 + 62, GY - 110, 4, 56, B.brass, { rx: 2 }));
+  for (const px of [30, 100, 170, 230]) S.add(glow(S, X + px, y1 + 14, 44, '#ffe3a8', 0.55), C(X + px, y1 + 9, 3.4, '#fff6d8'));
+  S.add(glow(S, X + 134, GY - 54, 90, '#fff0c0', 0.12), R(X + 50, GY - 60, 168, 54, S.grad([[0, '#ffe3a8', 0.0], [1, '#ffe3a8', 0.1]], 'v')));
+  // LED strips
+  S.add(ledStrip(S, X + 40, s1 + sl + 1, X + Wd + 70, s1 + sl + 1, '#ffe2a8', 2.6), ledStrip(S, X + 40, par + 8, X + Wd + 70, par + 8, '#cfe8ff', 2.2));
+  S.add(ledStrip(S, X + 50, y2 + 2, X + 50, s1, '#cfe8ff', 2), ledStrip(S, X + Wd + 20, y2 + 2, X + Wd + 20, s1, '#cfe8ff', 2));
+  S.add(ledStrip(S, X + 262, y2 + 12, X + 262, s1 - 6, '#ffe2a8', 2.2));
+  S.add(ledStrip(S, X + 2, GY - 10, X + Wd + 8, GY - 10, '#cfe8ff', 1.6, 4));
+  // wall-wash on facade
+  for (const wx of [ex + 66, X + 460]) S.add(POLY([[wx - 5, par + 6], [wx + 5, par + 6], [wx + 60, par + 120], [wx - 60, par + 120]], S.grad([[0, '#ffe2a8', 0.35], [1, '#ffe2a8', 0]], 'v'), { op: 0.0 }));
+  // landscape lights + wall
+  const wy = 744;
+  boundaryWall(S, 0, 482, { top: wy, fill: '#5d6676', capCol: '#1e2228' }); boundaryWall(S, 718, 482, { top: wy, fill: '#5d6676', capCol: '#1e2228' });
+  S.add(R(0, wy, W, WALL_BASE - wy, S.grad([[0, '#050c1c', 0.0], [1, '#050c1c', 0.55]], 'v'), { op: 0 }));
+  S.add(gate(S, 500, WALL_BASE, 220, 108, { col: '#2b2f36', style: 'vslats', accent: B.brass }));
+  S.add(ledStrip(S, 502, WALL_BASE - 106, 718, WALL_BASE - 106, '#ffe2a8', 1.8, 4));
+  for (const px of [472, 720]) S.add(pillar(S, px, WALL_BASE, 28, 108, { fill: '#8d95a3', cap: '#1e2228', lamp: true, glow: true }));
+  for (const px of [120, 300, 820, 1040]) S.add(lightPool(S, px, wy + 24, 70, 40, '#ffd890', 0.55), R(px - 4, wy + 20, 8, 12, '#2b2f36'), glow(S, px, wy + 24, 18, '#ffe9b0', 0.8));
+  S.add(R(0, wy - 8, W, 8, '#000', { op: 0 }));
+  // palms with uplights
+  palm(S, 150, 740, 330, th, { lean: 0.03, seed: 5 }); palm(S, 1090, 740, 350, th, { lean: -0.03, seed: 6 }); palm(S, 1148, 740, 280, th, { lean: 0.03, seed: 8 });
+  for (const px of [150, 1090, 1148]) S.add(uplight(S, px, 744, 120, 320, '#ffe0a0', 0.34), lightPool(S, px, 744, 46, 10, '#ffe0a0', 0.8), E(px, 744, 5, 2, '#fff6d0'));
+  hedge(S, X + 10, GY + 40, 220, 22, th, { seed: 2 }); 
+  for (const px of [X + 20, X + 245]) S.add(lightPool(S, px, GY + 36, 44, 9, '#ffd890', 0.6));
+  S.add(lightPool(S, lx + 126, GY + 22, 170, 16, '#ffd890', 0.35), lightPool(S, X + 134, GY + 20, 120, 12, '#ffe3a8', 0.25));
+  street(S, th, WALL_BASE);
+  S.add(R(0, WALL_BASE, W, H - WALL_BASE, S.grad([[0, '#050c1c', 0.1], [1, '#050c1c', 0.45]], 'v')));
+  // street lamp
+  S.add(lamp(S, 56, 826, 300, { on: true, arm: 50 }), lightPool(S, 106, 842, 160, 20, '#ffd890', 0.4));
+  S.add(carSide(S, 700, 886, 0.8, '#aeb4ba'));
+  S.add(P('M965 840 L1180 818 L1180 880 L965 858Z', S.grad([[0, '#fff4cf', 0.5], [1, '#fff4cf', 0]], 'h'), { op: 0 }));
+  S.add(moon(S, 1010, 120, 30));
+  finish(S, { vignette: 0.4 });
+  S.write('house-night-facade.svg');
+};
+
+function sofa(S, x, y, w, col = '#6b7480', cush = [B.brass, '#e9e0cf', '#3f6f7a']) { // y = floor line, front view
+  let s = E(x + w / 2, y, w * 0.55, 4, '#000', { op: 0.3 });
+  s += R(x + 4, y - 6, 6, 6, '#222') + R(x + w - 10, y - 6, 6, 6, '#222');
+  s += R(x, y - 40, 12, 36, dark(col, 0.1), { rx: 4 }) + R(x + w - 12, y - 40, 12, 36, dark(col, 0.1), { rx: 4 });
+  s += R(x + 8, y - 54, w - 16, 30, S.grad([[0, lite(col, 0.1)], [1, dark(col, 0.1)]], 'v'), { rx: 6 });
+  s += R(x + 8, y - 26, w - 16, 22, S.grad([[0, lite(col, 0.18)], [1, dark(col, 0.1)]], 'v'), { rx: 5 });
+  s += L(x + w / 2, y - 26, x + w / 2, y - 6, '#000', 1, { op: 0.25 });
+  const cw = 20;
+  s += R(x + 14, y - 46, cw, cw + 6, cush[0], { rx: 3 }) + R(x + w - 14 - cw, y - 46, cw, cw + 6, cush[2], { rx: 3 }) + R(x + w / 2 - 10, y - 42, cw, cw, cush[1], { rx: 3 });
+  return s;
+}
+function chair(S, x, y, col = '#d6c7a8') {
+  return E(x + 16, y, 22, 3, '#000', { op: 0.3 }) + R(x + 2, y - 14, 4, 14, '#222') + R(x + 26, y - 14, 4, 14, '#222') + R(x, y - 40, 32, 28, S.grad([[0, lite(col, 0.1)], [1, dark(col, 0.15)]], 'v'), { rx: 6 }) + R(x + 2, y - 54, 28, 20, dark(col, 0.05), { rx: 5 });
+}
+
+scenes['house-rooftop-terrace'] = () => {
+  const S = new Svg('hrt', 1200, 900, { title: 'Double-storey house with rooftop terrace at dusk', desc: 'A double-storey house at dusk with a furnished rooftop terrace: glass railing, a timber-and-steel pergola over lounge seating, string lights, solar panels, a water tank above the stair room, and warmly lit windows below.', seed: 11, th: 'dusk' });
+  const th = S.th; const { W, H } = S;
+  sky(S, th, { horizon: 640, clouds: [[220, 120, 1.4, 0.7], [900, 90, 1.5, 0.65], [600, 180, 0.8, 0.45]] });
+  birds(S, [[420, 90, 1], [455, 105, 0.8]], '#2a2040');
+  farBlocks(S, 670, th, { op: 0.5, seed: 71 }); farTrees(S, 680, th, { h: 90, op: 0.9, seed: 72 });
+  const X = 260, Wd = 680, GY = 740, fh = 170, sl = 14;
+  const y1 = GY - fh, s1 = y1 - sl, y2 = s1 - fh, s2 = y2 - sl;
+  neighbor(S, 20, 720, 220, 3, th, { col: '#d4cdc0', seed: 7, floorH: 150 }); neighbor(S, 960, 720, 230, 2, th, { col: '#cbc4b6', seed: 8, floorH: 150 });
+  forecourt(S, GY, 60);
+  const grey = '#cfccc4';
+  // body
+  S.add(vol(S, X, s2 - 34, Wd, GY - s2 + 34, { fill: grey }));
+  // parapet band + roof items
+  const mw = 146, mtop = s2 - 120;
+  // mumty (stair room)
+  S.add(vol(S, X + 4, mtop, mw, s2 - mtop, { fill: '#e6e2d8' }), slab(S, X - 4, mtop - 12, mw + 16, 12, { fill: '#2f3238', shy: 10 }));
+  S.add(tank(S, X + 14, mtop - 10, 58, 72, { stand: 8 }), tank(S, X + 80, mtop - 10, 58, 72, { stand: 8 }));
+  S.add(R(X + 24, s2 - 92, 54, 92, '#2f3238'), door(S, X + 28, s2 - 86, 46, 86, { style: 'wood', col: '#8a5a34', panels: 2 }), win(S, X + 96, s2 - 90, 30, 46, { cols: 1, rows: 2, frame: '#2f3238', fw: 2.4, sill: false, mode: 'dark' }));
+  S.add(solarRow(S, X + 164, s2 - 26, 3, 62, 46, 6));
+  // parapet: solid band left, glass railing on terrace side
+  const tx0 = X + 372;
+  S.add(R(X, s2 - 34, tx0 - X, 34, '#2f3238'), R(X, s2 - 34, tx0 - X, 34, boardPat(S, { name: 'bd10', col: '#000' })), slab(S, X - 6, s2 - 40, tx0 - X + 6, 8, { fill: '#3a3e45', shy: 6 }));
+  const px0 = X + 396, pw = 250, pTop = s2 - 168;
+  S.add(R(tx0, s2 - 5, X + Wd + 6 - tx0, 5, '#3a3e45'));
+  S.add(pergola(S, px0, pTop, pw, s2 - pTop, { col: '#2f3238', slats: 12 }));
+  S.add(R(px0 - 6, pTop + 8, pw + 12, 4, B.brass, { op: 0.8 }));
+  // terrace deck + furniture
+  S.add(R(tx0 + 8, s2 - 8, X + Wd - tx0 - 4, 5, '#8a6a46'));
+  {
+    const fz = [sofa(S, px0 + 14, s2 - 8, 124), E(px0 + 172, s2 - 7, 30, 4, '#000', { op: 0.25 }), R(px0 + 148, s2 - 28, 48, 6, '#3a3e45', { rx: 2 }), R(px0 + 152, s2 - 22, 3, 14, '#222'), R(px0 + 189, s2 - 22, 3, 14, '#222'), chair(S, px0 + 206, s2 - 8), R(px0 + 6, s2 - 86, 3, 78, '#222')].join('');
+    S.add(G(fz, { tf: `translate(${px0 + 125} ${s2 - 8}) scale(1.28) translate(${-(px0 + 125)} ${-(s2 - 8)})` }));
+  }
+  S.add(planter(S, tx0 + 8, s2 - 8, 26, 20, { fill: '#2f3238', th, seed: 4 }), planter(S, X + Wd - 28, s2 - 8, 28, 20, { fill: '#2f3238', th, seed: 5 }));
+  S.add(railing(S, tx0, s2 - 5, X + Wd + 6 - tx0, 56, { type: 'glass', posts: 6 }));
+  // body: first floor + slab + ground
+  S.add(slab(S, X - 6, s1, Wd + 12, sl, { fill: '#2f3238', shy: 22 }));
+  S.add(R(X + 20, y2 + 18, 250, 136, '#f0ece2'));
+  S.add(railing(S, X + 14, s1 - 4, 262, 48, { type: 'bars', post: '#2f3238', rail: '#2f3238' }));
+  S.add(R(X + 310, y2 + 18, 150, 140, woodPat(S, { name: 'w11', sw: 14 })), R(X + 310, y2 + 18, 150, 140, S.grad([[0, '#fff', 0.06], [1, '#000', 0.22]], 'h')));
+  S.add(ac(S, X + 566, y2 + 120, 44, 32));
+  // ground floor
+  const pw2 = 270;
+  S.add(R(X, y1, pw2, fh, '#1c1815'), R(X, y1, pw2, fh, woodPat(S, { name: 'w11b', sw: 13, colors: ['#6b4a30', '#5d3f28', '#74532f'] }), { op: 0.55 }));
+  S.add(R(X, GY - 6, pw2, 6, '#555048'), carFront(S, X + 130, GY - 4, 170, '#aab2b8'));
+  S.add(R(X + pw2 - 4, y1, 14, fh, '#2a2d33'));
+  S.add(R(X + pw2 + 10, y1, Wd - pw2 - 10, fh, '#e8e4da'));
+  S.add(R(X + 300, GY - 168, 100, 168, '#2f3238'), door(S, X + 310, GY - 158, 80, 158, { style: 'wood', col: '#8a5a34', panels: 5 }));
+  S.add(R(X + 290, GY - 5, 120, 5, '#c9c3b6'), R(X + 280, GY, 140, 5, '#bdb7a9'));
+  S.add(plate(S, X + 420, y1 + 80, 24, 16));
+  // dusk darkness overlay
+  S.add(R(0, 0, W, H, S.grad([[0, '#0a1230', 0.2], [0.6, '#0a1230', 0.38], [1, '#0a1230', 0.5]], 'v')));
+  // === lights ===
+  S.add(win(S, X + 34, y2 + 24, 222, 128, { cols: 3, rows: 1, transom: 0.2, frame: '#24272c', fw: 4, sill: false, mode: 'warm', interior: 'lounge', seed: 3 }), glow(S, X + 145, y2 + 90, 130, '#ffd890', 0.35));
+  S.add(win(S, X + 330, y2 + 40, 110, 96, { cols: 2, rows: 1, frame: '#24272c', fw: 4, sill: false, mode: 'hot', interior: 'shelf', seed: 6 }), glow(S, X + 385, y2 + 90, 90, '#ffd890', 0.3));
+  S.add(win(S, X + 490, y2 + 20, 56, 136, { cols: 1, rows: 4, frame: '#24272c', fw: 3.4, sill: false, mode: 'warm', interior: 'curtain', seed: 7 }));
+  S.add(win(S, X + 460, y1 + 26, 160, 120, { cols: 2, rows: 1, transom: 0.2, frame: '#24272c', fw: 4, sill: false, mode: 'hot', interior: 'pendant', seed: 9 }), glow(S, X + 540, y1 + 90, 110, '#ffd890', 0.35));
+  S.add(R(X + 310, GY - 158, 80, 158, '#000', { op: 0.0 }));
+  for (const lx of [50, 130, 210]) S.add(glow(S, X + lx, y1 + 14, 44, '#ffe3a8', 0.55), C(X + lx, y1 + 9, 3.4, '#fff6d8'));
+  for (const lx of [X + 288, X + 414]) S.add(R(lx - 3, y1 + 40, 6, 16, B.char, { rx: 2 }), glow(S, lx, y1 + 50, 30, '#ffe3a8', 0.7), R(lx - 2, y1 + 44, 4, 8, '#ffe9b0'));
+  // terrace lights
+  S.add(stringLights(S, X + 150, mtop + 10, px0 + 2, pTop + 2, 20, 11), stringLights(S, px0 + 2, pTop + 2, px0 + pw - 2, pTop + 2, 16, 12), stringLights(S, px0 + pw - 2, pTop + 2, X + Wd - 6, s2 - 90, 12, 5));
+  S.add(R(X + Wd - 8, s2 - 92, 3, 88, '#2f3238'));
+  S.add(glow(S, px0 + 185, s2 - 30, 90, '#ffd890', 0.4), glow(S, px0 - 6, s2 - 108, 46, '#ffd890', 0.55), P(`M${px0 - 18} ${s2 - 104} L${px0 + 8} ${s2 - 104} L${px0 + 3} ${s2 - 124} L${px0 - 13} ${s2 - 124}Z`, '#ffe6a8'));
+  S.add(R(px0 + 182, s2 - 38, 9, 9, '#ffe2a0', { rx: 1 }), glow(S, px0 + 186, s2 - 33, 24, '#ffd890', 0.7));
+  for (let i = 0; i < 4; i++) S.add(glow(S, px0 + 40 + i * 56, pTop + 14, 36, '#ffe3a8', 0.45), C(px0 + 40 + i * 56, pTop + 10, 3, '#fff6d8'));
+  // wall + gate + landscape
+  const wy = 764;
+  boundaryWall(S, 0, 250, { top: wy, fill: '#7a8190', capCol: '#1e2228' }); boundaryWall(S, 560, 640, { top: wy, fill: '#7a8190', capCol: '#1e2228' });
+  S.add(gate(S, 276, WALL_BASE, 280, 98, { col: '#2b2f36', style: 'vslats', accent: B.brass }), ledStrip(S, 278, WALL_BASE - 96, 554, WALL_BASE - 96, '#ffe2a8', 1.6, 3));
+  for (const px of [250, 556]) S.add(pillar(S, px, WALL_BASE, 26, 92, { fill: '#aab1bd', cap: '#1e2228', lamp: true, glow: true }));
+  hedge(S, X + 300, GY + 24, 330, 20, th, { seed: 2 });
+  palm(S, 120, 790, 430, th, { lean: 0.04, seed: 11 }); palm(S, 1090, 790, 420, th, { lean: -0.03, seed: 12 });
+  for (const px of [120, 1090]) S.add(uplight(S, px, 794, 110, 280, '#ffe0a0', 0.28), lightPool(S, px, 796, 44, 9, '#ffe0a0', 0.7));
+  for (const px of [330, 470]) S.add(lightPool(S, px, wy + 30, 80, 12, '#ffd890', 0.3));
+  street(S, th, WALL_BASE);
+  S.add(R(0, WALL_BASE, W, H - WALL_BASE, S.grad([[0, '#0a1230', 0.05], [1, '#0a1230', 0.3]], 'v')));
+  S.add(lamp(S, 1000, 826, 280, { on: true, arm: -46 }));
+  S.add(carSide(S, 560, 886, 0.8, '#3a4452', { dir: -1 }));
+  finish(S);
+  S.write('house-rooftop-terrace.svg');
 };
