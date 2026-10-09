@@ -98,7 +98,6 @@ export default async function build({ renderer, w, h }) {
   mound(0.4, 0, 2.7, 0.7, scene, { seed: 3 }); mound(3.5, 0, 3.0, 0.6, scene, { seed: 4, tint: 0xe6ffd0 }); mound(6.4, 0, 3.4, 0.7, scene, { seed: 5 }); mound(9.2, 0, 1.0, 0.6, scene, { seed: 8 });
   mound(9.6, 0, -4, 0.6, scene, { seed: 9 }); mound(9.4, 0, -9, 0.7, scene, { seed: 10, tint: 0xe6ffd0 });
   flowerMass({ x0: 0, x1: 3, y0: 0.1, y1: 1.2, z: 1.3, depth: 0.8, seed: 15, parent: scene });
-  palm(9.2, 3.8, { h: 7.5, seed: 7, lean: 0.2 }, scene); palm(-0.6, 4.0, { h: 5, seed: 8, lean: -0.1 }, scene);
   crownTree(10.0, -11, { h: 9, crown: 3.4, kind: 'neem', seed: 17 }, scene);
   // boundary walls
   bx(XW - 0.3, 0, ZW - 0.13, -4.0, 1.5, ZW + 0.13, grey, scene); bx(-0.9, 0, ZW - 0.13, XB, 1.5, ZW + 0.13, grey, scene); bx(XW - 0.33, 1.5, ZW - 0.17, XB + 0.2, 1.57, ZW + 0.17, cap, scene);
@@ -128,14 +127,14 @@ export default async function build({ renderer, w, h }) {
   footpath({ x0: -90, x1: 90, z0: R1, z1: R1 + 4, y: 0.12, mat: pave, parent: road });
   // trees & street furniture
   crownTree(-12, 8.0, { h: 9, crown: 3.4, kind: 'umbrella', seed: 51, lean: -0.3 }, scene); crownTree(-22, 8.0, { h: 8.5, crown: 3.2, kind: 'neem', seed: 53 }, scene);
-  crownTree(12.2, -3, { h: 9.5, crown: 3.4, kind: 'neem', seed: 55 }, scene); crownTree(12.2, -18, { h: 9, crown: 3.2, kind: 'umbrella', seed: 57 }, scene);
+  crownTree(12.2, -18, { h: 9, crown: 3.2, kind: 'umbrella', seed: 57 }, scene);
   crownTree(24, 8.0, { h: 9, crown: 3.2, kind: 'tall', seed: 59 }, scene); crownTree(-6, -22, { h: 14, crown: 5.6, kind: 'neem', seed: 61 }, scene); crownTree(8, -26, { h: 14, crown: 5.4, kind: 'umbrella', seed: 62 }, scene);
-  streetLamp({ x: 11.4, z: 8.4, h: 7.5, arm: 1.7, dir: 1, parent: scene });
+  streetLamp({ x: -16, z: 8.4, h: 7.5, arm: 1.7, dir: 1, parent: scene });
   car({ x: -14, z: 10.5, rot: 0, color: 0x2d3340, type: 'suv', parent: scene });
   neighbour({ x0: -34, x1: -9.3, zF: 0.2, depth: 13, floors: 2, storeyH: 3.4, wall: 0xcfc4af, accent: 0x6a5a48, seed: 3, zWall: ZW, wallH: 1.7, parent: scene, glow: 0.1 });
   neighbour({ x0: -60, x1: -34, zF: -0.4, depth: 13, floors: 3, storeyH: 3.2, wall: 0xc2c7ca, accent: 0x474c52, seed: 7, zWall: ZW, parent: scene });
   neighbour({ x0: 26, x1: 52, zF: -1.5, depth: 13, floors: 2, storeyH: 3.4, wall: 0xd6cbb6, accent: 0x5a6a58, seed: 11, zWall: ZW, parent: scene });
 
-  const camera = cam({ pos: [15.5, 1.7, 24.5], target: [-1.6, 1.7, -1.0], focal: 27, shift: 0.14, w, h });
+  const camera = cam({ pos: [17.0, 1.7, 17.5], target: [1.5, 1.7, -3.0], focal: 24, shift: 0.1, w, h });
   return { scene, camera, exposure: 0.42, aoRadius: 0.9, aoStrength: 1.0, grade: { contrast: 1.14, saturation: 1.1, vignette: 0.24, grain: 0.015, warm: 0.04 } };
 }

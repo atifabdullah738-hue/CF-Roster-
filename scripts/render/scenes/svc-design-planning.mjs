@@ -8,7 +8,7 @@ function between(parent, a, b, r0, r1, mat, seg = 10) { const A = new THREE.Vect
 export default async function build({ renderer, w, h }) {
   const scene = new THREE.Scene(), R = rng(9);
   const SUN_EL = 36, SUN_AZ = -118;
-  const E = setupEnvironment({ renderer, scene, sunElevation: SUN_EL, sunAzimuth: SUN_AZ, turbidity: 4, rayleigh: 1.1, sunIntensity: 2.7, sunColor: 0xfff0dc, envIntensity: 0.55, shadowExtent: 1.8, shadowCenter: [0, 0, 0], shadowMap: 4096 });
+  const E = setupEnvironment({ renderer, scene, sunElevation: SUN_EL, sunAzimuth: SUN_AZ, turbidity: 4, rayleigh: 1.1, sunIntensity: 2.6, sunColor: 0xfff0dc, envIntensity: 1.0, shadowExtent: 1.8, shadowCenter: [0, 0, 0], shadowMap: 4096 });
   bindEnv(E.env);
   E.light.shadow.radius = 9; E.light.shadow.blurSamples = 24; E.light.shadow.normalBias = 0.002; E.light.shadow.bias = -0.0002; E.light.shadow.camera.near = 0.5; E.light.shadow.camera.far = 30; E.light.position.copy(E.sun).multiplyScalar(6); E.light.shadow.camera.updateProjectionMatrix();
   scene.background = new THREE.Color(0x14110e);
@@ -16,8 +16,8 @@ export default async function build({ renderer, w, h }) {
   // ---------------- desk: oak planks
   const S = 2048, dc = cv(S), dx = dc.getContext('2d'), f = noiseArr(33, S, 5, 4), g = noiseArr(44, S, 6, 14), img = dx.createImageData(S, S), dd = img.data, pl = 8;
   for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) { const p = Math.floor((j / S) * pl), pk = (((p * 2654435761) >>> 0) % 100) / 100 - 0.5, edge = ((j / S) * pl) % 1, grain = Math.sin((j * 0.6 + f[(j * S + i) % (S * S)] * 80 + p * 31) * 0.5) * 0.5 + 0.5, streak = g[((j * 3) % S) * S + ((i * 0.15 | 0) % S)];
-    let v = 0.78 + pk * 0.16 + (grain - 0.5) * 0.12 + (streak - 0.5) * 0.28 + (f[j * S + i] - 0.5) * 0.12; if (edge < 0.008 || edge > 0.992) v *= 0.35; const k = (j * S + i) * 4; dd[k] = 205 * v; dd[k + 1] = 156 * v; dd[k + 2] = 104 * v; dd[k + 3] = 255; }
-  dx.putImageData(img, 0, 0); const deskTex = ctex(dc, { repeat: true }); deskTex.repeat.set(1, 1);
+    let v = 0.78 + pk * 0.16 + (grain - 0.5) * 0.12 + (streak - 0.5) * 0.28 + (f[j * S + i] - 0.5) * 0.12; if (edge < 0.008 || edge > 0.992) v *= 0.35; const k = (j * S + i) * 4; dd[k] = 235 * v; dd[k + 1] = 184 * v; dd[k + 2] = 128 * v; dd[k + 3] = 255; }
+  dx.putImageData(img, 0, 0); const deskTex = ctex(dc, { repeat: true }); deskTex.repeat.set(2.5, 2);
   const desk = new THREE.MeshStandardMaterial({ map: deskTex, roughness: 0.52, bumpMap: deskTex, bumpScale: 0.6 }); desk.userData.tileM = 1;
   const dg = new THREE.PlaneGeometry(4.0, 2.6); dg.rotateX(-Math.PI / 2); const deskM = new THREE.Mesh(dg, desk); deskM.receiveShadow = true; scene.add(deskM);
   boxAt(-2.0, -0.04, -1.3, 2.0, 0.0, 1.3, T.solid(0x6b4a2c, { roughness: 0.6 }), scene);
@@ -87,9 +87,9 @@ export default async function build({ renderer, w, h }) {
   for (let i = 0; i < pp.count; i++) { const px = pp.getX(i), pz = pp.getZ(i), u = (px + tw / 2) / tw; const curl = Math.max(0, 1 - u * 3.2); pp.setY(i, 0.0025 + curl * curl * 0.034 + Math.sin(px * 40 + pz * 25) * 0.0007 + Math.sin(pz * 70) * 0.0004); }
   tg.computeVertexNormals();
   const tc = cv(1024, 878), tx = tc.getContext('2d'); tx.clearRect(0, 0, 1024, 878); tx.lineWidth = 3; for (const [col, pts] of [['rgba(200,40,40,0.9)', [[120, 200], [420, 190], [440, 460], [160, 470], [120, 200]]], ['rgba(40,70,170,0.85)', [[520, 260], [900, 250], [910, 620], [530, 640], [520, 260]]]]) { tx.strokeStyle = col; tx.beginPath(); pts.forEach(([a, b], i) => (i ? tx.lineTo(a, b) : tx.moveTo(a, b))); tx.stroke(); } tx.strokeStyle = 'rgba(40,40,40,0.8)'; tx.lineWidth = 2; for (let i = 0; i < 9; i++) { tx.beginPath(); tx.moveTo(150 + i * 40, 560); tx.lineTo(150 + i * 40 + 22, 700); tx.stroke(); } tx.strokeStyle = 'rgba(190,40,40,0.9)'; tx.lineWidth = 5; tx.beginPath(); tx.arc(300, 330, 70, 0, 7); tx.stroke();
-  const tm = new THREE.MeshStandardMaterial({ map: ctex(tc), color: 0xffffff, transparent: true, opacity: 0.9, roughness: 0.7, side: THREE.DoubleSide, depthWrite: false });
+  const tm = new THREE.MeshStandardMaterial({ map: ctex(tc), color: 0xffffff, transparent: true, opacity: 0.75, roughness: 0.7, side: THREE.DoubleSide, depthWrite: false });
   const tmesh = new THREE.Mesh(tg, tm); tmesh.position.set(-0.28, 0.0, 0.0); tmesh.rotation.y = 0.05; tmesh.castShadow = false; tmesh.receiveShadow = true; tmesh.renderOrder = 1; scene.add(tmesh);
-  const tsh = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.32, depthWrite: false })); tsh.position.copy(tmesh.position); tsh.position.y += 0.0004; tsh.rotation.copy(tmesh.rotation); tsh.renderOrder = 1; scene.add(tsh);
+  const tsh = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.14, depthWrite: false })); tsh.position.copy(tmesh.position); tsh.position.y += 0.0004; tsh.rotation.copy(tmesh.rotation); tsh.renderOrder = 1; scene.add(tsh);
 
   // ---------------- pen mug, swatches, eraser
   const mug = new THREE.Group(); mug.position.set(0.55, 0, -0.2); scene.add(mug);
@@ -107,13 +107,13 @@ export default async function build({ renderer, w, h }) {
   const sunDir = E.sun.clone().normalize(), gobo = new THREE.Group(), gm = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
   gobo.position.copy(sunDir).multiplyScalar(2.6); gobo.lookAt(0, 0, 0);
   const bar = (x0, y0, x1, y1) => { const b = new THREE.Mesh(new THREE.BoxGeometry(Math.abs(x1 - x0), Math.abs(y1 - y0), 0.05), gm); b.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0); b.castShadow = true; gobo.add(b); };
-  const GW = 4.2, GH = 3.2; bar(-GW, -GH, -GW + 1.9, GH); bar(GW - 1.9, -GH, GW, GH); bar(-GW, -GH, GW, -GH + 1.2); bar(-GW, GH - 1.5, GW, GH);
-  bar(-0.06 - 0.2, -GH, 0.06 - 0.2, GH); bar(-GW, -0.1, GW, 0.06 + 0.0); bar(-GW, 0.85, GW, 0.97);
+  const GW = 4.2, GH = 3.2; bar(-GW, -GH, -GW + 2.6, GH); bar(GW - 2.6, -GH, GW, GH); bar(-GW, -GH, GW, -GH + 1.6); bar(-GW, GH - 1.9, GW, GH);
+  bar(-0.04 + 0.5, -GH, 0.04 + 0.5, GH); bar(-GW, -0.04 - 0.2, GW, 0.04 - 0.2);
   scene.add(gobo);
 
   // ---------------- camera
-  const camera = new THREE.PerspectiveCamera(); camera.filmGauge = 36; camera.setFocalLength(52); camera.aspect = w / h; camera.near = 0.05; camera.far = 50;
-  camera.position.set(0.04, 1.42, 1.12); camera.lookAt(0.0, 0, 0.0); camera.updateProjectionMatrix();
+  const camera = new THREE.PerspectiveCamera(); camera.filmGauge = 36; camera.setFocalLength(78); camera.aspect = w / h; camera.near = 0.05; camera.far = 50;
+  camera.position.set(-0.02, 1.42, 1.12); camera.lookAt(0.0, 0, 0.02); camera.updateProjectionMatrix();
   finish(scene, 1.4);
-  return { scene, camera, exposure: 0.36, aoRadius: 0.06, aoStrength: 1.0, grade: { contrast: 1.1, saturation: 1.02, vignette: 0.55, grain: 0.012, warm: 0.03 } };
+  return { scene, camera, exposure: 0.33, aoRadius: 0.06, aoStrength: 1.0, grade: { contrast: 1.2, saturation: 1.02, vignette: 0.55, grain: 0.012, warm: 0.03 } };
 }

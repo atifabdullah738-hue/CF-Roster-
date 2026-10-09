@@ -159,8 +159,8 @@ const trust = [
 
 <style>
   .hero { position: relative; min-height: min(86vh, 800px); display: flex; align-items: center; color: #fff; overflow: hidden; background: var(--navy-950); isolation: isolate; }
-  .hero :global(.hero__bg) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% center; z-index: -2; }
-  .hero__shade { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgb(8 20 31 / .88) 0%, rgb(8 20 31 / .62) 42%, rgb(8 20 31 / .12) 78%), linear-gradient(to top, rgb(8 20 31 / .55), transparent 40%); }
+  .hero :global(.hero__bg) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 75% center; z-index: -2; filter: brightness(1.22) contrast(1.05) saturate(1.05); }
+  .hero__shade { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgb(8 20 31 / .82) 0%, rgb(8 20 31 / .5) 40%, rgb(8 20 31 / 0) 72%), linear-gradient(to top, rgb(8 20 31 / .4), transparent 35%); }
   .hero__in { padding-block: clamp(72px, 12vw, 140px); }
   .hero__copy { max-width: 680px; animation: rise 1s cubic-bezier(.2,.7,.2,1) both; }
   .hero h1 { color: #fff; margin-bottom: 20px; text-wrap: balance; }

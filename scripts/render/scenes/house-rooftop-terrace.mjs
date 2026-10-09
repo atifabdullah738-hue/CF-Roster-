@@ -66,7 +66,7 @@ export default async function build({ renderer, w, h }) {
   glassRailing({ x0: X0, x1: X1, y: TOP + 0.7, z0: 0.22, z1: 0.22, h: 1.0, parent: scene });
   for (let x = X0 + 0.0; x <= X1 + 0.01; x += 2.0) boxAt(x - 0.03, TOP + 0.7, 0.19, x + 0.03, TOP + 1.7, 0.25, T.metal(0xbfc3c8, { roughness: 0.3 }), scene);
   // pergola over lounge (left)
-  { const px0 = -7.6, px1 = -1.2, pz0 = -4.6, pz1 = -0.9, py = TOP + 0.34, ph = 2.5;
+  { const px0 = -7.6, px1 = -1.2, pz0 = -3.6, pz1 = -0.7, py = TOP + 0.34, ph = 2.5;
     for (const [x, z] of [[px0, pz0], [px1, pz0], [px0, pz1], [px1, pz1], [(px0 + px1) / 2, pz1], [(px0 + px1) / 2, pz0]]) boxAt(x - 0.08, py, z - 0.08, x + 0.08, py + ph, z + 0.08, teak, scene);
     for (const z of [pz0, pz1]) boxAt(px0 - 0.2, py + ph, z - 0.07, px1 + 0.2, py + ph + 0.2, z + 0.07, teak, scene);
     for (let x = px0 - 0.2; x <= px1 + 0.2; x += 0.45) boxAt(x, py + ph + 0.2, pz0 - 0.2, x + 0.1, py + ph + 0.3, pz1 + 0.2, teakS, scene);
@@ -116,6 +116,6 @@ export default async function build({ renderer, w, h }) {
   neighbour({ x0: 13.4, x1: 38, z: -2, depth: 14, floors: 3, mat: T.plaster(0xaa9f8c, { tileM: 3.4, seed: 17 }), trim: T.plaster(0xd2ccbe, { tileM: 3, seed: 18 }), seed: 5, scene, mode: 'night' });
   P.backdrop({ scene, z: -34, seed: 7, palette: [0xa09480, 0x948a78], mode: 'night', treeColor: 0x3a5f2c });
 
-  const camera = archCamera({ pos: [-7, 3.9, 20.5], target: [0.5, 0, 0], focal: 34, shift: 0.0, w, h });
+  const camera = archCamera({ pos: [-7, 5.4, 21.5], target: [0.5, 0, 0], focal: 34, shift: -0.03, w, h });
   return { scene, camera, exposure: 0.55, aoRadius: 0.9, aoStrength: 1.0, bloom: true, bloomStrength: 0.34, bloomRadius: 0.75, bloomThreshold: 3.0, grade: { contrast: 1.12, saturation: 1.1, vignette: 0.3, grain: 0.018, warm: 0.01 } };
 }
