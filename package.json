@@ -9,12 +9,13 @@
     "preview": "astro preview",
     "check:links": "node scripts/check-links.mjs",
     "photo": "node scripts/import-photo.mjs",
-    "photo:list": "node scripts/import-photo.mjs --list"
+    "photo:list": "node scripts/import-photo.mjs --list",
+    "photo:status": "node scripts/import-photo.mjs --status"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
-    "astro": "^5.18.2",
+    "astro": "^7.3.8",
     "sharp": "^0.35.5"
   }
 }

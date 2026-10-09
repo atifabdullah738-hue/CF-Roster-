@@ -42,7 +42,7 @@ const rr = (a, b) => a + (b - a) * rnd();
 
 // -------------------------------------------------------------- scene state
 let S = null;
-function begin(prefix) { S = { p: prefix, defs: new Map(), body: [] }; reseed(7); }
+function begin(prefix) { S = { p: 'ab-' + prefix, defs: new Map(), body: [] }; reseed(7); }
 const id = (n) => `${S.p}-${n}`;
 const url = (n) => `url(#${id(n)})`;
 const add = (...parts) => { for (const p of parts) if (p) S.body.push(Array.isArray(p) ? p.join('') : p); };
@@ -1184,7 +1184,7 @@ function slatsOn(Sf, u0, u1, v0, v1, col, n, o = {}) {
 function marbleOn(Sf, u0, u1, v0, v1, o = {}) {
   const tag = o.tag || 'm';
   let s = sq(Sf, u0, u1, v0, v1, o.base || lin('mrb' + tag, [[0, '#f4f1ea'], [1, '#dedad0']], [0, 0, 1, 1]));
-  const cid = clipDef('mrb' + tag, sq(Sf, u0, u1, v0, v1, '#000'));
+  const cid = clipDef('mrc' + tag, sq(Sf, u0, u1, v0, v1, '#000'));
   let v = ''; reseed(o.seed ?? 9);
   const du = u1 - u0, dv = v1 - v0;
   const bez = (p0, p1, p2, p3, t) => { const m = 1 - t; return [m * m * m * p0[0] + 3 * m * m * t * p1[0] + 3 * m * t * t * p2[0] + t * t * t * p3[0], m * m * m * p0[1] + 3 * m * m * t * p1[1] + 3 * m * t * t * p2[1] + t * t * t * p3[1]]; };
@@ -2366,7 +2366,7 @@ function hammer(x, y, len, rot, o = {}) {
   s += rrect(-hw * 1.15, hl * 0.55, hw * 2.3, hl * 0.5, hw, hgrad('#1a2a40', '#27496d'));
   for (let i = 0; i < 6; i++) s += line(-hw * 1.1, hl * 0.6 + i * hl * 0.07, hw * 1.1, hl * 0.6 + i * hl * 0.07, '#0f2238', 1.2, { op: 0.6 });
   // head (claw hammer)
-  const bw = len * 0.1, bh = len * 0.14, fw = len * 0.09, cl = len * 0.24, y0 = -hl * 0.1;
+  const bw = len * 0.075, bh = len * 0.15, fw = len * 0.065, cl = len * 0.15, y0 = -hl * 0.1;
   s += path_(`M${r1(-bw)} ${r1(y0 - bh)}L${r1(bw + fw)} ${r1(y0 - bh)}L${r1(bw + fw)} ${r1(y0)}L${r1(-bw)} ${r1(y0)}Q${r1(-bw - cl * 0.6)} ${r1(y0 - bh * 0.1)} ${r1(-bw - cl)} ${r1(y0 + bh * 0.55)}Q${r1(-bw - cl * 0.7)} ${r1(y0 - bh * 0.55)} ${r1(-bw)} ${r1(y0 - bh)}Z`, lin('hmh', [[0, '#f4f6f8'], [0.5, '#aeb4be'], [1, '#6a717c']], [0, 0, 0, 1]), { stroke: '#4d535d', sw: 1.2 });
   s += rect(bw + fw * 0.2, y0 - bh, fw * 0.8, bh, '#8b929d', { op: 0.9 }) + rect(-bw + 4, y0 - bh + 4, bw * 2 + fw - 8, 5, '#fff', { op: 0.5, rx: 2 });
   return g(s, { tf: `translate(${r1(x)} ${r1(y)}) rotate(${rot})` });

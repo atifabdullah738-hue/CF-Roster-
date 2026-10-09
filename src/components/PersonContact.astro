@@ -11,17 +11,19 @@ const wa = showWhatsApp ? waHref(person, `Assalam o Alaikum ${person.name}, I wo
   {tel ? (
     <a class="pc__num" href={tel} aria-label={`Call ${person.name}, ${person.title}, on ${person.phone}`}><Icon name="phone" size={18} /> {person.phone}</a>
   ) : (
-    <span class="pc__num pc__num--plain"><Icon name="phone" size={18} /> {person.phone}{person.phoneNote && <em> · {person.phoneNote}</em>}</span>
+    <span class="pc__num pc__num--plain"><Icon name="phone" size={18} /> <span class="pc__digits">{person.phone}</span>{person.phoneNote && <em>{person.phoneNote}</em>}</span>
   )}
   {wa && <a class="pc__wa" href={wa} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${person.name}`}><Icon name="whatsapp" size={18} /> WhatsApp</a>}
 </div>
 <style>
   .pc { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
-  .pc__num { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; text-decoration: none; color: var(--navy-900); font-variant-numeric: tabular-nums; }
+  .pc__num { white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; text-decoration: none; color: var(--navy-900); font-variant-numeric: tabular-nums; }
   a.pc__num:hover { color: var(--brass-700); }
-  .pc__num--plain em { font-weight: 500; font-style: normal; font-size: .85em; color: var(--muted); }
+  .pc__num--plain { flex-wrap: wrap; white-space: normal; }
+  .pc__num--plain em { flex-basis: 100%; font-weight: 500; font-style: normal; font-size: .82em; color: var(--muted); margin-left: 26px; }
   .pc__wa { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: .9rem; text-decoration: none; color: #178a45; }
   .pc__wa:hover { text-decoration: underline; }
   .pc--light .pc__num { color: #fff; } .pc--light a.pc__num:hover { color: var(--brass); }
+  .pc__digits { white-space: nowrap; }
   .pc--light .pc__num--plain em { color: #aab5c5; } .pc--light .pc__wa { color: #5fe09a; }
 </style>

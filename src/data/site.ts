@@ -30,11 +30,9 @@ export const site = {
     {
       name: 'Muhammad Asif',
       title: 'CEO',
-      // The owner supplied this number as "0300 437 82", which is only 9 digits
-      // (a Pakistani mobile number has 11). Update it and set phoneConfirmed: true.
-      phone: '0300 437 82',
-      phoneConfirmed: false,
-      phoneNote: 'Full number to be updated',
+      // Confirmed by the owner: +92 300 4337882
+      phone: '0300 4337882',
+      phoneConfirmed: true,
     },
     {
       name: 'Abdullah Asif',
