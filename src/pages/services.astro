@@ -1,0 +1,59 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import ArtImage from '../components/ArtImage.astro';
+import Icon from '../components/Icon.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { services } from '../data/services';
+---
+<Layout title="Construction Services" description="Asif Builders services: new home construction, house design, renovation, grey structure, plumbing and electrical, painting and waterproofing, kitchen and bathroom renovation and complete turnkey construction.">
+  <PageHero crumb="Services" eyebrow="Our services" title="Construction and maintenance services for your home" lead="Twelve services covering design, building, finishing and upkeep. Use one, or combine them into a complete turnkey project." />
+
+  <nav class="jump" aria-label="Jump to a service">
+    <div class="container jump__in">
+      {services.map((s) => <a href={`#${s.slug}`}>{s.title}</a>)}
+    </div>
+  </nav>
+
+  <div class="section">
+    <div class="container list">
+      {services.map((s, i) => (
+        <article class:list={['svc', { 'svc--rev': i % 2 === 1 }]} id={s.slug}>
+          <div class="svc__media reveal">
+            <ArtImage name={s.image} alt={s.imageAlt} sizes="(min-width: 900px) 560px, 100vw" />
+            <span class="svc__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          </div>
+          <div class="svc__body reveal" style="--d:100ms">
+            <h2>{s.title}</h2>
+            <p>{s.description}</p>
+            <h3 class="svc__h">Typical scope</h3>
+            <ul>{s.includes.map((x) => <li>{x}</li>)}</ul>
+            <a class="btn btn--primary" href={`/contact?service=${s.slug}#inquiry`}>Enquire about this service <Icon name="arrow" /></a>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+
+  <CtaBand title="Not sure which service you need?" text="Describe your project and we’ll help you choose the right scope — from design only to complete turnkey construction." />
+</Layout>
+
+<style>
+  .jump { background: var(--cream); border-bottom: 1px solid var(--line); position: sticky; top: var(--header-h); z-index: 50; }
+  .jump__in { display: flex; gap: 8px; overflow-x: auto; padding-block: 12px; scrollbar-width: thin; }
+  .jump a { flex: none; font-size: .88rem; font-weight: 600; text-decoration: none; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--sand); background: #fff; white-space: nowrap; color: var(--navy-900); }
+  .jump a:hover { background: var(--navy-900); color: #fff; border-color: var(--navy-900); }
+  .list { display: grid; gap: clamp(56px, 8vw, 104px); }
+  .svc { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 72px); align-items: center; }
+  .svc--rev .svc__media { order: 2; }
+  .svc__media { position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg); aspect-ratio: 4/3; background: var(--cream); }
+  .svc__media :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .svc__num { position: absolute; top: 16px; left: 16px; font-family: var(--font-display); font-size: 1.1rem; background: var(--navy-900); color: var(--brass); width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; }
+  .svc h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+  .svc__h { font-family: var(--font-body); font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--brass-700); margin: 22px 0 10px; }
+  .svc ul { list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+  .svc li { position: relative; padding-left: 24px; font-size: .96rem; }
+  .svc li::before { content: ''; position: absolute; left: 3px; top: .5em; width: 10px; height: 6px; border-left: 2.5px solid var(--brass-600); border-bottom: 2.5px solid var(--brass-600); transform: rotate(-45deg); }
+  @media (max-width: 900px) { .svc { grid-template-columns: 1fr; } .svc--rev .svc__media { order: 0; } }
+  @media (max-width: 520px) { .svc ul { grid-template-columns: 1fr; } }
+</style>

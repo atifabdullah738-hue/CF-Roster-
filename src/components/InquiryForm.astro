@@ -1,0 +1,205 @@
+---
+import { site } from '../data/site';
+import { serviceOptions } from '../data/services';
+import { whatsappContact, waHref } from '../lib/contact';
+import Icon from './Icon.astro';
+
+const sizes = ['3 Marla', '5 Marla', '7 Marla', '10 Marla', '12 Marla', '1 Kanal', '2 Kanal', 'Other / not sure'];
+const wa = whatsappContact();
+const waBase = wa ? waHref(wa) : null;
+const configured = Boolean(site.formEndpoint);
+---
+<form class="form" id="inquiry-form" novalidate data-endpoint={site.formEndpoint} data-access-key={site.formAccessKey} data-wa={waBase ?? ''} data-wa-name={wa?.name ?? ''} aria-labelledby="inquiry-title">
+  <h2 id="inquiry-title">Request a free consultation</h2>
+  <p class="form__intro">Share a few details about your project and we will use them to discuss your requirements. Fields marked <span aria-hidden="true">*</span><span class="visually-hidden">with an asterisk</span> are required.</p>
+
+  <div class="form__grid">
+    <div class="field">
+      <label for="f-name">Full name <span aria-hidden="true">*</span></label>
+      <input id="f-name" name="name" type="text" autocomplete="name" required minlength="2" maxlength="80" aria-describedby="e-name" />
+      <p class="err" id="e-name" hidden></p>
+    </div>
+    <div class="field">
+      <label for="f-phone">Phone number <span aria-hidden="true">*</span></label>
+      <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="03XX XXXXXXX" aria-describedby="h-phone e-phone" />
+      <p class="hint" id="h-phone">Mobile or landline, e.g. 0322 1234567 or +92 322 1234567</p>
+      <p class="err" id="e-phone" hidden></p>
+    </div>
+    <div class="field">
+      <label for="f-email">Email address <span class="opt">(optional)</span></label>
+      <input id="f-email" name="email" type="email" autocomplete="email" maxlength="120" aria-describedby="e-email" />
+      <p class="err" id="e-email" hidden></p>
+    </div>
+    <div class="field">
+      <label for="f-service">Required service <span aria-hidden="true">*</span></label>
+      <select id="f-service" name="service" required aria-describedby="e-service">
+        <option value="">Select a service…</option>
+        {serviceOptions.map((s) => <option value={s.slug}>{s.title}</option>)}
+      </select>
+      <p class="err" id="e-service" hidden></p>
+    </div>
+    <div class="field">
+      <label for="f-size">Property size <span aria-hidden="true">*</span></label>
+      <select id="f-size" name="size" required aria-describedby="e-size">
+        <option value="">Select plot size…</option>
+        {sizes.map((s) => <option value={s}>{s}</option>)}
+      </select>
+      <p class="err" id="e-size" hidden></p>
+    </div>
+    <div class="field">
+      <label for="f-location">Project location <span aria-hidden="true">*</span></label>
+      <input id="f-location" name="location" type="text" required minlength="2" maxlength="120" placeholder="Area / society and city" autocomplete="address-level2" aria-describedby="e-location" />
+      <p class="err" id="e-location" hidden></p>
+    </div>
+    <div class="field field--full">
+      <label for="f-details">Project details <span class="opt">(optional)</span></label>
+      <textarea id="f-details" name="details" rows="5" maxlength="1500" placeholder="Number of floors, rooms needed, budget range, timeline, style preferences…" aria-describedby="e-details"></textarea>
+      <p class="err" id="e-details" hidden></p>
+    </div>
+    <!-- Honeypot: real visitors never see or fill this. -->
+    <div class="hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
+  </div>
+
+  <div class="form__actions">
+    <button class="btn btn--primary" type="submit"><span class="btn__label">Send inquiry</span> <Icon name="arrow" /></button>
+    {!configured && <p class="form__note">Online delivery is not enabled on this website yet. After you submit, you will get a ready-to-send WhatsApp message instead.</p>}
+  </div>
+
+  <div class="status" role="status" aria-live="polite" tabindex="-1" data-status hidden></div>
+</form>
+
+<style>
+  .form { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); padding: clamp(22px, 4vw, 40px); box-shadow: var(--shadow); }
+  .form h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
+  .form__intro { color: var(--muted); font-size: .98rem; }
+  .form__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 22px; margin-top: 22px; }
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .field--full { grid-column: 1 / -1; }
+  label { font-weight: 600; font-size: .94rem; color: var(--navy-900); }
+  label span[aria-hidden] { color: var(--danger); }
+  .opt { font-weight: 400; color: var(--muted); font-size: .85rem; }
+  input, select, textarea { font: inherit; font-size: 1rem; padding: 13px 14px; border: 1.5px solid #cfc7b6; border-radius: 10px; background: var(--cream-50); color: var(--ink); width: 100%; min-height: 50px; transition: border-color .2s, box-shadow .2s; }
+  textarea { resize: vertical; min-height: 130px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brass-600); box-shadow: 0 0 0 4px rgb(201 162 75 / .28); background: #fff; }
+  [aria-invalid='true'] { border-color: var(--danger); background: #fff7f6; }
+  .err { color: var(--danger); font-size: .88rem; margin: 0; font-weight: 500; }
+  .hint { color: var(--muted); font-size: .82rem; margin: 0; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .form__actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 26px; }
+  .form__note { margin: 0; font-size: .88rem; color: var(--muted); max-width: 46ch; }
+  .status { margin-top: 24px; padding: 18px 20px; border-radius: 12px; border: 1.5px solid; font-size: .98rem; }
+  .status[hidden] { display: none; }
+  .status p { margin: 0 0 12px; } .status p:last-child { margin: 0; }
+  .status--ok { background: #eaf6ef; border-color: #8cc9a8; color: #14532f; }
+  .status--warn { background: #fff8e6; border-color: var(--brass); color: #5c4400; }
+  .status--err { background: #fdecea; border-color: #e5a29d; color: #7a1a14; }
+  .status strong { display: block; margin-bottom: 4px; font-size: 1.04rem; }
+  @media (max-width: 640px) { .form__grid { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  const form = document.getElementById('inquiry-form') as HTMLFormElement | null;
+  if (form) {
+    const status = form.querySelector<HTMLElement>('[data-status]')!;
+    const btnLabel = form.querySelector<HTMLElement>('.btn__label')!;
+    const submitBtn = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    const waBase = form.dataset.wa || '';
+
+    // Preselect service from ?service=slug
+    const q = new URLSearchParams(location.search).get('service');
+    const sel = form.elements.namedItem('service') as HTMLSelectElement;
+    if (q && [...sel.options].some((o) => o.value === q)) sel.value = q;
+
+    const val = (n: string) => ((form.elements.namedItem(n) as HTMLInputElement)?.value ?? '').trim();
+    const digits = (s: string) => s.replace(/[\s\-().]/g, '');
+
+    const rules: Record<string, (v: string) => string> = {
+      name: (v) => (v.length < 2 ? 'Please enter your full name.' : /[<>]/.test(v) ? 'Please remove special characters from your name.' : ''),
+      phone: (v) => {
+        if (!v) return 'Please enter a phone number so we can reach you.';
+        const d = digits(v);
+        // Pakistani mobile: 03XXXXXXXXX / +923XXXXXXXXX / 00923XXXXXXXXX; landline: 0 + area code (2-3 digits) + 6-8 digits.
+        const mobile = /^(?:\+92|0092|92|0)3\d{9}$/.test(d);
+        const landline = /^(?:\+92|0092|92|0)[1-9]\d{1,2}\d{6,8}$/.test(d) && d.length >= 9 && d.length <= 14;
+        return mobile || landline ? '' : 'Please enter a valid Pakistani phone number, e.g. 0322 1234567.';
+      },
+      email: (v) => (v && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? 'Please enter a valid email address, or leave this blank.' : ''),
+      service: (v) => (v ? '' : 'Please choose the service you need.'),
+      size: (v) => (v ? '' : 'Please choose your plot / property size.'),
+      location: (v) => (v.length < 2 ? 'Please tell us where the project is located.' : ''),
+      details: (v) => (v.length > 1500 ? 'Please keep details under 1500 characters.' : ''),
+    };
+
+    const setError = (name: string, msg: string) => {
+      const el = form.elements.namedItem(name) as HTMLElement;
+      const err = form.querySelector<HTMLElement>(`#e-${name}`)!;
+      err.textContent = msg; err.hidden = !msg;
+      if (msg) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
+    };
+    const validateField = (name: string) => { const m = rules[name](val(name)); setError(name, m); return !m; };
+    const validateAll = () => {
+      let first: HTMLElement | null = null;
+      for (const name of Object.keys(rules)) if (!validateField(name) && !first) first = form.elements.namedItem(name) as HTMLElement;
+      first?.focus();
+      return !first;
+    };
+
+    for (const name of Object.keys(rules)) {
+      const el = form.elements.namedItem(name) as HTMLElement;
+      el.addEventListener('blur', () => { if (val(name) || el.getAttribute('aria-invalid')) validateField(name); });
+      el.addEventListener('input', () => { if (el.getAttribute('aria-invalid')) validateField(name); });
+    }
+
+    const serviceLabel = () => sel.selectedOptions[0]?.textContent ?? '';
+    const summary = () =>
+      [
+        'Assalam o Alaikum, I would like to enquire about construction with Asif Builders.',
+        `Name: ${val('name')}`,
+        `Phone: ${val('phone')}`,
+        val('email') && `Email: ${val('email')}`,
+        `Service: ${serviceLabel()}`,
+        `Property size: ${val('size')}`,
+        `Location: ${val('location')}`,
+        val('details') && `Details: ${val('details')}`,
+      ].filter(Boolean).join('\n');
+
+    const show = (kind: 'ok' | 'warn' | 'err', html: string, focus = true) => {
+      status.className = `status status--${kind}`;
+      status.innerHTML = html;
+      status.hidden = false;
+      if (focus) status.focus();
+    };
+    const waButton = () =>
+      waBase
+        ? `<p><a class="btn btn--wa btn--sm" target="_blank" rel="noopener noreferrer" href="${waBase}?text=${encodeURIComponent(summary())}">Send these details on WhatsApp</a></p>`
+        : '<p>Please call us using the phone numbers on this page.</p>';
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.hidden = true;
+      if (val('website')) return; // honeypot tripped: silently drop
+      if (!validateAll()) { show('err', '<strong>Please check the highlighted fields.</strong><p>Some information is missing or incorrect.</p>', false); return; }
+
+      const endpoint = form.dataset.endpoint || '';
+      if (!endpoint) {
+        // No backend configured: be honest — nothing has been delivered.
+        show('warn', `<strong>Your inquiry has NOT been sent yet.</strong><p>Your details look good, but online submission isn’t switched on for this website. To reach us right away, send your details on WhatsApp — or call us.</p>${waButton()}`);
+        return;
+      }
+
+      submitBtn.disabled = true; btnLabel.textContent = 'Sending…';
+      try {
+        const accessKey = form.dataset.accessKey || '';
+        const payload = { ...(accessKey ? { access_key: accessKey, subject: 'New website inquiry — Asif Builders' } : {}), name: val('name'), phone: val('phone'), email: val('email'), service: serviceLabel(), propertySize: val('size'), location: val('location'), details: val('details'), source: location.href };
+        const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error(String(res.status));
+        form.reset();
+        show('ok', '<strong>Thank you — your inquiry has been sent.</strong><p>We will contact you on the phone number you provided to discuss your project.</p>');
+      } catch {
+        show('err', `<strong>Sorry, we couldn’t send your inquiry.</strong><p>Please check your connection and try again, or contact us directly:</p>${waButton()}`);
+      } finally {
+        submitBtn.disabled = false; btnLabel.textContent = 'Send inquiry';
+      }
+    });
+  }
+</script>

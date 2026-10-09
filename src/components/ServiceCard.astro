@@ -1,0 +1,22 @@
+---
+import type { Service } from '../data/services';
+import ArtImage from './ArtImage.astro';
+interface Props { service: Service; delay?: number }
+const { service, delay = 0 } = Astro.props;
+---
+<article class="card reveal" style={`--d:${delay}ms`}>
+  <a class="card__media" href={`/services#${service.slug}`} tabindex="-1" aria-hidden="true">
+    <ArtImage name={service.image} alt="" sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw" />
+  </a>
+  <div class="card__body">
+    <h3>{service.title}</h3>
+    <p>{service.summary}</p>
+    <div class="actions">
+      <a class="link-arrow" href={`/services#${service.slug}`}>Learn more<span class="visually-hidden"> about {service.title}</span></a>
+      <a class="btn btn--outline btn--sm" href={`/contact?service=${service.slug}#inquiry`} aria-label={`Enquire about ${service.title}`}>Enquire</a>
+    </div>
+  </div>
+</article>
+<style>
+  .actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; }
+</style>

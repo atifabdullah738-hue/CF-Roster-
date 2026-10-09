@@ -1,0 +1,24 @@
+---
+import { site } from '../data/site';
+import PersonContact from './PersonContact.astro';
+const initials = (n: string) => n.split(' ').slice(0, 2).map((w) => w[0]).join('');
+---
+<div class="leaders">
+  {site.leadership.map((p, i) => (
+    <article class="leader reveal" style={`--d:${i * 100}ms`}>
+      <div class="leader__mono" aria-hidden="true">{initials(p.name)}</div>
+      <div>
+        <p class="leader__title">{p.title}</p>
+        <h3>{p.name}</h3>
+        <PersonContact person={p} />
+      </div>
+    </article>
+  ))}
+</div>
+<style>
+  .leaders { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 22px; }
+  .leader { display: flex; gap: 20px; align-items: center; background: #fff; border: 1px solid var(--line); border-left: 5px solid var(--brass); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); }
+  .leader__mono { flex: none; width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, var(--navy-800), var(--navy-950)); color: var(--brass); display: grid; place-items: center; font-family: var(--font-display); font-size: 1.7rem; font-weight: 600; box-shadow: 0 0 0 4px var(--brass-100); }
+  .leader__title { margin: 0; font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--brass-700); }
+  .leader h3 { margin: 2px 0 8px; font-size: 1.5rem; }
+</style>

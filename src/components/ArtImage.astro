@@ -1,0 +1,14 @@
+---
+import { Image } from 'astro:assets';
+import { art, isRaster } from '../lib/images';
+interface Props { name: string; alt: string; sizes?: string; widths?: number[]; loading?: 'lazy' | 'eager'; fetchpriority?: 'high' | 'low' | 'auto'; class?: string; }
+// Default widths suit card/grid images; pass `widths` for full-bleed images (hero).
+const { name, alt, sizes = '(min-width: 1024px) 400px, 100vw', widths = [480, 800, 1200, 1800], loading = 'lazy', fetchpriority, class: cls } = Astro.props;
+const img = art(name);
+const raster = isRaster(img);
+---
+{raster ? (
+  <Image src={img} alt={alt} widths={widths.filter((w) => w <= img.width)} sizes={sizes} loading={loading} fetchpriority={fetchpriority} decoding="async" class={cls} />
+) : (
+  <img src={img.src} alt={alt} width={img.width} height={img.height} loading={loading} fetchpriority={fetchpriority} decoding="async" class={cls} />
+)}

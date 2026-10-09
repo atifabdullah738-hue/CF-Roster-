@@ -1,0 +1,13 @@
+# This repository's website is an Astro project (see README.md), not a Jekyll site.
+# GitHub Pages' default Jekyll build tries to parse .astro files as YAML front matter and fails,
+# so the Astro source is excluded here (and `.nojekyll` disables Jekyll processing altogether).
+exclude:
+  - src
+  - scripts
+  - public
+  - node_modules
+  - dist
+  - package.json
+  - package-lock.json
+  - astro.config.mjs
+  - PHOTO-GUIDE.md

@@ -1,0 +1,35 @@
+{
+  "name": "asif-builders-website",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check:links": "node scripts/check-links.mjs",
+    "photo": "node scripts/import-photo.mjs",
+    "photo:list": "node scripts/import-photo.mjs --list",
+    "photo:status": "node scripts/import-photo.mjs --status",
+    "lint": "astro check",
+    "test:e2e": "node scripts/e2e.mjs",
+    "test": "npm run lint && npm run build && npm run check:links && npm run test:e2e"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "astro": "^7.3.8",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "axe-core": "^4.14.0",
+    "playwright-core": "^1.64.0",
+    "three": "^0.186.1",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

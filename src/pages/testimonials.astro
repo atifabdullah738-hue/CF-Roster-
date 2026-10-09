@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import TestimonialCard from '../components/TestimonialCard.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { testimonials } from '../data/testimonials';
+const allPlaceholders = testimonials.every((t) => t.placeholder);
+---
+<Layout title="Testimonials" description="Client testimonials for Asif Builders, a residential construction company in Pakistan. Genuine reviews will be published here.">
+  <PageHero crumb="Testimonials" eyebrow="Client feedback" title="What our clients say" lead="We believe in letting real clients speak for our work." />
+  <section class="section section--cream" aria-label="Testimonials">
+    <div class="container">
+      {allPlaceholders && (
+        <p class="notice" role="note"><strong>Placeholders:</strong> the cards below are sample layouts, not real reviews. Genuine, permission-approved customer testimonials will replace them.</p>
+      )}
+      <div class="grid grid--3">
+        {testimonials.map((t, i) => <TestimonialCard t={t} delay={i * 90} />)}
+      </div>
+    </div>
+  </section>
+  <CtaBand title="Build your home with us" text="Start with a free consultation and see how we work." />
+</Layout>
+<style>
+  .notice { background: #fff4d6; border: 1px dashed var(--brass-600); color: #5c4400; padding: 14px 18px; border-radius: 12px; margin: 0 0 32px; }
+</style>

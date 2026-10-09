@@ -1,0 +1,57 @@
+<!doctype html><meta charset="utf-8"><link rel="icon" href="data:,"><title>render harness</title>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<body style="margin:0;background:#000"><script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+
+const q = new URLSearchParams(location.search);
+const w = +q.get('w') || 1600, h = +q.get('h') || 900;
+window.__log = [];
+try {
+  const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false); document.body.appendChild(renderer.domElement);
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+  const mod = await import(`/scripts/render/scenes/${q.get('scene')}.mjs`);
+  const t0 = performance.now();
+  const r = await mod.default({ renderer, w, h });
+  window.__log.push(`scene built in ${Math.round(performance.now() - t0)}ms`);
+  renderer.toneMappingExposure = r.exposure ?? 0.4;
+  const rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: 4 });
+  const composer = new EffectComposer(renderer, rt); composer.setPixelRatio(1); composer.setSize(w, h);
+  composer.addPass(new RenderPass(r.scene, r.camera));
+  if (r.ao !== false) {
+    const ao = new GTAOPass(r.scene, r.camera, w, h); ao.blendIntensity = r.aoStrength ?? 1.0;
+    ao.updateGtaoMaterial({ radius: r.aoRadius ?? 0.5, distanceExponent: 1.5, thickness: 1.5, scale: 1.2, samples: 16, distanceFallOff: 1, screenSpaceRadius: false });
+    ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 4, radiusExponent: 1, rings: 2, samples: 16 });
+    composer.addPass(ao);
+  }
+  if (r.bloom === true) composer.addPass(new UnrealBloomPass(new THREE.Vector2(w, h), r.bloomStrength ?? 0.25, r.bloomRadius ?? 0.6, r.bloomThreshold ?? 6.0));
+  composer.addPass(new OutputPass());
+  const g = r.grade ?? {};
+  composer.addPass(new ShaderPass({
+    uniforms: { tDiffuse: { value: null }, contrast: { value: g.contrast ?? 1.12 }, saturation: { value: g.saturation ?? 1.06 }, vignette: { value: g.vignette ?? 0.28 }, grain: { value: g.grain ?? 0.018 }, warm: { value: g.warm ?? 0.03 }, seed: { value: 1.0 } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: `uniform sampler2D tDiffuse; uniform float contrast, saturation, vignette, grain, warm, seed; varying vec2 vUv;
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)) + seed) * 43758.5453); }
+      void main(){ vec4 c = texture2D(tDiffuse, vUv); vec3 col = c.rgb;
+        col = (col - 0.5) * contrast + 0.5; float l = dot(col, vec3(0.2126,0.7152,0.0722)); col = mix(vec3(l), col, saturation);
+        col += vec3(warm, 0.0, -warm) * (l * 0.8 + 0.2);
+        vec2 d = vUv - 0.5; col *= 1.0 - vignette * dot(d, d) * 2.2;
+        col += (hash(vUv * 4096.0) - 0.5) * grain;
+        gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0); }`
+  }));
+  const t1 = performance.now();
+  composer.render();
+  renderer.getContext().finish();
+  window.__log.push(`composer.render ${Math.round(performance.now() - t1)}ms`);
+  window.__log.push(`rendered ${w}x${h} in ${Math.round(performance.now() - t0)}ms`);
+  window.__png = renderer.domElement.toDataURL('image/png');
+  window.__ready = true;
+} catch (e) { window.__error = String(e && e.stack || e); window.__ready = true; }
+</script>

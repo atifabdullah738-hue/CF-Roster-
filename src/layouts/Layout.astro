@@ -1,0 +1,64 @@
+---
+import '../styles/global.css';
+import { site, ceo, vp } from '../data/site';
+import { telHref } from '../lib/contact';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import FloatingContact from '../components/FloatingContact.astro';
+
+interface Props { title?: string; description?: string; image?: string; }
+const { title, description = site.description, image } = Astro.props;
+const fullTitle = title ? `${title} | ${site.name}` : `${site.name} — ${site.tagline}`;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = image ? new URL(image, Astro.site).href : undefined;
+
+const phones = [ceo, vp].map(telHref).filter(Boolean).map((t) => t!.replace('tel:', ''));
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'GeneralContractor',
+  name: site.name,
+  description: site.description,
+  url: new URL('/', Astro.site).href,
+  ...(phones.length ? { telephone: phones } : {}),
+  ...(site.address ? { address: { '@type': 'PostalAddress', streetAddress: site.address.lines.join(', '), addressLocality: site.address.city, addressCountry: 'PK' } } : {}),
+  employee: site.leadership.map((p) => ({ '@type': 'Person', name: p.name, jobTitle: p.title })),
+};
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0f2238" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+  </head>
+  <body id="top">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <Header />
+    <main id="main" tabindex="-1"><slot /></main>
+    <Footer />
+    <FloatingContact />
+    <script>
+      // Scroll-reveal animations (disabled automatically for reduced-motion users via CSS).
+      const els = document.querySelectorAll<HTMLElement>('.reveal');
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          for (const e of entries) if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+        els.forEach((el) => io.observe(el));
+      } else els.forEach((el) => el.classList.add('is-visible'));
+    </script>
+  </body>
+</html>
