@@ -20,14 +20,14 @@ function leafMat(kind) {
   if (kind === 'neem' || kind === 'fine') {
     const sprigs = kind === 'neem' ? 13 : 16;
     for (let s = 0; s < sprigs; s++) {
-      const bx = 40 + r() * (S - 80), by = 40 + r() * (S - 80), a = r() * 6.28, L = 120 + r() * 80, h0 = 92 + r() * 26, sa = 36 + r() * 22, ll = 28 + r() * 16;
+      const bx = 40 + r() * (S - 80), by = 40 + r() * (S - 80), a = r() * 6.28, L = 120 + r() * 80, h0 = 78 + r() * 34, sa = 24 + r() * 18, ll = 24 + r() * 18;
       x.strokeStyle = `hsl(${h0 - 10},30%,24%)`; x.lineWidth = 2.2; x.beginPath(); x.moveTo(bx, by); x.lineTo(bx + Math.cos(a) * L, by + Math.sin(a) * L); x.stroke();
       const n = kind === 'neem' ? 9 : 12;
       for (let i = 1; i <= n; i++) { const t = i / (n + 1), px = bx + Math.cos(a) * L * t, py = by + Math.sin(a) * L * t, len = (kind === 'neem' ? 56 : 36) * (1 - Math.abs(t - 0.45) * 0.6), wd = len * 0.27; for (const sd of [-1, 1]) leaflet(px, py, len, wd, a + sd * (0.9 + r() * 0.25), h0 + (r() - 0.5) * 10, sa, ll + r() * 6); }
       leaflet(bx + Math.cos(a) * L, by + Math.sin(a) * L, 40, 9, a, h0, sa, ll + 4);
     }
   } else if (kind === 'broad') {
-    for (let i = 0; i < 70; i++) { const px = 20 + r() * (S - 40), py = 20 + r() * (S - 40), a = r() * 6.28, len = 52 + r() * 44, h0 = 84 + r() * 30, sa = 34 + r() * 24, ll = 26 + r() * 16; leaflet(px, py, len, len * 0.3, a, h0, sa, ll); }
+    for (let i = 0; i < 70; i++) { const px = 20 + r() * (S - 40), py = 20 + r() * (S - 40), a = r() * 6.28, len = 52 + r() * 44, h0 = 76 + r() * 34, sa = 22 + r() * 20, ll = 24 + r() * 18; leaflet(px, py, len, len * 0.3, a, h0, sa, ll); }
   } else if (kind === 'bougain') {
     for (let i = 0; i < 80; i++) { const px = 20 + r() * (S - 40), py = 20 + r() * (S - 40), a = r() * 6.28, len = 30 + r() * 24; leaflet(px, py, len, len * 0.33, a, 90 + r() * 25, 40, 24 + r() * 10); }
     for (let i = 0; i < 260; i++) { const px = 16 + r() * (S - 32), py = 16 + r() * (S - 32), rr = 6 + r() * 7, hue = 318 + r() * 28, l = 38 + r() * 18; x.save(); x.translate(px, py); x.rotate(r() * 6.28); x.fillStyle = `hsl(${hue},${70 + r() * 20}%,${l}%)`; x.beginPath(); x.ellipse(0, 0, rr, rr * 0.7, 0, 0, 6.28); x.fill(); x.fillStyle = `hsla(${hue + 8},60%,${l + 14}%,0.55)`; x.beginPath(); x.ellipse(-rr * 0.2, -rr * 0.15, rr * 0.5, rr * 0.35, 0, 0, 6.28); x.fill(); x.restore(); }

@@ -10,7 +10,7 @@ import { hazeEnvironment } from '../lib/agent4-env.mjs';
 
 export default async function build({ renderer, w, h }) {
   const scene = new THREE.Scene(); let _t = performance.now(); const lap = (n) => { window.__log.push(`  ${n}: ${Math.round(performance.now() - _t)}ms`); _t = performance.now(); };
-  hazeEnvironment({ renderer, scene, sunElevation: 30, sunAzimuth: -52, sunIntensity: 6.6, envIntensity: 0.32, shadowExtent: 34, shadowCenter: [4, 0, -2], horizon: [1.0, 0.89, 0.74], zenith: [0.5, 0.64, 0.86], fogDensity: 0.0068, glow: 0.5 });
+  hazeEnvironment({ renderer, scene, sunElevation: 30, sunAzimuth: -52, sunIntensity: 6.6, envIntensity: 0.32, shadowExtent: 34, shadowCenter: [4, 0, -2], horizon: [1.0, 0.89, 0.74], zenith: [0.34, 0.52, 0.86], fogDensity: 0.0095, glow: 0.5, haze: 0.3 });
   lap('env');
   const r = G.rng(11);
 
@@ -31,7 +31,7 @@ export default async function build({ renderer, w, h }) {
   const rccSlab = M.detailize(M.rcc({ seed: 13, color: 0x9d9b94, stain: 0.9 }).clone(), { scale: 1.3, strength: 0.5, key: 'rc3' });
   const plinthM = M.detailize(M.rcc({ seed: 17, color: 0xa09d95 }).clone(), { scale: 1.3, strength: 0.5, dustH: 0.5, key: 'rc4' });
   const clay = M.clay(); M.detailize(clay, { strength: 0.0, dustH: 0.75, dustColor: 0xa28b6e, dustAmt: 0.55, key: 'clayD' });
-  const mortar = M.detailize(M.mortar(0xa7a296, 3).clone(), { scale: 2.4, strength: 0.4, dustH: 0.6, key: 'mortD' });
+  const mortar = M.detailize(M.mortar(0x938e83, 3).clone(), { scale: 2.4, strength: 0.4, dustH: 0.6, key: 'mortD' });
   const timberM = M.timber({ color: 0x6d4f35, seed: 34, weather: 0.8 });
 
   lap('mats');
@@ -132,34 +132,34 @@ export default async function build({ renderer, w, h }) {
   const smB = S.scaffoldMeshers(); S.bambooScaffold({ x0: 0.0, x1: 9.2, z: 1.3, depth: 1.25, height: 7.9, levels: [2.3, 4.5, 6.5], sm: smB, seed: 9, wallZ: 0.0, bay: 1.75 }); const bg = new THREE.Group(); S.flushScaffold(smB, bg); bg.position.set(W + 0.18, 0, -0.2); bg.rotation.y = Math.PI / 2; scene.add(bg);
 
   lap('scaff');
-  // ------------------------------------------------------------------ piles & props
+  // ------------------------------------------------------------------ piles & props (placed relative to the camera)
+  const CAM = [12.5, 1.7, 10.5], TGT = [4.0, 1.7, -5.0], fw = (() => { const dx = TGT[0] - CAM[0], dz = TGT[2] - CAM[2], l = Math.hypot(dx, dz); return [dx / l, dz / l]; })(), rt = [-fw[1], fw[0]];
+  const cp = (F, R) => [CAM[0] + F * fw[0] + R * rt[0], CAM[2] + F * fw[1] + R * rt[1]];
   const sandM = M.detailize(M.sand({ color: 0xa8956f }).clone(), { scale: 3, strength: 0.4, key: 'sandD' });
-  const hp1 = G.heap({ x: 11.4, z: 5.8, rx: 2.1, rz: 1.7, h: 1.15, seed: 4, mat: sandM, parent: scene, rot: 0.4, y0: -0.03, scoop: { a: 0.9, w: 0.5, depth: 0.5 }, lump: 0.3, p: 1.05 });
+  const sandPos = cp(6.6, 3.2), hp1 = G.heap({ x: sandPos[0], z: sandPos[1], rx: 2.0, rz: 1.6, h: 1.25, seed: 4, mat: sandM, parent: scene, rot: 0.4, y0: -0.03, scoop: { a: 0.9, w: 0.4, depth: 0.15 }, lump: 0.25, p: 1.2 });
   const gravM = M.gravel({ color: 0x8a847a }); const gravel = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, vertexColors: false });
-  const hp2 = G.heap({ x: 6.6, z: 6.0, rx: 2.0, rz: 1.6, h: 1.1, seed: 9, mat: gravM, parent: scene, tile: 1.2, rot: -0.3, y0: -0.03 }); G.stonesOnHeap(hp2, { count: 9000, size: [0.022, 0.05], mat: gravel, parent: scene, seed: 5 });
+  const gp = cp(8.6, -3.6), hp2 = G.heap({ x: gp[0], z: gp[1], rx: 2.0, rz: 1.6, h: 1.1, seed: 9, mat: gravM, parent: scene, tile: 1.2, rot: -0.3, y0: -0.03 }); G.stonesOnHeap(hp2, { count: 9000, size: [0.022, 0.05], mat: gravel, parent: scene, seed: 5 });
   const hp3 = G.heap({ x: 1.2, z: 6.2, rx: 1.5, rz: 1.2, h: 0.8, seed: 14, mat: sandM, parent: scene, rot: 1.0, y0: -0.03 });
-  L.shovel({ x: 10.6, z: 4.9, y: hp1.heightAt(10.6, 4.9), ry: 2.6, lean: 0.35, parent: scene, seed: 2 });
+  { const sp = [sandPos[0] - 1.0, sandPos[1] + 0.6]; L.shovel({ x: sp[0], z: sp[1], y: hp1.heightAt(sp[0], sp[1]) - 0.05, ry: 2.4, lean: 0.4, parent: scene, seed: 2 }); }
+  // steel bars lying in the foreground on sleepers
+  { const b1 = cp(3.5, -0.8); S.barBundle({ x: b1[0], y: 0.02, z: b1[1], len: 6, dia: 0.016, rows: 5, ry: 0.5, parent: scene, seed: 3, rust: 0.6 }); const b2 = cp(4.5, -1.0); S.barBundle({ x: b2[0], y: 0.02, z: b2[1], len: 6, dia: 0.012, rows: 4, ry: 0.52, parent: scene, seed: 6, rust: 0.45 }); }
+  { const gm = cp(5.0, 1.8); L.ghamela({ x: gm[0], z: gm[1], fill: 0.85, parent: scene, seed: 3 }); const gm2 = cp(5.6, 2.5); L.brickPile({ x: gm2[0], z: gm2[1], rad: 0.7, h: 0.25, count: 40, seed: 18, parent: scene }); }
   // brick stacks
-  L.brickStack({ x: 13.4, z: 2.6, ry: 0.1, layers: 15, la: [5, 7], lb: [4, 9], seed: 3, parent: scene, missing: 0.4 });
-  L.brickStack({ x: 13.6, z: -0.6, ry: 0.06, layers: 12, la: [5, 7], lb: [4, 9], seed: 4, parent: scene, missing: 0.1 });
-  L.brickStack({ x: 15.6, z: 5.2, ry: -0.3, layers: 9, la: [5, 8], lb: [4, 10], seed: 6, parent: scene, missing: 0.7 });
+  { const p1 = cp(10.5, 4.6), p2 = cp(12.5, 5.6), p3 = cp(7.5, 6.0); L.brickStack({ x: p1[0], z: p1[1], ry: 0.5, layers: 15, la: [5, 7], lb: [4, 9], seed: 3, parent: scene, missing: 0.4 }); L.brickStack({ x: p2[0], z: p2[1], ry: 0.5, layers: 12, la: [5, 7], lb: [4, 9], seed: 4, parent: scene, missing: 0.1 }); L.brickStack({ x: p3[0], z: p3[1], ry: 0.4, layers: 9, la: [5, 8], lb: [4, 10], seed: 6, parent: scene, missing: 0.7 }); }
   L.brickPile({ x: 8.2, z: 3.1, rad: 1.0, h: 0.45, count: 140, seed: 8, parent: scene });
-  L.brickPile({ x: 14.5, z: 9.5, rad: 1.5, h: 0.4, count: 120, seed: 12, parent: scene });
   // cement bags
   L.cementStack({ x: 1.6, z: 3.2, ry: 0.15, layers: 8, nx: 2, nz: 2, seed: 2, parent: scene, scheme: 0 });
   L.cementStack({ x: 3.1, z: 3.6, ry: -0.1, layers: 5, nx: 2, nz: 2, seed: 3, parent: scene, scheme: 1 });
   L.looseBag({ x: 2.5, z: 5.0, ry: 0.5, parent: scene, seed: 3 });
   // plant
-  L.mixer({ x: 9.6, z: 3.4, ry: -0.5, color: 0xd34a1a, parent: scene, seed: 2 });
-  L.wheelbarrow({ x: 4.6, z: 3.6, ry: 0.4, color: 0x2f5fa8, parent: scene, seed: 2, load: 0.6 });
-  L.ghamela({ x: 8.6, z: 2.4, fill: 0.9, parent: scene, seed: 3, stack: 1 }); L.ghamela({ x: 6.4, z: 2.9, fill: 0.5, parent: scene, seed: 4, ry: 1 });
-  L.drum({ x: 17.0, z: -2.0, color: 0x2b5fb3, parent: scene, seed: 1 }); L.drum({ x: 17.7, z: -1.4, color: 0x2b5fb3, parent: scene, seed: 2 }); L.drum({ x: 17.2, z: -1.0, color: 0x8b5a3c, plasticDrum: false, parent: scene, seed: 3 });
-  L.pe_tank({ x: 14.9, z: -4.6, r: 0.62, h: 1.5, parent: scene });
-  L.plankStack({ x: 17.5, z: -7.0, ry: 0.1, n: 6, layers: 5, seed: 4, parent: scene });
-  S.barBundle({ x: 15.0, y: 0, z: -9.0, len: 12, dia: 0.016, rows: 5, ry: 0.07, parent: scene, seed: 3, rust: 0.55 });
-  S.barBundle({ x: 15.0, y: 0.5, z: -9.0, len: 11.5, dia: 0.012, rows: 4, ry: 0.07, parent: scene, seed: 6, rust: 0.4 });
+  L.mixer({ x: 8.8, z: 3.2, ry: -0.5, color: 0xd34a1a, parent: scene, seed: 2 });
+  L.wheelbarrow({ x: 4.6, z: 3.8, ry: 0.4, color: 0x2f5fa8, parent: scene, seed: 2, load: 0.6 });
+  L.ghamela({ x: 6.6, z: 2.9, fill: 0.5, parent: scene, seed: 4, ry: 1 });
+  L.drum({ x: 16.0, z: -2.0, color: 0x2b5fb3, parent: scene, seed: 1 }); L.drum({ x: 16.7, z: -1.4, color: 0x2b5fb3, parent: scene, seed: 2 }); L.drum({ x: 16.2, z: -1.0, color: 0x8b5a3c, plasticDrum: false, parent: scene, seed: 3 });
+  L.pe_tank({ x: 14.9, z: -5.6, r: 0.62, h: 1.5, parent: scene });
+  L.plankStack({ x: 17.5, z: -8.0, ry: 0.1, n: 6, layers: 5, seed: 4, parent: scene });
   L.hoseCoil({ x: 6.0, z: 2.0, parent: scene });
-  L.debris({ x0: -4, z0: -15, x1: 22, z1: 14, count: 220, seed: 7, parent: scene, avoid: (x, z) => (x > -0.5 && x < W + 0.5 && z < 0.8 && z > -D - 0.5) });
+  L.debris({ x0: -4, z0: -15, x1: 22, z1: 14, count: 140, seed: 7, parent: scene, avoid: (x, z) => (x > -0.5 && x < W + 0.5 && z < 0.8 && z > -D - 0.5) });
   L.dryGrass({ x0: -12, z0: -14, x1: 30, z1: 18, count: 900, scale: [0.1, 0.28], seed: 3, parent: scene, avoid: (x, z) => (x > -1 && x < W + 3 && z < 8 && z > -D - 1) || ruts(x, z) > 0.3 });
 
   lap('props');
@@ -176,9 +176,11 @@ export default async function build({ renderer, w, h }) {
   L.neighbourHouse({ x: 16, z: -34, w: 10, d: 12, floors: 2, color: 0xcfc3ab, seed: 7, parent: scene, trim: 0x877c6a, windowCols: 3 });
   L.neighbourHouse({ x: -22, z: -36, w: 11, d: 12, floors: 3, color: 0xe1d6bf, seed: 8, parent: scene, trim: 0x8a8070, windowCols: 3 });
   L.neighbourHouse({ x: 36, z: -34, w: 11, d: 12, floors: 3, color: 0xd9ceb5, seed: 9, parent: scene, trim: 0x8a8070, windowCols: 3 });
+  L.neighbourHouse({ x: 6, z: -27, w: 11, d: 12, floors: 2, color: 0xdad0b6, seed: 10, parent: scene, trim: 0x8a8070, windowCols: 3, gate: false });
+  L.neighbourHouse({ x: 20, z: -31, w: 10, d: 12, floors: 3, color: 0xd2c7ad, seed: 11, parent: scene, trim: 0x877c6a, windowCols: 3, gate: false });
   void nbWall;
-  tree(-4.5, -16, { h: 10, crown: 4.2, seed: 2, color: 0x5a7a3a }, scene); tree(24, -16, { h: 11, crown: 4.6, seed: 5, color: 0x5d7d3b }, scene); tree(30, 5, { h: 9, crown: 3.8, seed: 8, color: 0x58783a }, scene); tree(-17, 8, { h: 8.5, crown: 3.6, seed: 12, color: 0x5b7b3a }, scene);
-  tree(8, -22, { h: 12, crown: 5.0, seed: 14, color: 0x546f36 }, scene); palm(-3, 20, { h: 9, seed: 5, lean: 0.3 }, scene);
+  tree(-4.5, -16, { h: 10, crown: 4.2, seed: 2, color: 0x5a7a3a }, scene); tree(24, -16, { h: 11, crown: 4.6, seed: 5, color: 0x5d7d3b }, scene); tree(30, 5, { h: 9, crown: 3.8, seed: 8, color: 0x58783a }, scene); tree(-17, -2, { h: 8.5, crown: 3.6, seed: 12, color: 0x5b7b3a }, scene);
+  tree(8, -22, { h: 12, crown: 5.0, seed: 14, color: 0x546f36 }, scene); palm(31, 12, { h: 9, seed: 5, lean: 0.3 }, scene);
   bush(-5, 0, 13, 0.9, scene, { color: 0x6b7f3f, seed: 3 }); bush(23, 0, 14, 0.8, scene, { color: 0x6b7f3f, seed: 4 });
   L.utilityPole({ x: 27, z: 17, h: 9.5, parent: scene }); L.utilityPole({ x: -3, z: 18, h: 9.5, parent: scene });
   L.wire({ a: [27, 9.1, 17], b: [-3, 9.1, 18], sag: 0.9, parent: scene }); L.wire({ a: [27, 8.3, 17], b: [-3, 8.3, 18], sag: 0.95, parent: scene }); L.wire({ a: [27, 8.7, 17], b: [-3, 8.7, 18], sag: 0.92, parent: scene });

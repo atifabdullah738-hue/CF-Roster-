@@ -6,7 +6,7 @@ import { boxAt, wallWithOpenings, windowUnit, waterTank, acUnit, T } from './arc
 export { THREE };
 
 const BR = { L: 0.229, H: 0.0755, W: 0.114 };
-const clayColor = (r, p = {}) => { const k = r(); return k < 0.1 ? tintVar(p.dark ?? 0x75443a, r, 0.08, 0.1) : k < 0.28 ? tintVar(p.light ?? 0xc27a55, r, 0.08, 0.08) : tintVar(p.base ?? 0xa6513a, r, 0.1, 0.08); };
+const clayColor = (r, p = {}) => { const k = r(); return k < 0.1 ? tintVar(p.dark ?? 0x6c4338, r, 0.08, 0.1) : k < 0.28 ? tintVar(p.light ?? 0xb97a58, r, 0.08, 0.08) : tintVar(p.base ?? 0x9b5640, r, 0.1, 0.08); };
 
 /** Cross-stacked brick pile (the usual site stack). Position = centre of the footprint on the ground. */
 export function brickStack({ x, z, y = 0, ry = 0, layers = 14, la = [5, 8], lb = [4, 10], seed = 1, parent, missing = 0.0, pal = {}, mesher = null, scale = 1 }) {

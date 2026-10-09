@@ -1,5 +1,5 @@
 // svc-new-home: brand-new modern double-storey home, soft morning light, fresh landscaping, surveyor's kit at the frame edge.
-import { THREE, T, boxAt, cyl, ground, rng, bindEnv, finish, win, facade, ledgeStone, railRun, instBoxes, ac, tank, dish, wallLamp, downlight, wallStreaks, wallFoot, groundGrime, pavers, lawnOverlay, planeZ, planeY, glassPane, metalPro, ctex, cv } from '../lib/agent5-kit.mjs';
+import { THREE, T, boxAt, cyl, ground, rng, bindEnv, finish, win, facade, ledgeStone, lawnMat, railRun, instBoxes, ac, tank, dish, wallLamp, downlight, wallStreaks, wallFoot, groundGrime, pavers, lawnOverlay, planeZ, planeY, glassPane, metalPro, ctex, cv } from '../lib/agent5-kit.mjs';
 import { tree2, hedge2, bush2, grassTufts, flowerBed, bougain } from '../lib/agent5-nature.mjs';
 import { setupEnvironment, archCamera } from '../lib/env.mjs';
 import { makeSky } from '../lib/agent5-sky.mjs';
@@ -21,7 +21,7 @@ export default async function build({ renderer, w, h }) {
   const walnut = T.wood({ color: 0x8c5a35, tileM: 1.4, planks: 2, gap: false, seed: 21 });
   const soffit = T.wood({ color: 0xb98a58, tileM: 1.2, planks: 8, seed: 33 });
   const metalBlack = T.solid(0x1d1f22, { roughness: 0.45, metalness: 0.5 });
-  const lawn = T.grass({ color: 0xa2c05e, tileM: 4.5, seed: 61 });
+  const lawn = lawnMat({ color: 0x9db55a, tileM: 3.4, seed: 61 });
   const asphalt = T.asphalt({ tileM: 7 });
 
   // ---------------------------------------------------------------- ground
@@ -33,7 +33,7 @@ export default async function build({ renderer, w, h }) {
   groundGrime({ x0: -40, z0: 12.9, x1: 40, z1: 16, y: 0.006, seed: 41, alpha: 0.5, color: [120, 105, 85], scale: 12, cutoff: 0.45, res: 2048, noiseM: 5 }, scene);
   const paint = T.solid(0xe9e7df, { roughness: 0.7 }); for (let x = -118; x < 118; x += 6) boxAt(x, 0.004, 28.9, x + 3, 0.012, 29.1, paint, scene, { cast: false });
   // plot lawns, fresh turf with seams
-  lawnOverlay({ x0: -9, z0: 0, x1: 9, z1: 10.2, y: 0.008, seed: 5, rollW: 0.6, rollL: 1.6, patch: 0.28 }, scene);
+  lawnOverlay({ x0: -9, z0: 0, x1: 9, z1: 10.2, y: 0.008, seed: 5, rollW: 0.6, rollL: 1.6, patch: 0.12 }, scene);
   lawnOverlay({ x0: 9, z0: -12, x1: 9.01, z1: 10, y: 0.007 }, scene);
   // vacant neighbouring plot (dry, dusty)
   ground(9.3, -40, 60, 10.2, 0.03, T.solid(0x9a8a6c, { roughness: 1 }), scene);
@@ -184,8 +184,8 @@ export default async function build({ renderer, w, h }) {
   // surveyor total station on tripod + prism pole (foreground right edge)
   surveyor(scene, 6.8, 9.6);
   // staked sapling trees, mulch, planting
-  sapling(scene, 8.0, 5.8, 1);
-  sapling(scene, 3.4, 6.4, 2);
+  sapling(scene, 8.4, 6.6, 1);
+  sapling(scene, -4.0, 8.2, 2);
   // ---------------------------------------------------------------- planting
   const mulch = T.solid(0x4a3626, { roughness: 1 });
   boxAt(1.55, 0.0, 0.4, 6.3, 0.05, 1.3, mulch, scene);
@@ -195,7 +195,7 @@ export default async function build({ renderer, w, h }) {
   hedge2(-8.6, 1.2, -8.6, 9.0, { h: 0.8, w: 0.6, y: 0, seed: 4, tint: 0xc8e8b0 }, scene);
   hedge2(-6.55, 2.0, -6.55, 9.4, { h: 0.5, w: 0.45, y: 0.0, seed: 5, tint: 0xd0eeb8 }, scene);
   for (const [x, z, r2, s] of [[-2.2, 8.9, 0.5, 7], [-1.7, 3.0, 0.45, 8], [0.3, 8.7, 0.55, 9], [2.4, 8.8, 0.45, 10], [1.9, 2.4, 0.4, 11], [3.3, 1.8, 0.5, 12]]) bush2(x, 0.05, z, r2, { seed: s, tint: 0xe2f6cc, leaf: s % 2 ? 'broad' : 'neem' }, scene);
-  flowerBed(1.7, 0.5, 6.0, 1.1, { y: 0.6, h: 0.4, seed: 2, count: 520, tint: 0xffffff }, scene);
+  for (let i = 0; i < 6; i++) bush2(2.0 + i * 0.75, 0.62, 0.8, 0.34, { seed: 30 + i, leaf: i % 2 ? 'neem' : 'broad', tint: 0xe6f4d2, cardS: 0.2 }, scene);
   flowerBed(-2.4, 7.0, 3.8, 9.3, { y: 0.1, h: 0.45, seed: 3, count: 520 }, scene);
   // trees around: behind house and on neighbour plots
   tree2(-12.6, -2.0, { h: 9.5, crown: 3.4, kind: 'neem', seed: 3, tint: 0xe6f6d0, trunkR: 0.26 }, scene);

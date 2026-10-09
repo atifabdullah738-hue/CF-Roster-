@@ -6,8 +6,8 @@ const { THREE, T, boxAt, cyl, ground, glazed, wallPanel, openingPts, tree, palm,
 
 export default async function build({ renderer, w, h }) {
   const scene = new THREE.Scene();
-  setupEnvironment({ renderer, scene, sunElevation: 17, sunAzimuth: 36, sunIntensity: 6.0, sunColor: 0xffd9a8, envIntensity: 0.85, shadowExtent: 38, shadowCenter: [0, 0, 2],
-    dome: { zenith: [0.16, 0.42, 1.25], mid: [0.42, 0.72, 1.35], horizon: [1.55, 1.2, 0.95], sunCol: [3.2, 2.0, 1.1], coverage: 0.52, soft: 0.22, cloudScale: 1.5, seed: 4.2, cloudLit: [2.4, 2.1, 1.8], cloudShade: [0.8, 0.8, 0.95] },
+  setupEnvironment({ renderer, scene, sunElevation: 11, sunAzimuth: 42, sunIntensity: 7.0, sunColor: 0xffc58a, envIntensity: 0.75, shadowExtent: 38, shadowCenter: [0, 0, 2],
+    dome: { zenith: [0.16, 0.42, 1.25], mid: [0.42, 0.72, 1.35], horizon: [1.9, 1.25, 0.8], sunCol: [3.6, 1.9, 0.9], coverage: 0.46, soft: 0.24, cloudScale: 1.5, seed: 4.2, cloudLit: [2.4, 2.1, 1.8], cloudShade: [0.8, 0.8, 0.95] },
     fog: { color: [1.3, 1.1, 0.95], density: 0.0035 } });
 
   // ---- materials
@@ -138,10 +138,10 @@ export default async function build({ renderer, w, h }) {
   // =============================== D. site: boundary, gate, pool, landscaping
   const zb = 8.2;
   // low stone plinth + bar fence
-  boxAt(-30, 0, zb - 0.13, -10.9, 0.65, zb + 0.13, stone, scene); boxAt(-4.0, 0, zb - 0.13, 30, 0.65, zb + 0.13, stone, scene);
-  boxAt(-30, 0.65, zb - 0.16, -10.9, 0.72, zb + 0.16, coping, scene); boxAt(-4.0, 0.65, zb - 0.16, 30, 0.72, zb + 0.16, coping, scene);
-  barFence({ x0: -30, x1: -10.9, y0: 0.72, y1: 1.75, z: zb, pitch: 0.13, bar: 0.03, mat: steel, parent: scene, rails: [0, 1] });
-  barFence({ x0: -4.0, x1: 30, y0: 0.72, y1: 1.75, z: zb, pitch: 0.13, bar: 0.03, mat: steel, parent: scene, rails: [0, 1] });
+  boxAt(-30, 0, zb - 0.13, -10.9, 0.4, zb + 0.13, stone, scene); boxAt(-4.0, 0, zb - 0.13, 30, 0.4, zb + 0.13, stone, scene);
+  boxAt(-30, 0.4, zb - 0.16, -10.9, 0.47, zb + 0.16, coping, scene); boxAt(-4.0, 0.4, zb - 0.16, 30, 0.47, zb + 0.16, coping, scene);
+  barFence({ x0: -30, x1: -10.9, y0: 0.47, y1: 1.6, z: zb, pitch: 0.14, bar: 0.03, mat: steel, parent: scene, rails: [0, 1] });
+  barFence({ x0: -4.0, x1: 30, y0: 0.47, y1: 1.6, z: zb, pitch: 0.14, bar: 0.03, mat: steel, parent: scene, rails: [0, 1] });
   for (const px of [-10.9, -4.0]) { boxAt(px - 0.3, 0, zb - 0.3, px + 0.3, 2.05, zb + 0.3, stone, scene); boxAt(px - 0.34, 2.05, zb - 0.34, px + 0.34, 2.13, zb + 0.34, coping, scene); pillarLamp(px, 2.13, zb, scene, { intensity: 7 }); }
   for (const px of [4.5, 12.5, 20]) { boxAt(px - 0.25, 0, zb - 0.25, px + 0.25, 1.95, zb + 0.25, stone, scene); boxAt(px - 0.3, 1.95, zb - 0.3, px + 0.3, 2.02, zb + 0.3, coping, scene); }
   // gate track
@@ -152,6 +152,9 @@ export default async function build({ renderer, w, h }) {
     boxAt(4.8, -0.12, 3.2, 10.2, -0.1, 6.0, wm, scene, { cast: false }); void pw;
     boxAt(4.6, 0, 3.0, 10.4, 0.1, 3.2, coping, scene); boxAt(4.6, 0, 6.0, 10.4, 0.1, 6.2, coping, scene); boxAt(4.6, 0, 3.0, 4.8, 0.1, 6.2, coping, scene); boxAt(10.2, 0, 3.0, 10.4, 0.1, 6.2, coping, scene);
     for (const x of [5.6, 7.4, 9.2]) { const j = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.03, 0.9, 8), T.solid(0xe9f6f8, { roughness: 0.2, transparent: true, opacity: 0.55 })); j.position.set(x, 0.35, 4.6); scene.add(j); } }
+  P.lounger({ x: 5.4, z: 1.5, rot: Math.PI, parent: scene, cloth: 0xefe8d8 }); P.lounger({ x: 6.5, z: 1.5, rot: Math.PI + 0.12, parent: scene, cloth: 0xefe8d8 });
+  boxAt(5.85, 0.0, 1.2, 6.2, 0.36, 1.55, coping, scene);
+  P.backdrop({ scene, z: -34, seed: 2 });
   // planting
   hedge(-14.0, 7.4, -11.4, 7.4, { h: 0.7, w: 0.45, density: 70, seed: 3, color: 0x6a9a3e }, scene); hedge(-3.6, 7.4, 4.4, 7.4, { h: 0.65, w: 0.45, density: 70, seed: 13, color: 0x568f3b }, scene);
   hedge(10.6, 7.4, 16, 7.4, { h: 0.65, w: 0.45, density: 70, seed: 23, color: 0x4f8a35 }, scene);
@@ -164,7 +167,7 @@ export default async function build({ renderer, w, h }) {
    
   palm(-13.6, 6.2, { h: 8.5, seed: 3, lean: 0.3 }, scene); palm(12.6, 5.4, { h: 7.5, seed: 8, lean: -0.4 }, scene);
   // shade trees across the road (outside frame) cast dappled shadows onto the street
-  leafy(tree(-6, 34, { h: 7.5, crown: 3.4, seed: 41, color: 0x86b04c }, scene)); leafy(tree(9, 35, { h: 7, crown: 3.2, seed: 42, color: 0x86b04c }, scene)); leafy(tree(-20, 33.5, { h: 7, crown: 3, seed: 43, color: 0x86b04c }, scene));
+   leafy(tree(-20, 33.5, { h: 7, crown: 3, seed: 43, color: 0x86b04c }, scene));
   P.car({ x: 12.0, z: 12.7, rot: Math.PI / 2, color: 0x3a4048, parent: scene, y: -0.15 });
   // neighbours
   neighbour({ x0: -36, x1: -16, z: -1, depth: 14, floors: 2, mat: T.plaster(0xd9cfbd, { tileM: 3.4, seed: 12 }), trim: T.plaster(0xf2eee6, { tileM: 3, seed: 15 }), seed: 3, scene });
@@ -173,5 +176,5 @@ export default async function build({ renderer, w, h }) {
   
 
   const camera = archCamera({ pos: [-11, 4.2, 30], target: [1.5, 0, 0], focal: 38, shift: 0.0, w, h });
-  return { scene, camera, exposure: 0.45, aoRadius: 0.9, aoStrength: 1.0, grade: { contrast: 1.1, saturation: 1.08, vignette: 0.3, grain: 0.016, warm: 0.035 } };
+  return { scene, camera, exposure: 0.45, aoRadius: 0.9, aoStrength: 1.0, bloom: true, bloomStrength: 0.16, bloomRadius: 0.9, bloomThreshold: 1.7, grade: { contrast: 1.1, saturation: 1.08, vignette: 0.3, grain: 0.016, warm: 0.035 } };
 }

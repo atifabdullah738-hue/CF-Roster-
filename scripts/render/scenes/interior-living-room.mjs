@@ -5,13 +5,13 @@ import { setupEnvironment, archCamera } from '../lib/env.mjs';
 export default async function build({ renderer, w, h }) {
   const scene = new THREE.Scene();
   const X0 = -3.1, X1 = 3.1, Z0 = -3.6, Z1 = 3.3, H = 3.1;
-  const env = setupEnvironment({ renderer, scene, sunElevation: 24, sunAzimuth: 252, turbidity: 2.4, rayleigh: 1.0, sunIntensity: 6.5, sunColor: 0xffe6c8, envIntensity: 0.1, shadowExtent: 8, shadowCenter: [0, 1, -0.5] });
+  const env = setupEnvironment({ renderer, scene, sunElevation: 24, sunAzimuth: 252, turbidity: 2.4, rayleigh: 1.0, sunIntensity: 12, sunColor: 0xffe6c8, envIntensity: 0.1, shadowExtent: 8, shadowCenter: [0, 1, -0.5] });
   env.light.shadow.radius = 5;
   interiorEnvironment({ renderer, scene, W: 6.2, H, D: 6.9, wall: 0xe6dfd2, floor: 0xb0a088, ceil: 0xf4efe6, wallLum: 0.62, floorLum: 0.42, ceilLum: 1.0, windows: [{ side: '-x', c: -1.3, w: 3.2, yb: 0.4, yt: 2.7, lum: 6 }], lamps: [{ pos: [-0.2, 2.5, -1], size: 1.0, lum: 4 }], intensity: 0.5 });
 
   const floor = marbleMat({ base: 0xe8e2d6, vein: 0x8f877b, veinAlt: 0xaf9764, slab: 0.8, n: 3, seed: 5, contrast: 0.95, freq: 1.1, veinPow: 34, cloud: 0.09, rough: 0.2 });
   const wallM = paintMat(0xe9e3d8, { seed: 3 });
-  const room = buildRoom(scene, { x0: X0, x1: X1, z0: Z0, z1: Z1, H, mats: { floor, wall: wallM }, openings: { left: [{ c: -1.3, w: 3.2, y: 0.4, h: 2.3, type: 'window', panels: 3 }] }, ceiling: { tray: true, band: 0.85, drop: 0.2, ledColor: 0xffd49a, ledIntensity: 1.3, glowW: 1.2 } });
+  const room = buildRoom(scene, { x0: X0, x1: X1, z0: Z0, z1: Z1, H, mats: { floor, wall: wallM }, openings: { left: [{ c: -1.3, w: 3.2, y: 0.4, h: 2.3, type: 'window', panels: 3 }] }, ceiling: { tray: true, band: 0.85, drop: 0.2, ledColor: 0xffd49a, ledIntensity: 2.0, glowW: 1.5 }, ceilEmissive: 0.3 });
   gardenView(room, 'left', { dim: 0.55 });
   const wl = room.wall.left, u0 = room.uOf('left', -1.3 + 1.6), u1 = room.uOf('left', -1.3 - 1.6);
   curtainSet(wl, { u0, u1, yTop: 2.88, zOff: 0.16, drape: fabricMat({ color: 0xa08d74, kind: 'linen', tileM: 0.5, seed: 6 }), sheerOpacity: 0.42, stack: 0.8, track: false, rodMat: brassMat(0xc2a050, 0.3), seed: 3 });
@@ -58,7 +58,7 @@ export default async function build({ renderer, w, h }) {
   I.sconce(scene, { x: X1 - 0.01, y: 1.85, z: -2.7, rotY: -Math.PI / 2 }); I.sconce(scene, { x: X1 - 0.01, y: 1.85, z: 0.2, rotY: -Math.PI / 2 });
   // ---------- rug ----------
   const rug = rugMat({ kind: 'persian', w: 2.7, d: 3.7, pal: { field: 0x223250, red: 0x9d3b2b, ivory: 0xe8dec6, gold: 0xc6a05a, teal: 0x2f6c70, dark: 0x131a2c }, seed: 7 });
-  const rg = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.014, 3.7), rug); rg.position.set(-0.35, 0.007, -0.8); rg.receiveShadow = true; scene.add(rg);
+  const rg = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.014, 3.7), rug); rg.position.set(-0.35, 0.007, -0.35); rg.receiveShadow = true; scene.add(rg);
   // (BoxGeometry UVs are 0..1 per face: top face carries the full pattern)
 
   // ---------- seating ----------
@@ -66,18 +66,18 @@ export default async function build({ renderer, w, h }) {
   const teal = fabricMat({ color: 0x2e5a60, kind: 'velvet', tileM: 0.4, seed: 12 }), rust = fabricMat({ color: 0xa4512f, kind: 'velvet', tileM: 0.4, seed: 13 }), mustard = fabricMat({ color: 0xc79a3a, kind: 'linen', tileM: 0.4, seed: 14 }), cream = fabricMat({ color: 0xece3d1, kind: 'linen', tileM: 0.4, seed: 15 });
   const sofa = I.sofaL({ len: 3.1, depth: 0.98, chaise: 1.55, cw: 1.0, side: 'l', fabric: sofaFab, seatN: 2, seed: 3,
     pillows: [{ x: -0.3, z: -0.06, y: 0.68, w: 0.48, h: 0.46, mat: teal, rotZ: 0.1 }, { x: 0.12, z: -0.04, y: 0.68, w: 0.44, h: 0.44, mat: rust, rotZ: -0.12, rotY: 0.2 }, { x: 0.8, z: -0.06, y: 0.68, w: 0.46, h: 0.44, mat: mustard, rotZ: 0.2 }, { x: -1.15, z: 0.0, y: 0.66, w: 0.44, h: 0.42, mat: cream, rotZ: -0.15 }] });
-  place(sofa, -1.85, -0.8, Math.PI / 2); scene.add(sofa);
+  place(sofa, -1.85, -0.35, Math.PI / 2); scene.add(sofa);
   const chairMat = leatherMat({ color: 0x8c502e, tileM: 0.5 });
-  for (const [z, ry] of [[-1.8, -Math.PI / 2 + 0.25], [0.35, -Math.PI / 2 - 0.2]]) { const ac = I.armchair({ fabric: chairMat, seed: 4 }); place(ac, 1.55, z, ry); scene.add(ac); }
+  for (const [z, ry] of [[-1.5, -Math.PI / 2 + 0.25], [0.7, -Math.PI / 2 - 0.2]]) { const ac = I.armchair({ fabric: chairMat, seed: 4 }); place(ac, 1.55, z, ry); scene.add(ac); }
   // side table between chairs
-  const stable = I.roundTable({ r: 0.26, h: 0.52, top: marbleMat({ base: 0x2b2b2b, vein: 0xb99a5a, slab: 0.6, n: 1, seed: 21, contrast: 1.2 }), legMat: brassMat() }); place(stable, 1.95, -0.7, 0); scene.add(stable);
-  const lamp = I.tableLamp({ h: 0.46, kind: 'gourd', baseMat: ceramicMat(0x3b4a4a, 0.18) }); place(lamp, 1.95, -0.7, 0, 0.52); scene.add(lamp);
+  const stable = I.roundTable({ r: 0.26, h: 0.52, top: marbleMat({ base: 0x2b2b2b, vein: 0xb99a5a, slab: 0.6, n: 1, seed: 21, contrast: 1.2 }), legMat: brassMat() }); place(stable, 1.95, -0.4, 0); scene.add(stable);
+  const lamp = I.tableLamp({ h: 0.46, kind: 'gourd', baseMat: ceramicMat(0x3b4a4a, 0.18) }); place(lamp, 1.95, -0.4, 0, 0.52); scene.add(lamp);
   // coffee tables
   const ctTop = marbleMat({ base: 0xf2eee5, vein: 0x7d766b, veinAlt: 0xa98d4f, slab: 0.9, n: 1, seed: 31, contrast: 1.2 });
-  const ct = I.roundTable({ r: 0.58, h: 0.4, top: ctTop, legMat: brassMat(0xc2a050, 0.22) }); place(ct, -0.4, -0.8, 0); scene.add(ct);
-  const ct2 = I.roundTable({ r: 0.32, h: 0.5, top: woodMat({ kind: 'walnut', tileM: 0.6, planks: 1, seed: 33, gap: false }), legMat: brassMat() }); place(ct2, 0.45, 0.1, 0); scene.add(ct2);
-  I.tray(scene, -0.4, 0.4, -0.8, { w: 0.42, d: 0.28, rot: 0.3 }); I.books(scene, -0.55, 0.435, -0.8, { n: 3, seed: 8, rot: 0.3 }); I.vase(scene, -0.25, 0.432, -0.75, { h: 0.2, r: 0.05, type: 'cyl', mat: ceramicMat(0xc9b08a, 0.3) });
-  I.vase(scene, 0.45, 0.5, 0.1, { h: 0.16, r: 0.05, type: 'gourd', mat: ceramicMat(0x2f5d62, 0.2) });
+  const ct = I.roundTable({ r: 0.58, h: 0.4, top: ctTop, legMat: brassMat(0xc2a050, 0.22) }); place(ct, -0.4, -0.35, 0); scene.add(ct);
+  const ct2 = I.roundTable({ r: 0.32, h: 0.5, top: woodMat({ kind: 'walnut', tileM: 0.6, planks: 1, seed: 33, gap: false }), legMat: brassMat() }); place(ct2, 0.55, 0.55, 0); scene.add(ct2);
+  I.tray(scene, -0.4, 0.4, -0.35, { w: 0.42, d: 0.28, rot: 0.3 }); I.books(scene, -0.55, 0.435, -0.35, { n: 3, seed: 8, rot: 0.3 }); I.vase(scene, -0.25, 0.432, -0.3, { h: 0.2, r: 0.05, type: 'cyl', mat: ceramicMat(0xc9b08a, 0.3) });
+  I.vase(scene, 0.55, 0.5, 0.55, { h: 0.16, r: 0.05, type: 'gourd', mat: ceramicMat(0x2f5d62, 0.2) });
 
   // ---------- plants & lamps ----------
   const potW = ceramicMat(0xe4ded0, 0.4), potD = ceramicMat(0x2b2b2b, 0.35);
@@ -97,7 +97,7 @@ export default async function build({ renderer, w, h }) {
   // sun spill bounce on floor
   point(scene, 0.8, 0.8, -0.6, 0xffd9a8, 1.0, 8, 1.8);
 
-  const camera = archCamera({ pos: [0.15, 1.25, 3.15], target: [0, 1.25, -3.5], focal: 21, w, h });
+  const camera = archCamera({ pos: [0.15, 1.25, 3.15], target: [0, 1.25, -3.5], focal: 22, w, h });
   finishScene(scene, camera);
-  return { scene, camera, exposure: 0.42, aoRadius: 0.55, aoStrength: 1.0, grade: { contrast: 1.08, saturation: 1.05, vignette: 0.22, grain: 0.012, warm: 0.0 } };
+  return { scene, camera, exposure: 0.36, aoRadius: 0.55, aoStrength: 1.0, grade: { contrast: 1.08, saturation: 1.05, vignette: 0.22, grain: 0.012, warm: 0.0 } };
 }

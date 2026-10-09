@@ -512,7 +512,7 @@ function scatter(parent, n, fn, { kind = 'broad', tint = 0xffffff } = {}) {
   im.count = k; im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false; parent?.add(im); return im;
 }
 /** Better broadleaf tree. kind: 'neem' (dense round), 'umbrella' (wide, flat gulmohar/shisham), 'tall' (eucalyptus-like narrow). */
-export function crownTree(x, z, { h = 8, crown = 3, kind = 'neem', seed = 1, y = 0, tint = 0xffffff, trunkR = 0.2, lean = 0, size = 1 } = {}, parent) {
+export function crownTree(x, z, { h = 8, crown = 3, kind = 'neem', seed = 1, y = 0, tint = 0xffffff, trunkR = 0.2, lean = 0, size = 1, leaf = 0.3 } = {}, parent) {
   const g = new THREE.Group(), r = rng(seed * 101 + 13), bark = new THREE.MeshStandardMaterial({ color: 0x5a4a3c, roughness: 1 }); bark.userData.tileM = 1;
   const th = h * (kind === 'tall' ? 0.5 : kind === 'umbrella' ? 0.42 : 0.4), leafKind = kind === 'tall' ? 'euc' : kind === 'umbrella' ? 'gul' : 'neem';
   const tx = (t) => x + lean * t * t;
@@ -530,14 +530,14 @@ export function crownTree(x, z, { h = 8, crown = 3, kind = 'neem', seed = 1, y =
   }
   const leafTint = new THREE.Color(tint);
   for (const l of lobes) {
-    const n = Math.round(1100 * (l.rad * l.rad) * size), center = new THREE.Vector3(l.cx, l.cy, l.cz);
+    const n = Math.round(1100 * (l.rad * l.rad) * size * (0.42 / leaf) ** 2), center = new THREE.Vector3(l.cx, l.cy, l.cz);
     scatter(g, n, (i, rr) => {
       const u = rr() * 6.28, v = Math.acos(2 * rr() - 1), kk = Math.cbrt(0.28 + rr() * 0.72), o = new THREE.Vector3(Math.sin(v) * Math.cos(u), Math.cos(v), Math.sin(v) * Math.sin(u));
       const rough = 0.72 + 0.55 * Math.abs(Math.sin(u * 3.1 + l.cx) * Math.cos(v * 2.3 + l.cz)); const kr = kk * rough;
       if (kk < 0.62 && rr() < 0.35) return null; // hollow inside -> sky glints
       const pos = new THREE.Vector3(l.cx + o.x * l.rad * kr, l.cy + o.y * l.ry * kr, l.cz + o.z * l.rad * kr);
       const top = Math.max(0, o.y), shade = (0.38 + 0.85 * kk) * (0.62 + 0.55 * top) * (0.85 + rr() * 0.35);
-      return { pos, out: o, s: (kind === 'tall' ? 0.5 : 0.42 + rr() * 0.22) * (0.9 + rr() * 0.4), shade };
+      return { pos, out: o, s: (kind === 'tall' ? leaf * 1.15 : leaf + rr() * 0.12) * (0.9 + rr() * 0.4), shade };
     }, { kind: leafKind, tint: leafTint.getHex() });
     void center;
   }

@@ -113,8 +113,7 @@ export default async function build({ renderer, w, h }) {
   streetLamp({ x: -11.6, z: 5.4, h: 7.5, arm: 1.7, dir: 1, parent: scene });
   car({ x: 8.5, z: 8.5, rot: 0, color: 0x2e3a4c, type: 'sedan', parent: scene });
   wallStain({ x0: X0, x1: TX1, y0: 3.7, y1: RF + 0.3, z: TF, seed: 4, alpha: 0.12, parent: H });
-  utilityPole({ x: 12.5, z: 5.0, h: 9, wireTo: { x: -30, z: 5.0 }, parent: scene });
 
-  const camera = cam({ pos: [-4.4, 1.7, 17.2], target: [0.2, 1.7, 0], focal: 30, shift: 0.2, w, h });
+  const camera = cam({ pos: [-3.6, 1.7, 15.2], target: [0.2, 1.7, 0], focal: 36, shift: 0.17, w, h });
   return { scene, camera, exposure: 0.4, aoRadius: 0.7, aoStrength: 1.0, grade: { contrast: 1.15, saturation: 1.12, vignette: 0.22, grain: 0.015, warm: 0.03 } };
 }

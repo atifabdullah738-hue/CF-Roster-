@@ -306,7 +306,7 @@ export function pavers({ colors = [0xb9b3a7, 0xaaa498, 0xc4beb2, 0xa39d92], tile
     const gap = Math.max(2, bh * 0.07);
     for (let j = 0; j < rows; j++) for (let i = -1; i <= across; i++) {
       const px = i * bw + (j % 2) * bw * bond, py = j * bh, col = new THREE.Color(colors[Math.floor(r() * colors.length)]).offsetHSL(0, 0, (r() - 0.5) * 0.06);
-      x.fillStyle = hex(col.convertLinearToSRGB()); x.fillRect(px + gap / 2, py + gap / 2, bw - gap, bh - gap);
+      x.fillStyle = hex(col); x.fillRect(px + gap / 2, py + gap / 2, bw - gap, bh - gap);
       for (let s = 0; s < 8; s++) { x.fillStyle = `rgba(${r() > 0.5 ? 255 : 0},${r() > 0.5 ? 255 : 0},${r() > 0.5 ? 255 : 0},0.04)`; x.fillRect(px + r() * bw, py + r() * bh, 2 + r() * 5, 2 + r() * 4); }
       xb.fillStyle = `rgb(${190 + r() * 40},${190 + r() * 40},${190 + r() * 40})`; xb.fillRect(px + gap / 2, py + gap / 2, bw - gap, bh - gap);
     }
@@ -349,14 +349,14 @@ export function ledgeStone({ colors = [0x8d857a, 0x9c9486, 0x7a7268, 0xa59c8c, 0
   const key = `${colors.join(',')}/${tileM}/${seed}/${rowMin}/${rowMax}`;
   if (!_ls.has(key)) {
     const S = 1024, px = S / tileM, c = cv(S), x = c.getContext('2d'), cb = cv(S), xb = cb.getContext('2d'), r = rng(seed);
-    x.fillStyle = hex(new THREE.Color(joint).convertLinearToSRGB()); x.fillRect(0, 0, S, S); xb.fillStyle = '#000'; xb.fillRect(0, 0, S, S);
+    x.fillStyle = hex(new THREE.Color(joint)); x.fillRect(0, 0, S, S); xb.fillStyle = '#000'; xb.fillRect(0, 0, S, S);
     xb.filter = 'blur(2.2px)';
     let y = 0;
     while (y < S) {
       const rh = (rowMin + r() * (rowMax - rowMin)) * px; let xx = -r() * lenMax * px;
       while (xx < S) {
         const len = (lenMin + r() * (lenMax - lenMin)) * px, col = new THREE.Color(colors[Math.floor(r() * colors.length)]), j = (r() - 0.5) * 0.14;
-        col.offsetHSL((r() - 0.5) * 0.02, (r() - 0.5) * 0.06, j); const cs = col.clone().convertLinearToSRGB();
+        col.offsetHSL((r() - 0.5) * 0.02, (r() - 0.5) * 0.06, j); const cs = col.clone();
         const gx = 2.2, rx = xx + gx, ry = y + gx, rw = len - gx * 1.6, rhh = rh - gx * 1.6;
         const gr = x.createLinearGradient(0, ry, 0, ry + rhh); gr.addColorStop(0, hex(cs.clone().multiplyScalar(1.1))); gr.addColorStop(0.55, hex(cs)); gr.addColorStop(1, hex(cs.clone().multiplyScalar(0.8)));
         x.fillStyle = gr; x.beginPath(); x.roundRect(rx, ry, rw, rhh, 2 + r() * 4); x.fill();
@@ -370,4 +370,22 @@ export function ledgeStone({ colors = [0x8d857a, 0x9c9486, 0x7a7268, 0xa59c8c, 0
     _ls.set(key, [ctex(c, { repeat: true }), ctex(cb, { srgb: false, repeat: true })]);
   }
   const [map, bm] = _ls.get(key); const m = new THREE.MeshStandardMaterial({ map, bumpMap: bm, bumpScale: bump, roughness, color: 0xffffff }); m.userData.tileM = tileM; return m;
+}
+
+/** Natural lawn: low-contrast multi-scale mottling + fine blade grain (calmer than the shared T.grass). */
+const _lw = new Map();
+export function lawnMat({ color = 0x93b055, tileM = 3.2, seed = 61, contrast = 1 } = {}) {
+  const key = `${color}/${seed}`;
+  if (!_lw.has(key)) {
+    const S = 1024, f = noiseArr(seed, S, 6, 5), g = noiseArr(seed + 7, S, 4, 24), h2 = noiseArr(seed + 13, S, 5, 80), c = cv(S), x = c.getContext('2d'), img = x.createImageData(S, S), d = img.data, base = new THREE.Color(color).convertLinearToSRGB();
+    for (let i = 0; i < S * S; i++) {
+      const n = (f[i] - 0.5) * 0.34 * contrast + (g[i] - 0.5) * 0.22 * contrast + (h2[i] - 0.5) * 0.16 * contrast + (Math.random() - 0.5) * 0.05;
+      const yel = (f[i] - 0.5) * 0.25; // slight hue drift towards yellow in light patches
+      d[i * 4] = Math.max(0, Math.min(255, base.r * 255 * (1 + n + yel * 0.35))); d[i * 4 + 1] = Math.max(0, Math.min(255, base.g * 255 * (1 + n))); d[i * 4 + 2] = Math.max(0, Math.min(255, base.b * 255 * (1 + n * 0.8 - yel * 0.3))); d[i * 4 + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+    const cb = cv(S), xb = cb.getContext('2d'), ib = xb.createImageData(S, S), db = ib.data; for (let i = 0; i < S * S; i++) { const v = (h2[i] * 0.6 + g[i] * 0.4) * 255 + (Math.random() - 0.5) * 40; db[i * 4] = db[i * 4 + 1] = db[i * 4 + 2] = v; db[i * 4 + 3] = 255; } xb.putImageData(ib, 0, 0);
+    _lw.set(key, [ctex(c, { repeat: true }), ctex(cb, { srgb: false, repeat: true })]);
+  }
+  const [map, bm] = _lw.get(key); const m = new THREE.MeshStandardMaterial({ map, bumpMap: bm, bumpScale: 1.2, roughness: 1, color: 0xffffff }); m.userData.tileM = tileM; return m;
 }

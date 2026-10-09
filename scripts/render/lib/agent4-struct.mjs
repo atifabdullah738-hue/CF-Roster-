@@ -15,7 +15,7 @@ export const BRICK = { L: 0.229, H: 0.0755, W: 0.114, J: 0.0105, CH: 0.086 };
  */
 export function brickWall({ len, hgt, t = 0.23, bond = 'english', back = false, openings = [], ranges = null, seed = 1, palette = {}, topBed = true, mortarMat, clayMat, parent, startHalf = false, skew = 1 }) {
   const r = rng(seed), g = new THREE.Group(), B = new Mesher(), Mo = new Mesher(), { L, H, W, J, CH } = BRICK;
-  const base = palette.base ?? 0xa6513a, dark = palette.dark ?? 0x75443a, light = palette.light ?? 0xc27a55, pDark = palette.pDark ?? 0.06, pLight = palette.pLight ?? 0.12;
+  const base = palette.base ?? 0x9b5640, dark = palette.dark ?? 0x6c4338, light = palette.light ?? 0xb97a58, pDark = palette.pDark ?? 0.06, pLight = palette.pLight ?? 0.12;
   const nC = Math.floor((hgt + J) / CH), colorOf = () => { const k = r(); return k < pDark ? tintVar(dark, r, 0.08, 0.1) : k < pDark + pLight ? tintVar(light, r, 0.08, 0.08) : tintVar(base, r, 0.1, 0.08); };
   const sub = (a, b, v0, v1) => { // subtract openings
     let pieces = [[a, b]];

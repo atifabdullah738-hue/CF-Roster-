@@ -212,12 +212,6 @@ export function rugMat({ kind = 'persian', w = 3, d = 2, pal = {}, seed = 5, pil
       x.fillStyle = hex(P.field); x.globalAlpha = 0.0; x.globalAlpha = 1;
       for (let py = bw + gx / 2; py < H - bw; py += gx) for (let px = bw + gx / 2; px < W - bw; px += gx) { x.fillStyle = hex(r() > 0.5 ? P.red : P.gold); x.globalAlpha = 0.85; x.beginPath(); x.arc(px, py, 0.016 * pxm, 0, TAU); x.fill(); }
       x.globalAlpha = 1;
-      // spandrels
-      const sp = Math.min(W, H) * 0.17;
-      x.globalCompositeOperation = 'source-over';
-      x.save(); x.beginPath(); x.rect(bw, bw, W - 2 * bw, H - 2 * bw); x.clip();
-      for (const [cx, cy] of [[bw, bw], [W - bw, bw], [bw, H - bw], [W - bw, H - bw]]) { x.fillStyle = hex(P.red); x.beginPath(); x.arc(cx, cy, sp, 0, TAU); x.fill(); x.strokeStyle = hex(P.gold); x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, sp, 0, TAU); x.stroke(); x.strokeStyle = hex(P.ivory); x.lineWidth = 2; x.beginPath(); x.arc(cx, cy, sp * 0.72, 0, TAU); x.stroke(); }
-      x.restore();
       // medallion
       const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.235;
       const star = (rad, n, inner, col, lw, fill) => { x.beginPath(); for (let i = 0; i < n * 2; i++) { const a = (i / (n * 2)) * TAU - Math.PI / 2, rr = i % 2 ? rad * inner : rad; x[i ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } x.closePath(); if (fill) { x.fillStyle = hex(fill); x.fill(); } if (col) { x.strokeStyle = hex(col); x.lineWidth = lw; x.stroke(); } };
@@ -531,7 +525,7 @@ export function buildRoom(scene, o) {
 }
 
 /** Garden / street backdrop seen through a window wall. Built in the wall's local frame (z negative = outside). */
-export function gardenView(room, side, { pave = 0xc8c2b6, lawn = 0x4b7a34, dim = 0.62, depthWall = 9.5, seed = 1, trees = true, neighbour = true, extent = 40, terrace = 3.0, tone = 0x56873b, wallColor = 0xe3dccb, west = 0 } = {}) {
+export function gardenView(room, side, { pave = 0xc8c2b6, lawn = 0x4b7a34, dim = 0.62, depthWall = 9.5, seed = 1, trees = true, neighbour = true, extent = 40, terrace = 3.0, tone = 0x56873b, wallColor = 0xe3dccb, treeSpec = null } = {}) {
   const g = room.wall[side], t = room.t, u0 = -extent, u1 = room.frames[side].L + extent;
   const dm = (c) => new THREE.Color(c).multiplyScalar(dim).getHex();
   const grass = T.grass({ color: dm(lawn), tileM: 4, seed: 61 + seed });
@@ -544,9 +538,8 @@ export function gardenView(room, side, { pave = 0xc8c2b6, lawn = 0x4b7a34, dim =
   for (let k = 0; k < 7; k++) bush(-3 + k * ((room.frames[side].L + 6) / 6.2), 0, -t - terrace - 0.9 - (k % 2) * 0.6, 0.55 + (k % 3) * 0.12, g, { seed: 20 + k + seed, color: dm(tone) });
   if (trees) {
     const L = room.frames[side].L;
-    tree(L * 0.15, -depthWall - 2.4, { h: 9, crown: 3.3, seed: 2 + seed, color: dm(0x4a7f35) }, g); tree(L * 0.62, -depthWall - 3.4, { h: 10, crown: 3.8, seed: 5 + seed, color: dm(0x558a3a) }, g);
-    tree(-L * 0.25, -depthWall - 3, { h: 8.5, crown: 3.2, seed: 14 + seed, color: dm(0x4f8438) }, g);
-    palm(L * 0.38, -t - terrace - 2.2, { h: 4.8, seed: 3 + seed, lean: 0.3 }, g);
+    for (const [uu, ww, hh, cc, sd] of treeSpec ?? [[L * 0.1, -depthWall - 2.4, 9, 0x4a7f35, 2], [-L * 0.3, -depthWall - 3.0, 8.5, 0x4f8438, 14], [-L * 0.75, -depthWall - 3.4, 10, 0x558a3a, 5]]) tree(uu, ww, { h: hh, crown: hh * 0.38, seed: sd + seed, color: dm(cc) }, g);
+    palm(L * 0.3, -t - terrace - 2.2, { h: 4.8, seed: 3 + seed, lean: 0.3 }, g);
   }
   if (neighbour) {
     const nb = T.plaster(dm(0xdcd3c1), { tileM: 3.5, seed: 12 + seed }); boxAt(u0, -0.3, -depthWall - 17, u1 - 8, 9.5, -depthWall - 15, nb, g);

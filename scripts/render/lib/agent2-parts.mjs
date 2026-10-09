@@ -426,23 +426,22 @@ export function ac(x, y, z, parent, { w = 0.9, h = 0.65, d = 0.35 } = {}) {
 export function car({ x = 0, z = 0, rot = 0, color = 0xf1f0ec, parent, y = 0, s = 1, lights = false }) {
   const g = new THREE.Group(), P2 = (u, v) => V2(u, v);
   const paint = new THREE.MeshPhysicalMaterial({ color, roughness: 0.28, metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.5 }); paint.userData.tileM = 1;
-  const glassM = new THREE.MeshPhysicalMaterial({ color: 0x0a0e12, roughness: 0.05, metalness: 0.2, clearcoat: 1, envMapIntensity: 2.4 }); glassM.userData.tileM = 1;
+  const glassM = new THREE.MeshPhysicalMaterial({ color: 0x050709, roughness: 0.12, metalness: 0.0, clearcoat: 0.4, envMapIntensity: 0.9 }); glassM.userData.tileM = 1;
   const tire = T.solid(0x141414, { roughness: 0.9 }), rim = T.metal(0xb9bcc0, { roughness: 0.25 }), black = T.solid(0x0d0d0e, { roughness: 0.5 }), chrome = T.metal(0xd0d3d6, { roughness: 0.2 });
   const extrude = (pts, width, bev, mat, cx = 0) => {
     const e = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: width - 2 * bev, bevelEnabled: bev > 0, bevelThickness: bev, bevelSize: bev * 0.8, bevelSegments: 4, curveSegments: 10 });
     e.translate(0, 0, -(width - 2 * bev) / 2); e.rotateY(-Math.PI / 2); e.translate(cx, 0, 0); return add(e, mat, g, { uv: false });
   };
   const arch = (cu, r, n = 10) => Array.from({ length: n + 1 }, (_, i) => { const a = Math.PI * (1 - i / n); return P2(cu + r * Math.cos(a), 0.34 + r * Math.sin(a) * 1.0); });
-  const lower = [P2(-2.22, 0.3), P2(-2.3, 0.6), P2(-2.2, 0.98), P2(-1.0, 1.02), P2(0.8, 1.0), P2(2.0, 0.9), P2(2.28, 0.72), P2(2.3, 0.45), P2(2.2, 0.3), P2(1.88, 0.3), ...arch(1.42, 0.46).reverse().map((p) => p), P2(0.96, 0.3), P2(-0.96, 0.3), ...arch(-1.42, 0.46).reverse(), P2(-1.88, 0.3)];
-  // fix ordering: arches generated left->right in angle; reverse so travelling front->rear (decreasing u)
-  extrude(lower, 1.86, 0.1, paint);
-  const cabin = [P2(-2.0, 0.98), P2(-1.86, 1.5), P2(-1.5, 1.6), P2(0.5, 1.6), P2(1.25, 1.0)];
-  extrude(cabin, 1.62, 0.07, paint);
-  const gl = [P2(-1.93, 1.02), P2(-1.8, 1.47), P2(-1.5, 1.55), P2(0.5, 1.55), P2(1.19, 1.04)];
-  extrude(gl, 1.66, 0, glassM);
-  for (const u of [-0.55, 0.55]) { boxAt(-0.9, 1.0, u - 0.04, 0.9, 1.57, u + 0.04, paint, g, { cast: true }); }  // pillars (rendered across width; glass sits under them) 
+  const lower = [P2(-2.2, 0.32), P2(-2.32, 0.62), P2(-2.26, 0.94), P2(-1.7, 1.0), P2(0.7, 0.99), P2(1.5, 0.93), P2(2.1, 0.8), P2(2.3, 0.62), P2(2.3, 0.44), P2(2.2, 0.32), P2(1.88, 0.32), ...arch(1.42, 0.46).reverse(), P2(0.96, 0.32), P2(-0.96, 0.32), ...arch(-1.42, 0.46).reverse(), P2(-1.88, 0.32)];
+  extrude(lower, 1.84, 0.11, paint);
+  const cabin = [P2(-1.62, 0.97), P2(-1.05, 1.42), P2(-0.1, 1.5), P2(0.25, 1.49), P2(0.95, 0.99)];
+  extrude(cabin, 1.52, 0.1, paint);
+  const gl = [P2(-1.5, 1.0), P2(-1.02, 1.37), P2(-0.12, 1.44), P2(0.22, 1.43), P2(0.82, 1.01)];
+  extrude(gl, 1.56, 0, glassM);
+  for (const u of [-0.6, 0.02]) boxAt(-0.82, 1.0, u - 0.045, 0.82, 1.5, u + 0.045, paint, g);
   // roof rails / mirrors
-  for (const sx of [-1, 1]) { boxAt(sx * 0.93 - 0.06, 1.02, 0.75, sx * 0.93 + 0.06, 1.12, 0.95, black, g); boxAt(sx * 0.7 - 0.02, 1.6, -1.4, sx * 0.7 + 0.02, 1.64, 0.4, black, g); }
+  for (const sx of [-1, 1]) { boxAt(sx * 0.9 - 0.07, 1.0, 0.7, sx * 0.9 + 0.07, 1.1, 0.92, paint, g); }
   // wheels
   for (const sx of [-1, 1]) for (const wz of [1.42, -1.42]) { const t = new THREE.CylinderGeometry(0.37, 0.37, 0.24, 28); t.rotateZ(Math.PI / 2); t.translate(sx * 0.82, 0.37, wz); add(t, tire, g, { uv: false }); const r = new THREE.CylinderGeometry(0.25, 0.25, 0.26, 24); r.rotateZ(Math.PI / 2); r.translate(sx * 0.82 + sx * 0.005, 0.37, wz); add(r, rim, g, { uv: false }); const hb = new THREE.CylinderGeometry(0.07, 0.07, 0.28, 12); hb.rotateZ(Math.PI / 2); hb.translate(sx * 0.82, 0.37, wz); add(hb, black, g, { uv: false }); }
   // wheel wells
@@ -462,4 +461,23 @@ export function weather({ x0, x1, y0, y1, z, parent, alpha = 0.28, color = '70,5
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, y1 - y0), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, toneMapped: true }));
   m.position.set((x0 + x1) / 2, (y0 + y1) / 2, z + 0.004); m.renderOrder = 2; parent?.add(m); return m;
+}
+
+/** Row of distant houses + trees behind the subject (z negative). Keeps the horizon from being an empty field. */
+export function backdrop({ scene, z = -30, x0 = -70, x1 = 70, seed = 1, palette = [0xd8cfbf, 0xc9c0b0, 0xe4ddd0, 0xbfb6a6], trees = true, treeColor = 0x7fa84a, mode = 'day' }) {
+  const r = rng(seed * 11 + 5); let x = x0;
+  while (x < x1) {
+    const w = 14 + r() * 8, fl = 2 + Math.floor(r() * 2), c = palette[Math.floor(r() * palette.length)];
+    neighbour({ x0: x, x1: x + w, z: z + r() * 5, depth: 12, floors: fl, mat: T.plaster(c, { tileM: 3.4, seed: 30 + Math.floor(r() * 20) }), trim: T.plaster(0xeee8dd, { tileM: 3, seed: 18 }), seed: Math.floor(r() * 99), scene, mode });
+    x += w + 2 + r() * 3;
+  }
+  if (trees) { const r2 = rng(seed * 3 + 1); for (let tx = x0 + 6; tx < x1; tx += 9 + r2() * 10) leafy(tree(tx, z + 10 + r2() * 8, { h: 7 + r2() * 5, crown: 3 + r2() * 1.8, seed: Math.floor(r2() * 90) + 1, color: treeColor }, scene)); }
+}
+/** Sun lounger. Faces +z by default. */
+export function lounger({ x, z, y = 0, rot = 0, cloth = 0xe9e2d2, frame = 0x2b2d30, parent }) {
+  const g = new THREE.Group(), fm = T.metal(frame, { roughness: 0.5 }), cl = T.solid(cloth, { roughness: 0.9 });
+  boxAt(-0.33, 0.28, -0.9, 0.33, 0.36, 0.5, cl, g); boxAt(-0.33, 0.36, -0.9, 0.33, 0.4, 0.5, T.solid(0xf4efe4, { roughness: 0.95 }), g, { cast: false });
+  const back = new THREE.BoxGeometry(0.66, 0.07, 0.7); back.rotateX(-0.9); back.translate(0, 0.62, -1.05); add(back, cl, g, { uv: false });
+  for (const sx of [-1, 1]) { boxAt(sx * 0.34, 0.0, -0.85, sx * 0.34 + 0.03, 0.28, -0.8, fm, g); boxAt(sx * 0.34, 0.0, 0.42, sx * 0.34 + 0.03, 0.28, 0.47, fm, g); }
+  g.rotation.y = rot; g.position.set(x, y, z); parent?.add(g); return g;
 }
