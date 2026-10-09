@@ -20,8 +20,8 @@ export default async function build({ renderer, w, h }) {
   const metalB = T.solid(0x26282b, { roughness: 0.5, metalness: 0.5 });
 
   // ground
-  ground(-1500, -1500, 1500, 1500, 0, lawn, scene);
-  ground(-1500, 11.0, 1500, 34, 0.002, asphalt, scene);
+  ground(-1500, -1500, 1500, 11.0, 0, lawn, scene); ground(-1500, 34, 1500, 1500, 0, lawn, scene);
+  ground(-1500, 11.0, 1500, 34, 0.0, asphalt, scene);
   groundGrime({ x0: -60, z0: 11, x1: 60, z1: 34, y: 0.004, seed: 31, alpha: 0.22, color: [20, 20, 20], scale: 6, cutoff: 0.5, noiseM: 9, res: 2048 }, scene);
   groundGrime({ x0: -60, z0: 11, x1: 60, z1: 15, y: 0.006, seed: 41, alpha: 0.45, color: [130, 112, 88], scale: 12, cutoff: 0.45, res: 2048, noiseM: 5 }, scene);
   const paint = T.solid(0xe9e7df, { roughness: 0.7 }); for (let x = -118; x < 118; x += 6) boxAt(x, 0.004, 22.9, x + 3, 0.012, 23.1, paint, scene, { cast: false });
@@ -139,6 +139,6 @@ export default async function build({ renderer, w, h }) {
   car(scene, 18.5, 14.6, Math.PI, { color: 0x6e7479 });
 
   finish(scene, 1.5);
-  const camera = archCamera({ pos: [15, 1.65, 29], target: [-1.5, 1.65, 0], focal: 24, shift: 0.17, w, h });
+  const camera = archCamera({ pos: [12.5, 1.65, 24.5], target: [-2.5, 1.65, 0], focal: 24, shift: 0.15, w, h });
   return { scene, camera, exposure: 0.34, aoRadius: 0.9, aoStrength: 1.0, bloom: true, bloomStrength: 0.1, bloomRadius: 0.6, bloomThreshold: 5, grade: { contrast: 1.07, saturation: 1.0, vignette: 0.24, grain: 0.014, warm: 0.03 } };
 }

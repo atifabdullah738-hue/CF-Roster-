@@ -73,8 +73,8 @@ export default async function build({ renderer, w, h }) {
   mound(-3.0, 0, 2.2, 0.8, scene, { seed: 3 }); mound(-1.6, 0, 2.0, 0.6, scene, { seed: 4, tint: 0xe6ffd0 }); mound(-4.6, 0, 3.4, 0.7, scene, { seed: 5 });
   mound(-0.2, 0, 3.4, 0.5, scene, { seed: 6 }); mound(1.8, 0, 3.8, 0.5, scene, { seed: 7, tint: 0xe6ffd0 });
   flowerMass({ x0: -5.6, x1: -2.8, y0: 0.2, y1: 1.4, z: 4.5, depth: 1, seed: 11, parent: scene, kind: 'flower' });
-  crownTree(-3.6, 5.5, { h: 7.5, crown: 3.2, kind: 'umbrella', seed: 17, trunkR: 0.15 }, scene);
-  palm(-5.2, 1.2, { h: 7.5, seed: 9, lean: 0.3 }, scene); palm(-0.6, 5.5, { h: 5.0, seed: 4, lean: -0.2 }, scene);
+  crownTree(-8.5, 5.0, { h: 8.5, crown: 3.2, kind: 'umbrella', seed: 17, trunkR: 0.15 }, scene);
+  palm(-7.2, 1.5, { h: 8.5, seed: 9, lean: 0.3 }, scene);
   bx(X0, 0, ZW - 0.2, 2.4, 0.9, ZW + 0.2, sB, scene); bx(X0 - 0.03, 0.9, ZW - 0.24, 2.4, 0.97, ZW + 0.24, cap, scene);
   hedgeRow(X0 + 0.2, ZW - 0.9, 2.2, ZW - 0.9, { h: 1.1, w: 0.8, y: 0, seed: 4 }, scene);
   pillar({ x: 2.7, z: ZW, w: 0.6, h: 2.1, mat: sB, cap, lampI: 7, parent: scene }); pillar({ x: 5.6, z: ZW, w: 0.6, h: 2.1, mat: sB, cap, lampI: 7, parent: scene });
@@ -89,6 +89,6 @@ export default async function build({ renderer, w, h }) {
   crownTree(-8, -20, { h: 14, crown: 5.6, kind: 'neem', seed: 61 }, scene); crownTree(9, -21, { h: 14, crown: 5.6, kind: 'umbrella', seed: 62 }, scene);
   streetLamp({ x: -14, z: 11.0, h: 7.5, arm: 1.7, dir: 1, parent: scene });
 
-  const camera = cam({ pos: [-1.8, 1.7, 25], target: [0.2, 1.7, 0], focal: 36, shift: 0.2, w, h });
+  const camera = cam({ pos: [-1.8, 1.7, 22], target: [0.2, 1.7, 0], focal: 36, shift: 0.2, w, h });
   return { scene, camera, exposure: 0.44, aoRadius: 0.8, aoStrength: 1.0, grade: { contrast: 1.12, saturation: 1.1, vignette: 0.24, grain: 0.015, warm: 0.05 } };
 }
