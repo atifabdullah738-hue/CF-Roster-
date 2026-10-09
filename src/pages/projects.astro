@@ -1,0 +1,15 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import ProjectGallery from '../components/ProjectGallery.astro';
+import CtaBand from '../components/CtaBand.astro';
+---
+<Layout title="Projects Gallery" description="Gallery of Pakistani home designs by Asif Builders: modern 5 Marla, 10 Marla and 1 Kanal houses, traditional and luxury facades, interiors, rooftop designs and construction stages.">
+  <PageHero crumb="Projects" eyebrow="Projects gallery" title="Pakistani home designs and construction stages" lead="Filter by plot size, style, interiors or construction stage, and tap any image to view it full-screen." />
+  <section class="section" aria-label="Project gallery">
+    <div class="container">
+      <ProjectGallery />
+    </div>
+  </section>
+  <CtaBand title="Want a home like one of these?" text="Share your plot size and preferences — we’ll discuss design options, scope and the next steps." />
+</Layout>

@@ -1,0 +1,27 @@
+---
+import { telHref, waHref } from '../lib/contact';
+import type { Person } from '../data/site';
+import Icon from './Icon.astro';
+interface Props { person: Person; showWhatsApp?: boolean; light?: boolean; class?: string }
+const { person, showWhatsApp = true, light = false } = Astro.props;
+const tel = telHref(person);
+const wa = showWhatsApp ? waHref(person, `Assalam o Alaikum ${person.name}, I would like to enquire about construction with Asif Builders.`) : null;
+---
+<div class:list={['pc', { 'pc--light': light }, Astro.props.class]}>
+  {tel ? (
+    <a class="pc__num" href={tel} aria-label={`Call ${person.name}, ${person.title}, on ${person.phone}`}><Icon name="phone" size={18} /> {person.phone}</a>
+  ) : (
+    <span class="pc__num pc__num--plain"><Icon name="phone" size={18} /> {person.phone}{person.phoneNote && <em> · {person.phoneNote}</em>}</span>
+  )}
+  {wa && <a class="pc__wa" href={wa} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${person.name}`}><Icon name="whatsapp" size={18} /> WhatsApp</a>}
+</div>
+<style>
+  .pc { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+  .pc__num { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; text-decoration: none; color: var(--navy-900); font-variant-numeric: tabular-nums; }
+  a.pc__num:hover { color: var(--brass-700); }
+  .pc__num--plain em { font-weight: 500; font-style: normal; font-size: .85em; color: var(--muted); }
+  .pc__wa { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: .9rem; text-decoration: none; color: #178a45; }
+  .pc__wa:hover { text-decoration: underline; }
+  .pc--light .pc__num { color: #fff; } .pc--light a.pc__num:hover { color: var(--brass); }
+  .pc--light .pc__num--plain em { color: #aab5c5; } .pc--light .pc__wa { color: #5fe09a; }
+</style>

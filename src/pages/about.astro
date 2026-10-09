@@ -1,0 +1,97 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import ArtImage from '../components/ArtImage.astro';
+import LeadershipCards from '../components/LeadershipCards.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import { site, ceo, vp } from '../data/site';
+
+const pillars = [
+  { icon: 'compass', title: 'Our Mission', text: 'To build well-planned, durable homes for Pakistani families, and to make the experience of building clear, honest and stress-free from the first consultation to the day we hand over the keys.' },
+  { icon: 'badge', title: 'Our Vision', text: 'To be a residential builder that homeowners recommend for the quality of its work, the clarity of its communication and the care it takes with every project, large or small.' },
+  { icon: 'layers', title: 'Our Construction Philosophy', text: 'A good house is planned before it is built. We design around how a family lives, choose materials suited to the climate and budget, and supervise each stage so quality is built in — not patched in later.' },
+  { icon: 'shield', title: 'Our Commitment to Quality', text: 'Correct methods, proper supervision, tested services and a final inspection before handover. We explain what we are doing and why, and we put the scope and specification in writing.' },
+] as const;
+const values = [
+  ['Integrity', 'We say what we will do, and we do what we say.'],
+  ['Craftsmanship', 'Straight lines, clean joints and finishes that hold up over time.'],
+  ['Transparency', 'Clear scope, clear costing and regular progress updates.'],
+  ['Client focus', 'Your family’s needs and budget shape every decision.'],
+];
+---
+<Layout title="About Us" description="About Asif Builders — our mission, vision, construction philosophy and leadership: Muhammad Asif (CEO) and Abdullah Asif (Vice President).">
+  <PageHero crumb="About Us" eyebrow="About Asif Builders" title="Homes built on careful planning and honest work." lead={`${site.name} is a residential construction company focused on designing, building and renovating homes for Pakistani families.`} />
+
+  <section class="section" aria-labelledby="intro-title">
+    <div class="container intro">
+      <div class="reveal">
+        <p class="eyebrow">Who we are</p>
+        <h2 id="intro-title">A builder you can talk to, from the first idea to the final handover</h2>
+        <p>{site.name} designs and builds houses, residential buildings and renovations — from compact 5 Marla homes to 1 Kanal villas. We handle everything from house design and grey structure to finishing and complete turnkey construction, or any single stage you need.</p>
+        <p>We believe building a home should not feel confusing. That is why we start with a conversation, put the scope in writing, keep you updated through every stage, and stay reachable — directly through our leadership team.</p>
+      </div>
+      <div class="intro__media reveal">
+        <ArtImage name="progress-completed" alt="A finished modern home with a tidy lawn, ready for handover" sizes="(min-width: 900px) 540px, 100vw" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--cream" aria-labelledby="lead-title">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Leadership</p>
+        <h2 id="lead-title">Meet the people behind {site.name}</h2>
+      </div>
+      <LeadershipCards />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="pillars-title">
+    <div class="container">
+      <div class="section-head section-head--center reveal">
+        <p class="eyebrow">What drives us</p>
+        <h2 id="pillars-title">Mission, vision and philosophy</h2>
+      </div>
+      <div class="grid grid--2">
+        {pillars.map((p, i) => (
+          <article class="pillar reveal" style={`--d:${(i % 2) * 90}ms`}>
+            <span class="pillar__icon"><Icon name={p.icon} size={28} /></span>
+            <h3>{p.title}</h3>
+            <p>{p.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--navy" aria-labelledby="values-title">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Our values</p>
+        <h2 id="values-title">How we work every day</h2>
+      </div>
+      <div class="grid grid--4">
+        {values.map(([t, d], i) => (
+          <div class="value reveal" style={`--d:${i * 80}ms`}><span>0{i + 1}</span><h3>{t}</h3><p>{d}</p></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CtaBand title={`Speak with ${ceo.name} or ${vp.name}`} text="Tell us about your plot and your plans. We’ll discuss your requirements and the best way forward." />
+</Layout>
+
+<style>
+  .intro { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 6vw, 80px); align-items: center; }
+  .intro__media { border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg); }
+  .intro__media :global(img) { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+  .pillar { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-sm); }
+  .pillar__icon { width: 56px; height: 56px; border-radius: 16px; background: var(--navy-900); color: var(--brass); display: grid; place-items: center; margin-bottom: 18px; }
+  .pillar p { color: var(--muted); margin: 0; }
+  .grid--4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+  .value { padding: 26px; border-top: 3px solid var(--brass); background: rgb(255 255 255 / .04); border-radius: 0 0 var(--radius) var(--radius); }
+  .value span { font-family: var(--font-display); color: var(--brass); font-size: 1.5rem; }
+  .value p { color: #b7c2d2; margin: 0; }
+  @media (max-width: 900px) { .intro { grid-template-columns: 1fr; } }
+</style>

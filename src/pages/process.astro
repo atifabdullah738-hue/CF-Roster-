@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import ProcessSteps from '../components/ProcessSteps.astro';
+import CtaBand from '../components/CtaBand.astro';
+import ArtImage from '../components/ArtImage.astro';
+---
+<Layout title="Our Process" description="How Asif Builders works: consultation, site visit, design and planning, costing, grey structure, finishing and handover.">
+  <PageHero crumb="Our Process" eyebrow="Our process" title="From first conversation to handover, step by step" lead="A predictable process removes the stress from building. Here is how a typical project with us runs." />
+  <section class="section section--cream" aria-label="Project stages">
+    <div class="container wrap">
+      <ProcessSteps />
+      <aside class="side reveal" aria-label="Good to know">
+        <ArtImage name="elevation-drawing" alt="Blueprint-style front elevation drawing" sizes="(min-width: 900px) 380px, 100vw" />
+        <div class="side__body">
+          <h2>Every project is different</h2>
+          <p>Timelines and costs depend on plot size, design, materials and scope. After the site visit and design stage, we put the scope, specification, cost and payment schedule in writing, so you know exactly what to expect before construction begins.</p>
+          <p>Only need part of the journey — design only, grey structure only, or finishing only? We can start or stop at the stage that suits you.</p>
+          <a class="btn btn--primary" href="/contact#inquiry">Start with a free consultation</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+  <CtaBand />
+</Layout>
+<style>
+  .wrap { display: grid; grid-template-columns: 1.5fr 1fr; gap: clamp(28px, 5vw, 64px); align-items: start; }
+  .side { position: sticky; top: calc(var(--header-h) + 24px); background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); }
+  .side :global(img) { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+  .side__body { padding: 26px; } .side__body h2 { font-size: 1.5rem; } .side__body p { color: var(--muted); font-size: .98rem; }
+  @media (max-width: 960px) { .wrap { grid-template-columns: 1fr; } .side { position: static; } }
+</style>

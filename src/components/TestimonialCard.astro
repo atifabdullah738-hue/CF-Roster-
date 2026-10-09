@@ -1,0 +1,19 @@
+---
+import type { Testimonial } from '../data/testimonials';
+import Icon from './Icon.astro';
+interface Props { t: Testimonial; delay?: number }
+const { t, delay = 0 } = Astro.props;
+---
+<figure class="tcard reveal" style={`--d:${delay}ms`}>
+  {t.placeholder && <span class="tcard__flag">Placeholder — not a real review</span>}
+  <Icon name="quote" size={34} />
+  <blockquote>{t.quote}</blockquote>
+  <figcaption><strong>{t.name}</strong><span>{t.detail}</span></figcaption>
+</figure>
+<style>
+  .tcard { margin: 0; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 34px 28px 28px; position: relative; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 14px; color: var(--brass); }
+  .tcard__flag { position: absolute; top: 14px; right: 14px; background: #fff4d6; color: #7a5a00; border: 1px dashed var(--brass-600); font-size: .7rem; font-weight: 700; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; }
+  blockquote { margin: 0; color: var(--ink); font-size: 1.04rem; font-style: italic; flex: 1; }
+  figcaption { display: grid; border-top: 1px solid var(--line); padding-top: 14px; }
+  figcaption strong { color: var(--navy-900); } figcaption span { color: var(--muted); font-size: .9rem; }
+</style>

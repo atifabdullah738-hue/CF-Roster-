@@ -1,0 +1,62 @@
+---
+import { nav, site, ceo, vp } from '../data/site';
+import { services } from '../data/services';
+import Logo from './Logo.astro';
+import PersonContact from './PersonContact.astro';
+import Icon from './Icon.astro';
+const year = new Date().getFullYear();
+---
+<footer class="footer">
+  <div class="container footer__grid">
+    <div class="footer__brand">
+      <a href="/" aria-label={`${site.name} — home`}><Logo light /></a>
+      <p>{site.description}</p>
+    </div>
+    <nav aria-label="Footer navigation">
+      <h2 class="footer__h">Explore</h2>
+      <ul>{nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}</ul>
+    </nav>
+    <nav aria-label="Footer services">
+      <h2 class="footer__h">Services</h2>
+      <ul>
+        {services.slice(0, 6).map((s) => <li><a href={`/services#${s.slug}`}>{s.title}</a></li>)}
+        <li><a href="/services">All services →</a></li>
+      </ul>
+    </nav>
+    <div>
+      <h2 class="footer__h">Contact</h2>
+      <ul class="footer__contact">
+        {[ceo, vp].map((p) => (
+          <li><strong>{p.name}</strong><span class="footer__role">{p.title}</span><PersonContact person={p} light /></li>
+        ))}
+        <li class="footer__addr"><Icon name="pin" size={18} />
+          {site.address ? <span>{site.address.lines.join(', ')}, {site.address.city}</span> : <span>Office address will be published here soon.</span>}
+        </li>
+        {site.email && <li><Icon name="mail" size={18} /> <a href={`mailto:${site.email}`}>{site.email}</a></li>}
+      </ul>
+    </div>
+  </div>
+  <div class="footer__bar">
+    <div class="container footer__bar-in">
+      <span>© {year} {site.name}. All rights reserved.</span>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </div>
+</footer>
+<style>
+  .footer { background: var(--navy-950); color: #b7c2d2; font-size: .96rem; }
+  .footer__grid { display: grid; grid-template-columns: 1.4fr .8fr 1fr 1.3fr; gap: clamp(28px, 4vw, 56px); padding-block: clamp(48px, 7vw, 80px); }
+  .footer__brand p { margin-top: 18px; max-width: 34ch; }
+  .footer__h { font-family: var(--font-body); font-size: .8rem; letter-spacing: .16em; text-transform: uppercase; color: var(--brass); margin-bottom: 18px; font-weight: 700; }
+  .footer ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .footer a { color: #d6deea; text-decoration: none; } .footer a:hover { color: var(--brass); text-decoration: underline; }
+  .footer__contact { gap: 18px !important; }
+  .footer__contact strong { color: #fff; display: block; }
+  .footer__role { display: block; font-size: .85rem; color: #8fa0b6; margin-bottom: 4px; }
+  .footer__addr { display: flex; gap: 10px; align-items: flex-start; }
+  .footer__addr :global(svg) { flex: none; margin-top: 3px; color: var(--brass); }
+  .footer__bar { border-top: 1px solid rgb(255 255 255 / .1); }
+  .footer__bar-in { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 20px; font-size: .88rem; }
+  @media (max-width: 980px) { .footer__grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .footer__grid { grid-template-columns: 1fr; } }
+</style>

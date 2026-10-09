@@ -1,0 +1,104 @@
+---
+import { nav, site, ceo, vp } from '../data/site';
+import { telHref } from '../lib/contact';
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(href + '/'));
+const topPeople = [ceo, vp];
+---
+<div class="topbar">
+  <div class="container topbar__in">
+    <span class="topbar__txt">{site.tagline}</span>
+    <span class="topbar__phones">
+      {topPeople.map((p) => {
+        const tel = telHref(p);
+        return tel
+          ? <a href={tel}><Icon name="phone" size={15} /> <span class="topbar__role">{p.title.replace(' (VP)', '')}:</span> {p.phone}</a>
+          : <span><Icon name="phone" size={15} /> <span class="topbar__role">{p.title}:</span> {p.phone}</span>;
+      })}
+    </span>
+  </div>
+</div>
+<header class="header" id="site-header">
+  <div class="container header__in">
+    <a href="/" class="header__logo" aria-label={`${site.name} — home`}><Logo /></a>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <ul>
+        {nav.map((n) => (
+          <li><a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>{n.label}</a></li>
+        ))}
+      </ul>
+      <a class="btn btn--primary btn--sm nav__cta" href="/contact#inquiry">Free Consultation</a>
+    </nav>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
+      <span class="menu-btn__open"><Icon name="menu" size={26} /></span>
+      <span class="menu-btn__close"><Icon name="close" size={26} /></span>
+    </button>
+  </div>
+</header>
+
+<style>
+  .topbar { background: var(--navy-950); color: #c3ccd9; font-size: .85rem; }
+  .topbar__in { display: flex; justify-content: space-between; gap: 16px; padding-block: 8px; align-items: center; }
+  .topbar__phones { display: flex; gap: 22px; flex-wrap: wrap; }
+  .topbar a, .topbar__phones > span { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: #e9edf3; }
+  .topbar a:hover { color: var(--brass); }
+  .topbar__role { color: var(--brass); font-weight: 600; }
+  @media (max-width: 860px) { .topbar__txt { display: none; } .topbar__in { justify-content: center; } .topbar__phones { gap: 6px 16px; justify-content: center; font-size: .8rem; } }
+  @media (max-width: 400px) { .topbar__role { display: none; } }
+
+  .header { position: sticky; top: 0; z-index: 100; background: rgb(250 247 241 / .92); backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--line); transition: box-shadow .3s; }
+  .header.is-scrolled { box-shadow: var(--shadow-sm); }
+  .header__in { display: flex; align-items: center; justify-content: space-between; height: var(--header-h); gap: 16px; }
+  .header__logo { text-decoration: none; }
+  .nav { display: flex; align-items: center; gap: 20px; }
+  .nav ul { display: flex; list-style: none; margin: 0; padding: 0; gap: 2px; }
+  .nav ul a { display: block; padding: 10px 13px; text-decoration: none; font-weight: 500; font-size: .96rem; color: var(--ink); border-radius: 8px; position: relative; }
+  .nav ul a::after { content: ''; position: absolute; left: 13px; right: 13px; bottom: 4px; height: 2px; background: var(--brass); transform: scaleX(0); transform-origin: left; transition: transform .3s; }
+  .nav ul a:hover::after, .nav ul a[aria-current='page']::after { transform: scaleX(1); }
+  .nav ul a[aria-current='page'] { color: var(--navy-900); font-weight: 700; }
+  .menu-btn { display: none; background: none; border: 0; color: var(--navy-900); width: 48px; height: 48px; border-radius: 10px; cursor: pointer; align-items: center; justify-content: center; }
+  .menu-btn__close { display: none; }
+  .menu-btn[aria-expanded='true'] .menu-btn__open { display: none; }
+  .menu-btn[aria-expanded='true'] .menu-btn__close { display: inline-flex; }
+  .menu-btn span { display: inline-flex; }
+
+  @media (max-width: 1080px) {
+    .menu-btn { display: inline-flex; }
+    .nav { position: fixed; left: 0; right: 0; bottom: 0; top: var(--nav-top, 112px); background: var(--navy-900); flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 18px; padding: 24px var(--gutter) 40px; overflow-y: auto; transform: translateY(-12px); opacity: 0; visibility: hidden; transition: opacity .25s, transform .25s, visibility .25s; }
+    .nav.is-open { opacity: 1; transform: none; visibility: visible; }
+    .nav ul { flex-direction: column; gap: 0; }
+    .nav ul a { color: #fff; font-family: var(--font-display); font-size: 1.5rem; padding: 14px 4px; border-bottom: 1px solid rgb(255 255 255 / .1); border-radius: 0; }
+    .nav ul a::after { display: none; }
+    .nav ul a[aria-current='page'] { color: var(--brass); }
+    .nav__cta { align-self: stretch; }
+  }
+</style>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>('.menu-btn')!;
+  const nav = document.getElementById('primary-nav')!;
+  const header = document.getElementById('site-header')!;
+
+  const setTop = () => {
+    // Offset the mobile menu below the visible part of the (sticky) header.
+    const bottom = Math.max(header.getBoundingClientRect().bottom, 0);
+    nav.style.setProperty('--nav-top', `${bottom}px`);
+  };
+  const setOpen = (open: boolean) => {
+    if (open) setTop();
+    nav.classList.toggle('is-open', open);
+    btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    document.body.style.overflow = open ? 'hidden' : '';
+  };
+  btn.addEventListener('click', () => setOpen(btn.getAttribute('aria-expanded') !== 'true'));
+  nav.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav.classList.contains('is-open')) { setOpen(false); btn.focus(); } });
+  window.matchMedia('(min-width: 1081px)').addEventListener('change', (m) => { if (m.matches) setOpen(false); });
+
+  const onScroll = () => { header.classList.toggle('is-scrolled', window.scrollY > 8); if (nav.classList.contains('is-open')) setTop(); };
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+</script>
