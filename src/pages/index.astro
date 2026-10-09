@@ -11,9 +11,7 @@ import CtaBand from '../components/CtaBand.astro';
 import { services } from '../data/services';
 import { testimonials } from '../data/testimonials';
 import { ceo, vp, site } from '../data/site';
-import { art } from '../lib/images';
 
-const heroImg = art('hero-home');
 const trust = [
   { icon: 'compass', title: 'Design to handover', text: 'Planning, design, construction and finishing under one team.' },
   { icon: 'layers', title: 'Grey structure to turnkey', text: 'Choose a complete build or only the stage you need.' },
@@ -23,7 +21,7 @@ const trust = [
 ---
 <Layout description="Asif Builders — residential construction in Pakistan: house design, grey structure, complete turnkey construction, renovation and maintenance for 5 Marla, 10 Marla and 1 Kanal homes.">
   <section class="hero" aria-labelledby="hero-title">
-    <ArtImage name="hero-home" alt="" class="hero__bg" sizes="100vw" loading="eager" fetchpriority="high" />
+    <ArtImage name="hero-home" alt="" class="hero__bg" sizes="100vw" widths={[800, 1280, 1920, 2560, 3840]} loading="eager" fetchpriority="high" />
     <div class="hero__shade" aria-hidden="true"></div>
     <div class="container hero__in">
       <div class="hero__copy">

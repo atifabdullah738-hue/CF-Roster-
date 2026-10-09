@@ -17,9 +17,9 @@ export type Category =
   | 'Traditional & Luxury'
   | 'Interiors'
   | 'Double-storey & Rooftop'
-  | 'Construction Progress'
+  | 'Construction Stages'
   | 'Plans & Elevations'
-  | 'Completed Homes';
+  | 'Finished Home Concepts';
 
 export interface Project {
   id: string;
@@ -47,8 +47,8 @@ export const categories: Category[] = [
   'Traditional & Luxury',
   'Double-storey & Rooftop',
   'Interiors',
-  'Construction Progress',
-  'Completed Homes',
+  'Construction Stages',
+  'Finished Home Concepts',
   'Plans & Elevations',
 ];
 
@@ -205,7 +205,7 @@ export const projects: Project[] = [
     caption: 'RCC frame, brickwork and scaffolding — the structural stage before finishing begins.',
     image: 'progress-grey-structure',
     alt: 'Construction site showing a reinforced concrete grey structure with scaffolding and brick piles',
-    categories: ['Construction Progress'],
+    categories: ['Construction Stages'],
     illustrative: ill,
   },
   {
@@ -214,16 +214,16 @@ export const projects: Project[] = [
     caption: 'Plastering, painting and window fitting as the home takes its final shape.',
     image: 'progress-finishing',
     alt: 'House in the finishing stage with plastered walls, scaffolding and paint buckets',
-    categories: ['Construction Progress'],
+    categories: ['Construction Stages'],
     illustrative: ill,
   },
   {
     id: 'completed-home',
-    title: 'Handover-Ready Home',
-    caption: 'The finished result: a tidy lawn, finished facade and a home ready to move into.',
+    title: 'Finished Home Concept',
+    caption: 'A concept of the finished result: tidy lawn, completed facade and a home ready to move into.',
     image: 'progress-completed',
-    alt: 'Finished house in warm daylight with a tidy lawn, ready for handover',
-    categories: ['Completed Homes', 'Contemporary'],
+    alt: 'Concept render of a finished house in warm daylight with a tidy lawn',
+    categories: ['Finished Home Concepts', 'Contemporary'],
     illustrative: ill,
   },
   {

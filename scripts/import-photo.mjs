@@ -15,11 +15,13 @@ import { resolve, basename, extname, join } from 'node:path';
 import sharp from 'sharp';
 
 const ART = resolve('src/assets/art');
-const slots = readdirSync(ART).filter((f) => f.endsWith('.svg')).map((f) => f.replace('.svg', '')).sort();
+const RENDER = resolve('src/assets/render');
+// A slot is any image name that has a concept render or a drawing today.
+const slots = [...new Set([...readdirSync(RENDER).filter((f) => f.endsWith('.webp')), ...readdirSync(ART).filter((f) => f.endsWith('.svg'))].map((f) => f.replace(/\.(webp|svg)$/, '')))].sort();
 const [a, slot] = process.argv.slice(2);
 
 const IMG = /\.(jpe?g|png|webp|avif|tiff?)$/i;
-const hasPhoto = (sl) => ['webp', 'jpg', 'jpeg', 'png', 'avif'].some((e) => existsSync(`${ART}/${sl}.${e}`));
+const hasPhoto = (sl) => ['webp', 'jpg', 'jpeg', 'png', 'avif'].some((e) => existsSync(`${ART}/${sl}.${e}`)); // photos live in src/assets/art
 
 if (a === '--list' || !a) {
   console.log('Available slots:\n  ' + slots.join('\n  ') + '\n\nUsage: node scripts/import-photo.mjs <image|folder> [slot]');
@@ -28,7 +30,7 @@ if (a === '--list' || !a) {
 if (a === '--status') {
   const todo = slots.filter((s) => !hasPhoto(s));
   console.log(`${slots.length - todo.length}/${slots.length} slots use real photos.`);
-  if (todo.length) console.log('Still illustrations:\n  ' + todo.join('\n  '));
+  if (todo.length) console.log('Still concept renders / drawings:\n  ' + todo.join('\n  '));
   process.exit(0);
 }
 if (!existsSync(a)) { console.error(`Not found: ${a}`); process.exit(1); }

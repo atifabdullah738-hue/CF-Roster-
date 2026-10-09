@@ -12,7 +12,7 @@ const { service, delay = 0 } = Astro.props;
     <h3>{service.title}</h3>
     <p>{service.summary}</p>
     <div class="actions">
-      <a class="link-arrow" href={`/services#${service.slug}`}>Learn more</a>
+      <a class="link-arrow" href={`/services#${service.slug}`}>Learn more<span class="visually-hidden"> about {service.title}</span></a>
       <a class="btn btn--outline btn--sm" href={`/contact?service=${service.slug}#inquiry`} aria-label={`Enquire about ${service.title}`}>Enquire</a>
     </div>
   </div>

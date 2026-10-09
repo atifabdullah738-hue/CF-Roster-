@@ -9,7 +9,7 @@ const wa = whatsappContact();
 const waBase = wa ? waHref(wa) : null;
 const configured = Boolean(site.formEndpoint);
 ---
-<form class="form" id="inquiry-form" novalidate data-endpoint={site.formEndpoint} data-wa={waBase ?? ''} data-wa-name={wa?.name ?? ''} aria-labelledby="inquiry-title">
+<form class="form" id="inquiry-form" novalidate data-endpoint={site.formEndpoint} data-access-key={site.formAccessKey} data-wa={waBase ?? ''} data-wa-name={wa?.name ?? ''} aria-labelledby="inquiry-title">
   <h2 id="inquiry-title">Request a free consultation</h2>
   <p class="form__intro">Share a few details about your project and we will use them to discuss your requirements. Fields marked <span aria-hidden="true">*</span><span class="visually-hidden">with an asterisk</span> are required.</p>
 
@@ -189,7 +189,8 @@ const configured = Boolean(site.formEndpoint);
 
       submitBtn.disabled = true; btnLabel.textContent = 'Sending…';
       try {
-        const payload = { name: val('name'), phone: val('phone'), email: val('email'), service: serviceLabel(), propertySize: val('size'), location: val('location'), details: val('details'), source: location.href };
+        const accessKey = form.dataset.accessKey || '';
+        const payload = { ...(accessKey ? { access_key: accessKey, subject: 'New website inquiry — Asif Builders' } : {}), name: val('name'), phone: val('phone'), email: val('email'), service: serviceLabel(), propertySize: val('size'), location: val('location'), details: val('details'), source: location.href };
         const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error(String(res.status));
         form.reset();

@@ -33,7 +33,7 @@ const usedCats = categories.filter((c) => allProjects.some((p) => p.categories.i
   <ul class="gallery__grid">
     {items.map(({ p, full, kind }, i) => (
       <li class="gcard reveal" style={`--d:${(i % 3) * 80}ms`} data-cats={JSON.stringify(p.categories)}>
-        <button type="button" class="gcard__btn" data-full={full} data-title={p.title} data-caption={p.caption} data-alt={p.alt} data-illustrative={String(p.illustrative)} data-kind={kind} aria-label={`View larger: ${p.title}`}>
+        <button type="button" class="gcard__btn" data-full={full} data-title={p.title} data-caption={p.caption} data-alt={p.alt} data-illustrative={String(p.illustrative)} data-kind={kind}>
           <span class="gcard__media"><ArtImage name={p.image} alt={p.alt} sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw" /></span>
           <span class="gcard__tags">
             {p.size && <span class="tag">{p.size}</span>}
@@ -43,6 +43,7 @@ const usedCats = categories.filter((c) => allProjects.some((p) => p.categories.i
           <span class="gcard__cap">
             <strong>{p.title}</strong>
             <span>{p.style ?? p.categories[0]}{p.location ? ` · ${p.location}` : ''}</span>
+            <span class="visually-hidden">— view larger</span>
           </span>
         </button>
         {p.illustrative && <span class="gcard__ill" title={kind === 'render' ? 'Computer-generated concept render — not a photograph of a completed project' : 'Illustration — not a photograph of a completed project'}>{kind === 'render' ? 'Concept render' : 'Illustration'}</span>}

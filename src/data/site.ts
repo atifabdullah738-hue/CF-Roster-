@@ -63,6 +63,8 @@ export const site = {
 
   /** Contact-form endpoint (see .env.example). Empty → form validates but does not claim delivery. */
   formEndpoint: (import.meta.env.PUBLIC_FORM_ENDPOINT as string | undefined) || '',
+  /** Optional public access key for Web3Forms-style services (it is designed to be public). */
+  formAccessKey: (import.meta.env.PUBLIC_FORM_ACCESS_KEY as string | undefined) || '',
   /** Optional Google Maps embed URL. */
   mapEmbedUrl: (import.meta.env.PUBLIC_MAP_EMBED_URL as string | undefined) || '',
 };

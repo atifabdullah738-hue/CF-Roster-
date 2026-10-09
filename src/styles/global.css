@@ -81,8 +81,8 @@ ul { padding-left: 1.2em; }
 .btn--outline:hover { background: var(--navy-900); color: #fff; border-color: var(--navy-900); }
 .btn--light { border-color: rgb(255 255 255 / .75); color: #fff; background: rgb(255 255 255 / .06); backdrop-filter: blur(4px); }
 .btn--light:hover { background: #fff; color: var(--navy-900); }
-.btn--wa { background: #1fa855; color: #fff; }
-.btn--wa:hover { background: #178a45; }
+.btn--wa { background: #0d7a38; color: #fff; }
+.btn--wa:hover { background: #0a6630; }
 .btn--sm { padding: 11px 20px; min-height: 44px; font-size: .95rem; }
 .btn svg { width: 20px; height: 20px; flex: none; }
 .btn[disabled] { opacity: .65; cursor: progress; transform: none; }
@@ -119,5 +119,5 @@ ul { padding-left: 1.2em; }
 .page-hero h1 { color: #fff; max-width: 18ch; }
 .page-hero .lead { color: #c3ccd9; }
 .breadcrumb { font-size: .9rem; color: #aab5c5; margin-bottom: 18px; }
-.breadcrumb a { text-decoration: none; color: var(--brass); }
-.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb a { text-decoration: underline; text-underline-offset: 3px; color: var(--brass); }
+.breadcrumb a:hover { text-decoration-thickness: 2px; }

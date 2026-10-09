@@ -1,5 +1,5 @@
 // Procedural architectural illustrations for Asif Builders.
-// Run:  node scripts/art/exteriors.mjs   ->  writes SVGs to src/assets/art/
+// Run:  node scripts/art/exteriors.mjs   ->  writes SVGs to archive/illustrations/ (kept as an archive; not part of the website build)
 // Pure string-building SVG, no dependencies. Every file uses unique id prefixes.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const want = process.argv.slice(2);
 const scenes = {};
 setTimeout(() => { for (const [k, fn] of Object.entries(scenes)) if (!want.length || want.some((w) => k.includes(w))) fn(); }, 0);
-const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../src/assets/art');
+const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../archive/illustrations');
 
 /* ------------------------------------------------------------------ */
 /* Brand palette                                                       */

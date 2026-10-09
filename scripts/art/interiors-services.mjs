@@ -1,14 +1,14 @@
 // =============================================================================
 // Asif Builders - procedural SVG illustration set (interiors + services)
 // Run:  node scripts/art/interiors-services.mjs
-// Writes 17 self-contained SVGs (1200x900) into src/assets/art/
+// Writes 17 self-contained SVGs (1200x900) into archive/illustrations/
 // No dependencies. Every file prefixes its <defs> ids so inlining is collision free.
 // =============================================================================
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../src/assets/art');
+const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../archive/illustrations');
 fs.mkdirSync(OUT, { recursive: true });
 
 // ----------------------------------------------------------------- palette
