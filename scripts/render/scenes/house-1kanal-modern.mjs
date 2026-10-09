@@ -168,7 +168,6 @@ export default async function build({ renderer, w, h }) {
   palm(-13.6, 6.2, { h: 8.5, seed: 3, lean: 0.3 }, scene); palm(12.6, 5.4, { h: 7.5, seed: 8, lean: -0.4 }, scene);
   // shade trees across the road (outside frame) cast dappled shadows onto the street
    leafy(tree(-20, 33.5, { h: 7, crown: 3, seed: 43, color: 0x86b04c }, scene));
-  P.car({ x: 12.0, z: 12.7, rot: Math.PI / 2, color: 0x3a4048, parent: scene, y: -0.15 });
   // neighbours
   neighbour({ x0: -36, x1: -16, z: -1, depth: 14, floors: 2, mat: T.plaster(0xd9cfbd, { tileM: 3.4, seed: 12 }), trim: T.plaster(0xf2eee6, { tileM: 3, seed: 15 }), seed: 3, scene });
   neighbour({ x0: 17, x1: 38, z: -2.5, depth: 14, floors: 2, mat: T.plaster(0xc9c1b4, { tileM: 3.4, seed: 17 }), trim: T.plaster(0xeee8dd, { tileM: 3, seed: 18 }), seed: 5, scene });

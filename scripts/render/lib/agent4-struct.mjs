@@ -13,7 +13,8 @@ export const BRICK = { L: 0.229, H: 0.0755, W: 0.114, J: 0.0105, CH: 0.086 };
  *  opts: len,hgt,t(0.23|0.115|0.345), bond('english'|'stretcher'), back(bool: also brick the back face), openings[{u0,u1,v0,v1}],
  *  ranges(j,nCourses)->[[a,b],...] (racking / partial heights), seed, palette({base,dark,light}), topBed, clay/mortar materials.
  */
-export function brickWall({ len, hgt, t = 0.23, bond = 'english', back = false, openings = [], ranges = null, seed = 1, palette = {}, topBed = true, mortarMat, clayMat, parent, startHalf = false, skew = 1 }) {
+export function brickWall({ len, hgt, t = 0.23, bond = 'english', back = false, openings: openings0 = [], chases = [], ranges = null, seed = 1, palette = {}, topBed = true, mortarMat, clayMat, parent, startHalf = false, skew = 1 }) {
+  const openings = openings0.concat(chases);
   const r = rng(seed), g = new THREE.Group(), B = new Mesher(), Mo = new Mesher(), { L, H, W, J, CH } = BRICK;
   const base = palette.base ?? 0x9b5640, dark = palette.dark ?? 0x6c4338, light = palette.light ?? 0xb97a58, pDark = palette.pDark ?? 0.06, pLight = palette.pLight ?? 0.12;
   const nC = Math.floor((hgt + J) / CH), colorOf = () => { const k = r(); return k < pDark ? tintVar(dark, r, 0.08, 0.1) : k < pDark + pLight ? tintVar(light, r, 0.08, 0.08) : tintVar(base, r, 0.1, 0.08); };
@@ -49,6 +50,7 @@ export function brickWall({ len, hgt, t = 0.23, bond = 'english', back = false, 
       addBrick(it.a, it.b, v0, 0, dF, hd, false);
       if (back && !(hd && t <= L + 0.01)) { const off = bond === 'english' ? 0 : 0; void off; addBrick(it.a, it.b, v0, 0, Math.min(W, t), hd, true); }
     }
+    for (const c of chases) { if (v0 + CH <= c.v0 || v0 >= c.v1) continue; const dd = c.d ?? 0.035, zc = (-dd + (-t + 0.007)) / 2; B.box((c.u0 + c.u1) / 2 + 0.004, v0 + CH / 2 - 0.004, zc, c.u1 - c.u0 - 0.008, CH - 0.004, t - 0.007 - dd, { tile: 0.34, uv: [r(), r()], color: tintVar(0x8a4f3b, r, 0.1, 0.08) }); }
     // mortar runs
     const items = c.items.slice().sort((a, b) => a.a - b.a); let run = null; const runs = [];
     for (const it of items) { if (run && it.a - run[1] < 0.02) run[1] = it.b; else { run = [it.a, it.b]; runs.push(run); } }
@@ -64,7 +66,7 @@ export function brickWall({ len, hgt, t = 0.23, bond = 'english', back = false, 
 }
 /** helper: racked (toothed) end — returns ranges fn for brickWall. side: 'left'|'right'|'both' ; maxC = number of courses at full length. */
 export function racked({ len, from = 'right', step = 0.12, maxC = 20, a0 = 0, topC = null }) {
-  return (j, nC) => { const lim = topC ?? nC; if (j >= lim) return []; const d = Math.max(0, (j - (maxC - 1)) * -1) * 0; void d; const back = Math.max(0, (lim - 1 - j)) * step; return from === 'right' ? [[a0, Math.max(a0 + 0.3, len - back)]] : from === 'left' ? [[Math.min(len - 0.3, a0 + back), len]] : [[a0 + back * 0.5, len - back * 0.5]]; };
+  return (j, nC) => { const lim = topC ?? nC; if (j >= lim) return []; const back = j * step; return from === 'right' ? [[a0, Math.max(a0 + 0.3, len - back)]] : from === 'left' ? [[Math.min(len - 0.3, a0 + back), len]] : [[a0 + back * 0.5, len - back * 0.5]]; };
 }
 /** helper: place a local-space object (group) at world pos with yaw (radians). */
 export function place(obj, x, y, z, ry = 0, parent) { obj.position.set(x, y, z); obj.rotation.y = ry; parent?.add(obj); return obj; }
@@ -79,7 +81,7 @@ export function column({ x, z, w = 0.23, d = 0.35, y0 = 0, y1, mat, parent, rot 
 }
 
 // ------------------------------------------------------------------------------------------------ REBAR
-const RC = { fresh: lin(0x3b3e42), rustL: lin(0x9a5a30), rustD: lin(0x6d3d25), dust: lin(0x8b7660), orange: lin(0xb4693a) };
+const RC = { fresh: lin(0x5a5d61), rustL: lin(0xaa6a3c), rustD: lin(0x6d3d25), dust: lin(0x8b7660), orange: lin(0xb4693a) };
 const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 export class Rebar {
   constructor(seed = 1, rust = 0.6) { this.m = new Mesher(); this.ties = new Mesher(); this.r = rng(seed); this.rust = rust; }

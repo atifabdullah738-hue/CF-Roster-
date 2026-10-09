@@ -58,7 +58,7 @@ export default async function build({ renderer, w, h }) {
   I.sconce(scene, { x: X1 - 0.01, y: 1.85, z: -2.7, rotY: -Math.PI / 2 }); I.sconce(scene, { x: X1 - 0.01, y: 1.85, z: 0.2, rotY: -Math.PI / 2 });
   // ---------- rug ----------
   const rug = rugMat({ kind: 'persian', w: 2.7, d: 3.7, pal: { field: 0x223250, red: 0x9d3b2b, ivory: 0xe8dec6, gold: 0xc6a05a, teal: 0x2f6c70, dark: 0x131a2c }, seed: 7 });
-  const rg = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.014, 3.7), rug); rg.position.set(-0.35, 0.007, -0.35); rg.receiveShadow = true; scene.add(rg);
+  const rg = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.014, 3.7), rug); rg.position.set(-0.35, 0.007, -0.6); rg.receiveShadow = true; scene.add(rg);
   // (BoxGeometry UVs are 0..1 per face: top face carries the full pattern)
 
   // ---------- seating ----------
@@ -66,7 +66,7 @@ export default async function build({ renderer, w, h }) {
   const teal = fabricMat({ color: 0x2e5a60, kind: 'velvet', tileM: 0.4, seed: 12 }), rust = fabricMat({ color: 0xa4512f, kind: 'velvet', tileM: 0.4, seed: 13 }), mustard = fabricMat({ color: 0xc79a3a, kind: 'linen', tileM: 0.4, seed: 14 }), cream = fabricMat({ color: 0xece3d1, kind: 'linen', tileM: 0.4, seed: 15 });
   const sofa = I.sofaL({ len: 3.1, depth: 0.98, chaise: 1.55, cw: 1.0, side: 'l', fabric: sofaFab, seatN: 2, seed: 3,
     pillows: [{ x: -0.3, z: -0.06, y: 0.68, w: 0.48, h: 0.46, mat: teal, rotZ: 0.1 }, { x: 0.12, z: -0.04, y: 0.68, w: 0.44, h: 0.44, mat: rust, rotZ: -0.12, rotY: 0.2 }, { x: 0.8, z: -0.06, y: 0.68, w: 0.46, h: 0.44, mat: mustard, rotZ: 0.2 }, { x: -1.15, z: 0.0, y: 0.66, w: 0.44, h: 0.42, mat: cream, rotZ: -0.15 }] });
-  place(sofa, -1.85, -0.35, Math.PI / 2); scene.add(sofa);
+  place(sofa, -1.85, -0.75, Math.PI / 2); scene.add(sofa);
   const chairMat = leatherMat({ color: 0x8c502e, tileM: 0.5 });
   for (const [z, ry] of [[-1.5, -Math.PI / 2 + 0.25], [0.7, -Math.PI / 2 - 0.2]]) { const ac = I.armchair({ fabric: chairMat, seed: 4 }); place(ac, 1.55, z, ry); scene.add(ac); }
   // side table between chairs

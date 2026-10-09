@@ -389,3 +389,23 @@ export function lawnMat({ color = 0x93b055, tileM = 3.2, seed = 61, contrast = 1
   }
   const [map, bm] = _lw.get(key); const m = new THREE.MeshStandardMaterial({ map, bumpMap: bm, bumpScale: 1.2, roughness: 1, color: 0xffffff }); m.userData.tileM = tileM; return m;
 }
+
+/** Generic hatchback/sedan (no brand). Faces +X, centred at (x,z) on y=0. Rotate with ry. */
+export function car(parent, x, z, ry = 0, { color = 0x8a8f94, len = 4.3, wid = 1.74, glowLights = 0 } = {}) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry;
+  const L = len, hh = 1.0;
+  const prof = new THREE.Shape(); prof.moveTo(-L / 2, 0.32); prof.lineTo(-L / 2 + 0.05, 0.62); prof.lineTo(-L / 2 + 0.2, 0.86); prof.lineTo(L * 0.18, 0.9); prof.lineTo(L * 0.34, 0.74); prof.lineTo(L / 2 - 0.05, 0.66); prof.lineTo(L / 2, 0.45); prof.lineTo(L / 2 - 0.05, 0.32); prof.lineTo(-L / 2, 0.32);
+  const bg = new THREE.ExtrudeGeometry(prof, { depth: wid - 0.3, bevelEnabled: true, bevelThickness: 0.14, bevelSize: 0.14, bevelSegments: 4, curveSegments: 8 }); bg.translate(0, 0, -(wid - 0.3) / 2);
+  const paint = new THREE.MeshPhysicalMaterial({ color, roughness: 0.32, metalness: 0.45, clearcoat: 1, clearcoatRoughness: 0.08, envMap: ENV, envMapIntensity: 1.2 });
+  const body = new THREE.Mesh(bg, paint); body.castShadow = body.receiveShadow = true; g.add(body);
+  const cab = new THREE.Shape(); cab.moveTo(-L * 0.3, 0.84); cab.lineTo(-L * 0.18, 1.34); cab.lineTo(L * 0.1, 1.38); cab.lineTo(L * 0.28, 0.9); cab.lineTo(-L * 0.3, 0.84);
+  const cg = new THREE.ExtrudeGeometry(cab, { depth: wid - 0.62, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.1, bevelSegments: 3 }); cg.translate(0, 0, -(wid - 0.62) / 2);
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0x0f161b, roughness: 0.05, metalness: 0.2, clearcoat: 1, envMap: ENV, envMapIntensity: 1.6 });
+  const cabm = new THREE.Mesh(cg, glass); cabm.castShadow = true; g.add(cabm);
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(L * 0.3, 0.04, wid - 0.5), paint); roof.position.set(-L * 0.04, 1.5, 0); roof.castShadow = true; g.add(roof);
+  const tyre = T.solid(0x111111, { roughness: 0.9 }), rim = T.solid(0xa7aaad, { roughness: 0.3, metalness: 0.8 });
+  for (const sx of [-L * 0.31, L * 0.3]) for (const sz of [-wid / 2 + 0.12, wid / 2 - 0.12]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.33, 0.22, 20), tyre); w.rotation.x = Math.PI / 2; w.position.set(sx, 0.33, sz); w.castShadow = true; g.add(w); const r = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.23, 14), rim); r.rotation.x = Math.PI / 2; r.position.set(sx, 0.33, sz + (sz > 0 ? 0.01 : -0.01)); g.add(r); }
+  const hl = T.emissive(0xfff3d6, glowLights ? 6 : 0.6), tl = T.emissive(0xff2a1a, glowLights ? 4 : 0.5);
+  for (const sz of [-wid / 2 + 0.25, wid / 2 - 0.25]) { boxAt(L / 2 - 0.02, 0.52, sz - 0.18, L / 2 + 0.06, 0.64, sz + 0.18, hl, g, { cast: false }); boxAt(-L / 2 - 0.06, 0.62, sz - 0.18, -L / 2 + 0.02, 0.72, sz + 0.18, tl, g, { cast: false }); }
+  parent?.add(g); return g;
+}

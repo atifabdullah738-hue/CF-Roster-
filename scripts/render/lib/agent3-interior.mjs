@@ -850,4 +850,195 @@ export function sconce(parent, { x, y, z, rotY = 0, color = 0xffd49a, lum = 5, u
   point(g, 0, 0, 0.25, color, lum * 0.25, 4, 1.8); return g;
 }
 
+/* ------------------------------------------------------------------ bedroom */
+/** bed facing +Z (foot toward +Z), headboard at z = -l/2 */
+export function bed({ w = 1.85, l = 2.1, wood, linen, duvet, band = null, throwMat = null, headFab, pillowMat, accent = [], seed = 1, led = 0xffc98a } = {}) {
+  const g = new THREE.Group(), lm = duvet || linen;
+  rbox(g, w + 0.24, 0.22, l + 0.12, 0.03, wood, 0, 0.17, 0.0);                               // platform
+  bx(g, -(w + 0.2) / 2, 0.04, -l / 2, (w + 0.2) / 2, 0.06, l / 2 + 0.04, T.emissive(led, 2.2), { cast: false });
+  glow(g, { kind: 'shadow', w: w + 1.1, h: l + 1.1, color: led, intensity: 0.55, pos: [0, 0.012, 0.0], rot: [-Math.PI / 2, 0, 0] });
+  rbox(g, w, 0.26, l, 0.06, linen, 0, 0.41, 0.0);                                                // mattress
+  const top = 0.54;
+  softBox(g, w + 0.04, 0.14, l * 0.74, lm, 0, top + 0.05, l * 0.13 + 0.02, { r: 0.05, seg: [30, 6, 40], bulge: { y: 0.025 }, wrinkle: 0.012, wfreq: 7, seed, tile: 0.5 });
+  for (const sx of [-1, 1]) softBox(g, 0.06, 0.34, l * 0.72, lm, sx * (w / 2 + 0.005), 0.42, l * 0.13 + 0.02, { r: 0.025, seg: [4, 10, 30], wrinkle: 0.0, seed: seed + 2, bulge: { x: 0.015 }, tile: 0.5 });
+  softBox(g, w + 0.0, 0.05, 0.62, band || linen, 0, top + 0.115, -l / 2 + 0.78, { r: 0.02, seg: [24, 3, 12], bulge: { y: 0.01 }, wrinkle: 0.006, seed: seed + 1, tile: 0.5 });
+  if (throwMat) softBox(g, w * 0.98, 0.05, 0.55, throwMat, 0, top + 0.13, l / 2 - 0.34, { r: 0.02, seg: [24, 3, 12], bulge: { y: 0.01 }, wrinkle: 0.01, seed: seed + 5, tile: 0.4 });
+  // pillows
+  const pw = w / 2 - 0.05;
+  for (const sx of [-1, 1]) {
+    pillow(g, 0.68, 0.46, pillowMat, sx * pw * 0.5, 0.84, -l / 2 + 0.3, { thick: 0.16, rotX: -1.15, rotZ: sx * 0.04, seed: seed + 10 });
+    pillow(g, 0.62, 0.42, pillowMat, sx * pw * 0.5, 0.74, -l / 2 + 0.52, { thick: 0.15, rotX: -1.0, rotZ: -sx * 0.05, seed: seed + 11 });
+  }
+  accent.forEach((a, i) => pillow(g, a.w ?? 0.5, a.h ?? 0.3, a.mat, a.x ?? 0, a.y ?? 0.78, a.z ?? -l / 2 + 0.7, { thick: 0.12, rotX: a.rotX ?? -0.9, rotZ: a.rotZ ?? 0, seed: seed + 20 + i }));
+  // upholstered headboard with vertical channels
+  const hbW = w + 0.9, n = 9, cwid = hbW / n;
+  bx(g, -hbW / 2 - 0.05, 0.1, -l / 2 - 0.12, hbW / 2 + 0.05, 1.75, -l / 2 - 0.06, wood);
+  for (let i = 0; i < n; i++) softBox(g, cwid - 0.012, 1.15, 0.09, headFab, -hbW / 2 + cwid * (i + 0.5), 1.12, -l / 2 - 0.0, { r: 0.04, seg: [6, 18, 3], bulge: { z: 0.05 }, seed: seed + 30 + i, tile: 0.5 });
+  return g;
+}
+export function nightstand({ wood, w = 0.5, d = 0.4, y = 0.3, h = 0.34, brass = null, stone = null } = {}) {
+  const g = new THREE.Group(), bm = brass || brassMat(0xc2a050, 0.28);
+  I_frontGrid(g, { x0: -w / 2, x1: w / 2, y0: y, y1: y + h, z: d / 2 - 0.02, t: 0.02, cols: [1], rows: [1, 1], mat: wood, depth: d - 0.04, carcass: wood, gap: 0.006 });
+  bx(g, -w / 2 - 0.01, y + h, -d / 2, w / 2 + 0.01, y + h + 0.025, d / 2, stone || wood);
+  for (const k of [0.25, 0.75]) bx(g, -0.07, y + h * (1 - k) - 0.003, d / 2, 0.07, y + h * (1 - k) + 0.003, d / 2 + 0.02, bm);
+  return g;
+}
+function I_frontGrid(...a) { return frontGrid(...a); }
+/** moulded wall panelling (shaker boxes) */
+export function wallMoulding(parent, { x0, x1, y0, y1, z, cols = 3, gap = 0.12, t = 0.02, mat, face = '+z', rows = 1 }) {
+  const cw = (x1 - x0 - gap * (cols + 1)) / cols, rh = (y1 - y0 - gap * (rows + 1)) / rows;
+  for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+    const xa = x0 + gap + i * (cw + gap), ya = y0 + gap + j * (rh + gap), m = 0.03;
+    bx(parent, xa, ya, z, xa + cw, ya + m, z + t, mat); bx(parent, xa, ya + rh - m, z, xa + cw, ya + rh, z + t, mat); bx(parent, xa, ya, z, xa + m, ya + rh, z + t, mat); bx(parent, xa + cw - m, ya, z, xa + cw, ya + rh, z + t, mat);
+  }
+}
+/** floor-to-ceiling wardrobe wall. front plane at z, spans x0..x1 (faces +Z). */
+export function wardrobeWall(parent, { x0, x1, y1, z, cols = 6, wood, fab = null, brass = null, depth = 0.6 }) {
+  const bm = brass || brassMat(0xc2a050, 0.28), g = new THREE.Group(); parent.add(g);
+  frontGrid(g, { x0, x1, y0: 0.0, y1, z, t: 0.022, cols: Array(cols).fill(1), rows: [1], matFn: (i) => (i % 3 === 1 && fab ? fab : wood), depth, carcass: T.solid(0x15110e, { roughness: 0.9 }), gap: 0.005 });
+  const cw = (x1 - x0) / cols;
+  for (let i = 0; i < cols; i++) { const xx = x0 + cw * i + (i % 2 ? 0.06 : cw - 0.06); bx(g, xx - 0.008, 0.9, z + 0.02, xx + 0.008, 1.5, z + 0.04, bm); }
+  bx(g, x0, y1 - 0.02, z + 0.02, x1, y1, z + 0.03, T.emissive(0xffc98a, 2.5), { cast: false });
+  return g;
+}
+
+/* ------------------------------------------------------------------ dining */
+export function diningChair({ fabric, wood, brass = null, seed = 1 } = {}) {
+  const g = new THREE.Group(), bm = brass || brassMat(0xc2a050, 0.28);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { rod(g, [sx * 0.2, 0, sz * 0.2], [sx * 0.19, 0.44, sz * 0.19], 0.014, wood, { seg: 10 }); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.012, 10), bm); c.position.set(sx * 0.2, 0.006, sz * 0.2); g.add(c); }
+  rbox(g, 0.46, 0.035, 0.46, 0.012, wood, 0, 0.43, 0);
+  softBox(g, 0.46, 0.07, 0.46, fabric, 0, 0.485, 0.0, { r: 0.03, bulge: { y: 0.02 }, seed, seg: [10, 4, 10] });
+  for (const sx of [-1, 1]) rod(g, [sx * 0.2, 0.44, -0.2], [sx * 0.19, 0.88, -0.25], 0.013, wood, { seg: 8 });
+  softBox(g, 0.46, 0.38, 0.06, fabric, 0, 0.7, -0.235, { r: 0.028, bulge: { z: 0.02 }, seed: seed + 1, rotX: -0.1, seg: [10, 8, 3] });
+  return g;
+}
+export function diningTable({ w = 2.3, d = 1.05, h = 0.76, top, base, brass = null } = {}) {
+  const g = new THREE.Group(), bm = brass || brassMat(0xc2a050, 0.28);
+  rbox(g, w, 0.045, d, 0.012, top, 0, h - 0.0225, 0);
+  for (const sx of [-1, 1]) { rbox(g, 0.1, h - 0.05, d * 0.72, 0.02, base, sx * (w / 2 - 0.55), (h - 0.05) / 2, 0); bx(g, sx * (w / 2 - 0.55) - 0.052, 0, -d * 0.36, sx * (w / 2 - 0.55) + 0.052, 0.012, d * 0.36, bm); }
+  bx(g, -(w / 2 - 0.55), h * 0.45, -0.015, w / 2 - 0.55, h * 0.45 + 0.02, 0.015, base);
+  return g;
+}
+export function chandelierGlobes({ x, z, y, n = 9, r = 0.55, ceilY, lum = 12, color = 0xffd9a8, globe = 0.08, light = true }) {
+  const g = new THREE.Group(); g.position.set(x, y, z); const bm = brassMat(0xc7a252, 0.22), em = T.emissive(color, lum), gm = glassMat({ tint: 0xfff3dc, opacity: 0.25, rough: 0.05 });
+  const top = ceilY - y; rod(g, [0, 0, 0], [0, top, 0], 0.01, bm, { seg: 8 }); cylY(g, 0, top - 0.02, 0, 0.1, 0.1, 0.04, bm);
+  for (let i = 0; i < n; i++) { const a = (i / n) * TAU, rr = r * (0.55 + 0.45 * ((i * 7) % 3) / 2), yy = -0.15 - ((i * 5) % 4) * 0.12; const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(Math.cos(a) * rr * 0.6, 0.12, Math.sin(a) * rr * 0.6), new THREE.Vector3(Math.cos(a) * rr, yy, Math.sin(a) * rr));
+    const tb = new THREE.Mesh(new THREE.TubeGeometry(curve, 16, 0.006, 6), bm); tb.castShadow = true; g.add(tb);
+    const b = new THREE.Mesh(new THREE.SphereGeometry(globe * 0.45, 12, 8), em); b.position.set(Math.cos(a) * rr, yy - 0.02, Math.sin(a) * rr); noAO(b); g.add(b);
+    const gl = new THREE.Mesh(new THREE.SphereGeometry(globe, 20, 14), gm); gl.position.copy(b.position); noAO(gl); g.add(gl); }
+  if (light) point(g, 0, -0.5, 0, color, lum * 0.5, 8, 1.8); halo(g, [0, -0.3, 0], r * 3.2, color, 0.5);
+  return g;
+}
+export function displayCabinet({ w = 1.6, h = 2.2, d = 0.45, wood, glass = null, shelves = 4, seed = 1 } = {}) {
+  const g = new THREE.Group(), gl = glass || glassMat({ opacity: 0.1 }), t = 0.03, inner = T.solid(0x2a211a, { roughness: 0.9 });
+  bx(g, -w / 2, 0, -d, w / 2, 0.12, 0, wood); bx(g, -w / 2, h - 0.04, -d, w / 2, h, 0, wood); bx(g, -w / 2, 0.12, -d, -w / 2 + t, h - 0.04, 0, wood); bx(g, w / 2 - t, 0.12, -d, w / 2, h - 0.04, 0, wood); bx(g, -w / 2, 0.12, -d, w / 2, h - 0.04, -d + 0.02, inner);
+  const lowH = 0.8; bx(g, -w / 2, 0.12, -d, w / 2, lowH, 0, wood); // lower cupboard doors
+  frontGrid(g, { x0: -w / 2, x1: w / 2, y0: 0.12, y1: lowH, z: 0.0, t: 0.02, cols: [1, 1, 1], mat: wood, depth: 0.02, carcass: wood, gap: 0.005 });
+  const rr = rng(seed), plateM = ceramicMat(0xf1eee6, 0.1), rimM = ceramicMat(0xc9a24d, 0.2), gm2 = glassMat({ tint: 0xeaf3f5, opacity: 0.3, rough: 0.03 });
+  const top = h - 0.06, sh = (top - lowH) / shelves;
+  for (let s = 0; s <= shelves; s++) { const yy = lowH + sh * s; if (s > 0 && s < shelves) bx(g, -w / 2 + t, yy, -d + 0.02, w / 2 - t, yy + 0.015, -0.03, gl.clone()); bx(g, -w / 2 + t, yy + 0.01, -d + 0.03, w / 2 - t, yy + 0.014, -d + 0.05, T.emissive(0xffd49a, 4), { cast: false });
+    if (s < shelves) { const base = yy + (s > 0 ? 0.015 : 0.0);
+      if (s % 2 === 0) for (let k = 0; k < 6; k++) { const px = -w / 2 + 0.2 + k * (w - 0.4) / 5; const pl = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.07, 0.012, 28), plateM); pl.rotation.x = -1.35; pl.position.set(px, base + 0.12, -d + 0.07); pl.castShadow = true; g.add(pl); const rm = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.004, 6, 28), rimM); rm.rotation.x = -1.35; rm.position.set(px, base + 0.12, -d + 0.073); g.add(rm); }
+      else for (let k = 0; k < 7; k++) { const px = -w / 2 + 0.15 + k * (w - 0.3) / 6; lathe(g, [[0.001, 0], [0.03, 0.002], [0.032, 0.02], [0.012, 0.1], [0.012, 0.13], [0.04, 0.2], [0.043, 0.22], [0.037, 0.22]], k % 2 ? gm2 : ceramicMat(k % 3 ? 0xd9cdb6 : 0x2f5d62, 0.2), px, base, -d + 0.2 - rr() * 0.05, { seg: 20 }); } } }
+  // glass doors
+  bx(g, -w / 2 + t, lowH, -0.01, w / 2 - t, top, 0.0, gl, { cast: false });
+  for (let k = 0; k <= 2; k++) bx(g, -w / 2 + t + k * (w - 2 * t) / 2 - 0.015, lowH, -0.02, -w / 2 + t + k * (w - 2 * t) / 2 + 0.015, top, 0.012, brassMat(0xc2a050, 0.3));
+  return g;
+}
+/** wall with an arch-top recess (niche). faces +Z; front face at z. Returns group; shelf/back material given */
+export function archNiche(parent, { x, y0, w, h, z, depth = 0.22, wallMat, backMat, wallX0, wallX1, wallY1, led = 0xffc98a }) {
+  const g = new THREE.Group(); parent.add(g), r0();
+  function r0() {}
+  const sh = new THREE.Shape(); sh.moveTo(wallX0, 0); sh.lineTo(wallX1, 0); sh.lineTo(wallX1, wallY1); sh.lineTo(wallX0, wallY1); sh.lineTo(wallX0, 0);
+  const hole = new THREE.Path(), x0 = x - w / 2, x1 = x + w / 2, rr = w / 2; hole.moveTo(x0, y0); hole.lineTo(x1, y0); hole.lineTo(x1, y0 + h - rr); hole.absarc(x, y0 + h - rr, rr, 0, Math.PI, false); hole.lineTo(x0, y0); sh.holes.push(hole);
+  const geo = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: false, curveSegments: 32 }); geo.translate(0, 0, z); triUV(geo, wallMat.userData.tileM || 3);
+  const m = new THREE.Mesh(geo, wallMat); m.castShadow = true; m.receiveShadow = true; g.add(m);
+  bx(g, x0, y0, z - 0.01, x1, y0 + h, z + 0.004, backMat);
+  const arc = new THREE.Shape(); arc.absarc(x, y0 + h - rr, rr, 0, Math.PI, false); const ag = new THREE.ShapeGeometry(arc, 32); ag.translate(0, 0, z + 0.0045); const am = new THREE.Mesh(ag, backMat); g.add(am);
+  const lm = T.emissive(led, 3.5); bx(g, x0 + 0.01, y0 + 0.02, z + 0.01, x1 - 0.01, y0 + 0.03, z + depth - 0.04, lm, { cast: false });
+  glow(g, { kind: 'scallop', w: w * 1.1, h: h * 0.9, color: led, intensity: 0.7, pos: [x, y0 + h * 0.5 + 0.15, z + 0.007] });
+  return g;
+}
+
+/* ------------------------------------------------------------------ kitchen */
+export function baseCabinets(parent, { x0, x1, z, depth = 0.6, h = 0.86, toe = 0.1, mat, counter, cols = [1, 1, 1], rows = [1], thick = 0.03, over = 0.03, slot = 0.0, matFn = null, sideBack = false }) {
+  const g = new THREE.Group(); parent.add(g), sideBack;
+  const dark = T.solid(0x141414, { roughness: 0.8 });
+  bx(g, x0 + 0.02, 0, z - depth + 0.04, x1 - 0.02, toe, z - 0.06, dark);
+  frontGrid(g, { x0, x1, y0: toe, y1: h - thick, z: z - 0.02, t: 0.02, cols, rows, mat, matFn, gap: 0.005, carcass: mat, depth: depth - 0.02, slot: slot ? dark : null });
+  bx(g, x0 - 0.0, h - thick, z - depth, x1, h, z + over, counter);
+  return g;
+}
+export function hob(parent, { x, y, z, w = 0.6, d = 0.52 }) {
+  const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0x07080a, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.05 }); glass.userData.tileM = 1;
+  bx(g, -w / 2, 0, -d / 2, w / 2, 0.012, d / 2, glass); const ring = blackMetal(0x3a3b3d, 0.4);
+  for (const [px, pz, r] of [[-w * 0.24, -d * 0.22, 0.09], [w * 0.24, -d * 0.22, 0.07], [-w * 0.24, d * 0.2, 0.07], [w * 0.24, d * 0.2, 0.1]]) { torus(g, r, 0.003, ring, px, 0.014, pz, { rx: Math.PI / 2, seg: 36, tseg: 6 }); torus(g, r * 0.55, 0.0025, ring, px, 0.014, pz, { rx: Math.PI / 2, seg: 28, tseg: 6 }); }
+  return g;
+}
+export function chimneyHood(parent, { x, y, z, w = 0.9, d = 0.5, top = 2.95, mat }) {
+  const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
+  const c = new THREE.CylinderGeometry(w * 0.2, w * 0.72, 0.34, 4, 1); c.rotateY(Math.PI / 4); c.scale(1, 1, d / w); const m = new THREE.Mesh(c, mat); m.position.y = 0.17; m.castShadow = true; g.add(m);
+  bx(g, -0.17, 0.3, -0.15, 0.17, top - y, 0.15, mat);
+  const led = T.emissive(0xfff0d0, 3); bx(g, -w * 0.3, 0.005, -d * 0.2, w * 0.3, 0.012, d * 0.2, led, { cast: false });
+  return g;
+}
+export function tap(parent, { x, y, z, mat = null, h = 0.3, reach = 0.2 }) {
+  const bm = mat || brassMat(0xc2a050, 0.22), g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
+  cylY(g, 0, 0, 0, 0.022, 0.026, 0.05, bm);
+  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.05, 0), new THREE.Vector3(0, h * 0.8, 0), new THREE.Vector3(0, h, reach * 0.3), new THREE.Vector3(0, h * 0.92, reach)]);
+  const t = new THREE.Mesh(new THREE.TubeGeometry(curve, 24, 0.011, 8), bm); t.castShadow = true; g.add(t); rod(g, [0.0, 0.05, 0.04], [0.04, 0.12, 0.04], 0.007, bm); return g;
+}
+export function barStool({ seat, legs, h = 0.68, r = 0.19 } = {}) {
+  const g = new THREE.Group();
+  softBox(g, r * 2, 0.07, r * 2, seat, 0, h, 0, { r: 0.034, seg: [10, 4, 10], bulge: { y: 0.015 } });
+  for (let i = 0; i < 4; i++) { const a = (i / 4) * TAU + Math.PI / 4; rod(g, [Math.cos(a) * r * 0.8, 0, Math.sin(a) * r * 0.8], [Math.cos(a) * r * 0.55, h - 0.03, Math.sin(a) * r * 0.55], 0.013, legs, { seg: 8 }); }
+  torus(g, r * 0.72, 0.008, legs, 0, h * 0.38, 0, { rx: Math.PI / 2, seg: 32, tseg: 6 }); return g;
+}
+
+/* ------------------------------------------------------------------ bathroom */
+export function roundMirror(parent, { x, y, z, r = 0.38, rotY = 0, color = 0xffe4bc, lum = 4 }) {
+  const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY; parent.add(g);
+  const md = new THREE.Mesh(new THREE.CircleGeometry(r, 64), mirrorMat(0xdfe6e8)); md.position.z = 0.02; md.receiveShadow = true; g.add(md);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r + 0.012, 0.012, 8, 64), T.emissive(color, lum)); ring.position.z = 0.016; noAO(ring); g.add(ring);
+  torus(g, r + 0.03, 0.008, blackMetal(0x151515, 0.4), 0, 0, 0.02, { rx: 0, seg: 64, tseg: 6 });
+  glow(g, { kind: 'radial', w: r * 4.2, h: r * 4.2, color, intensity: 0.5, pos: [0, 0, 0.012] });
+  return g;
+}
+export function vanity({ w = 1.2, d = 0.48, y = 0.45, h = 0.45, wood, top, basin = true, brass = null } = {}) {
+  const g = new THREE.Group(), bm = brass || brassMat(0xc2a050, 0.25);
+  frontGrid(g, { x0: -w / 2, x1: w / 2, y0: y, y1: y + h, z: d / 2 - 0.02, t: 0.02, cols: [1, 1], rows: [1, 1], mat: wood, depth: d - 0.02, carcass: wood, gap: 0.005 });
+  bx(g, -w / 2 - 0.015, y + h, -d / 2, w / 2 + 0.015, y + h + 0.03, d / 2 + 0.01, top);
+  bx(g, -w / 2 + 0.05, y - 0.02, -d / 2 + 0.03, w / 2 - 0.05, y, d / 2 - 0.1, T.emissive(0xffc98a, 3), { cast: false });
+  glow(g, { kind: 'shadow', w: w + 0.8, h: d + 0.9, color: 0xffc98a, intensity: 0.4, pos: [0, 0.01, 0.1], rot: [-Math.PI / 2, 0, 0] });
+  for (const k of [0.25, 0.75]) bx(g, -0.1 + (k - 0.5) * 0.0 + (k < 0.5 ? -w / 4 : w / 4) - 0.1, y + h * 0.5 + 0.18, d / 2, (k < 0.5 ? -w / 4 : w / 4) + 0.1, y + h * 0.5 + 0.185, d / 2 + 0.022, bm);
+  if (basin) { const bsn = ceramicMat(0xf6f4f0, 0.08); lathe(g, [[0.001, 0], [0.12, 0.003], [0.17, 0.05], [0.2, 0.12], [0.195, 0.125], [0.17, 0.1], [0.1, 0.06], [0.001, 0.05]], bsn, 0, y + h + 0.03, 0.0, { seg: 40 }); }
+  return g;
+}
+export function showerGlass(parent, { x0, x1, z0, z1, h = 2.1, frame = null }) {
+  const g = new THREE.Group(); parent.add(g); const fm = frame || blackMetal(0x121212, 0.4), gl = glassMat({ opacity: 0.1 });
+  const pane = (xa, za, xb, zb) => { const dx = xb - xa, dz = zb - za, len = Math.hypot(dx, dz), m = new THREE.Mesh(new THREE.PlaneGeometry(len, h), gl); m.position.set((xa + xb) / 2, h / 2, (za + zb) / 2); m.rotation.y = -Math.atan2(dz, dx); noAO(m); m.renderOrder = 1; g.add(m);
+    bx(g, Math.min(xa, xb) - 0.012, 0, Math.min(za, zb) - 0.012, Math.max(xa, xb) + 0.012, 0.03, Math.max(za, zb) + 0.012, fm); bx(g, Math.min(xa, xb) - 0.012, h - 0.02, Math.min(za, zb) - 0.012, Math.max(xa, xb) + 0.012, h, Math.max(za, zb) + 0.012, fm); };
+  pane(x0, z1, x1, z1); pane(x1, z1, x1, z0);
+  for (const [xx, zz] of [[x0, z1], [x1, z1], [x1, z0]]) bx(g, xx - 0.012, 0, zz - 0.012, xx + 0.012, h, zz + 0.012, fm);
+  bx(g, x0 + 0.3, 0.9, z1 - 0.012, x0 + 0.34, 1.0, z1 + 0.05, blackMetal(0x121212, 0.3));
+  return g;
+}
+export function rainShower(parent, { x, y, z, wallZ, mat = null }) {
+  const bm = mat || blackMetal(0x141414, 0.35), g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
+  cylY(g, 0, -0.01, 0, 0.18, 0.18, 0.02, bm, { seg: 40 }); rod(g, [0, 0, 0], [0, 0.0, wallZ - z], 0.012, bm, { seg: 8 }); return g;
+}
+export function towelRail(parent, { x, y, z, h = 1.2, w = 0.5, mat = null, towel = null, rotY = 0 }) {
+  const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rotY; parent.add(g); const bm = mat || blackMetal(0x141414, 0.35);
+  for (const sx of [-1, 1]) rod(g, [sx * w / 2, 0, 0.05], [sx * w / 2, h, 0.05], 0.012, bm, { seg: 8 });
+  const n = Math.round(h / 0.16); for (let i = 0; i < n; i++) rod(g, [-w / 2, 0.1 + i * (h - 0.15) / (n - 1), 0.05], [w / 2, 0.1 + i * (h - 0.15) / (n - 1), 0.05], 0.008, bm, { seg: 6 });
+  if (towel) { softBox(g, w * 0.9, 0.3, 0.05, towel, 0, h * 0.6, 0.085, { r: 0.02, seg: [14, 8, 3], wrinkle: 0.01, seed: 3, tile: 0.3 }); softBox(g, w * 0.9, 0.3, 0.05, towel, 0, h * 0.3, 0.085, { r: 0.02, seg: [14, 8, 3], wrinkle: 0.01, seed: 4, tile: 0.3 }); }
+  return g;
+}
+export function toiletWall({ mat = null } = {}) {
+  const g = new THREE.Group(), c = mat || ceramicMat(0xf7f5f1, 0.06);
+  rbox(g, 0.37, 0.4, 0.44, 0.1, c, 0, 0.4, 0.2); rbox(g, 0.4, 0.04, 0.5, 0.02, ceramicMat(0xfbfaf8, 0.2), 0, 0.605, 0.22);
+  rbox(g, 0.4, 1.0, 0.18, 0.03, c, 0, 0.7, -0.1); bx(g, -0.07, 0.95, -0.005, 0.07, 1.0, 0.005, brassMat(0xc2a050, 0.3)); return g;
+}
+
 // <<END-PART4>>
