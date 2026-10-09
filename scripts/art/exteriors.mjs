@@ -939,3 +939,66 @@ scenes['house-5marla-contemporary'] = () => {
   finish(S);
   S.write('house-5marla-contemporary.svg');
 };
+
+scenes['house-10marla-modern'] = () => {
+  const S = new Svg('h10m', 1200, 900, { title: 'Modern 10 Marla house with cantilevered upper floor', desc: 'Front elevation of a modern 10 Marla house in cream and charcoal: a cantilevered first-floor volume with a long ribbon window floats over a recessed, fully glazed ground floor, with a floating flat roof plane, timber accent panel, car porch with downlights and a charcoal sliding gate, under a deep blue afternoon sky.', seed: 4, th: 'afternoon' });
+  const th = S.th; const { W } = S;
+  sky(S, th, { horizon: 650, clouds: [[180, 130, 1.5, 0.95], [760, 110, 1.2, 0.9], [1060, 200, 1.0, 0.8], [420, 230, 0.8, 0.6]] });
+  birds(S, [[300, 90, 1.1], [335, 110, 0.9]]);
+  farBlocks(S, 690, th, { op: 0.35, seed: 12 }); farTrees(S, 696, th, { h: 80, op: 0.7, seed: 11 });
+  const X = 215, Wd = 770, GY = 690, fh = 186, sl = 18;
+  const y1 = GY - fh, s1 = y1 - sl, y2 = s1 - fh, s2 = y2 - sl;
+  grassBand(S, 0, GY, W, 60, th);
+  S.add(R(X + 590, GY, 210, 60, S.grad([[0, '#b9b1a3'], [1, '#a29a8c']], 'v')), R(X + 590, GY, 210, 60, paverPat(S, { name: 'fc' }), { op: 0.8 }));
+  S.add(tank(S, X + 600, s2 + 8, 66, 80, { stand: 8 }), tank(S, X + 674, s2 + 8, 66, 80, { stand: 8 }));
+  // recessed ground floor
+  S.add(vol(S, X + 4, y1, Wd - 8, fh, { fill: '#cfc8ba', edge: false }));
+  S.add(win(S, X + 14, y1 + 12, 410, fh - 12, { cols: 4, rows: 1, transom: 0.14, frame: '#25282d', fw: 5, sill: false, interior: 'lounge', seed: 4, mode: 'day' }));
+  S.add(R(X + 14, y1 + 12, 410, fh - 12, S.grad([[0, '#ffe7b0', 0.0], [1, '#ffd490', 0.28]], 'v')));
+  // charcoal feature wall w/ entrance
+  S.add(vol(S, X + 440, y1, 170, fh, { fill: '#33363d', tex: boardPat(S, { name: 'bd10', col: '#000' }), edge: false }));
+  S.add(door(S, X + 472, GY - 172, 100, 172, { style: 'dark', handle: B.brass, panels: 1 }));
+  S.add(R(X + 472, GY - 172, 100, 172, S.grad([[0, '#fff', 0.1], [1, '#000', 0.1]], 'h')), R(X + 556, GY - 130, 4, 76, B.brass, { rx: 2 }));
+  S.add(R(X + 590, y1 + 10, 6, 40, B.brass, { rx: 3 }), glow(S, X + 593, y1 + 30, 26, '#ffd890', 0.3));
+  S.add(R(X + 450, GY - 6, 150, 6, '#cfc8bc'), R(X + 438, GY, 174, 5, '#bdb7a9'), shadeBelow(S, X + 438, GY + 5, 174, 6, 0.3));
+  // porch
+  S.add(R(X + 616, y1, Wd - 616, fh, S.grad([[0, '#2d2a27'], [1, '#161412']], 'v')), R(X + 616, y1, Wd - 616, fh, woodPat(S, { name: 'w10', sw: 13, colors: ['#6b4a30', '#5d3f28', '#74532f'] }), { op: 0.5 }), R(X + 616, y1, Wd - 616, fh, S.grad([[0, '#000', 0.5], [0.5, '#000', 0.05], [1, '#000', 0.4]], 'v')));
+  S.add(carFront(S, X + 696, GY - 3, 168, '#3c434c'));
+  for (const lx of [650, 700, 750]) S.add(glow(S, X + lx, y1 + 14, 38, '#ffe3a8', 0.5), C(X + lx, y1 + 8, 3.4, '#fff6d8'));
+  S.add(R(X + Wd - 14, y1, 14, fh, '#2a2d33'));
+  S.add(R(X + 428, y1, 12, fh, '#2a2d33'), R(X + 428, y1, 1.6, fh, '#fff', { op: 0.2 }));
+  // slab fascia 1 + shadow
+  S.add(slab(S, X - 24, s1, Wd + 48, sl, { fill: '#32353c', shy: 34 }));
+  S.add(shadeBelow(S, X + 4, y1, Wd - 8, 40, 0.35));
+  // upper box
+  S.add(vol(S, X - 24, y2, Wd + 48, fh, { fill: '#f1ece1' }));
+  S.add(win(S, X + 14, y2 + 26, 430, 126, { cols: 5, rows: 1, transom: 0.2, frame: '#25282d', fw: 5, sill: false, interior: 'pendant', seed: 6 }));
+  S.add(R(X + 8, y2 + 14, 442, 12, '#32353c'), shadeBelow(S, X + 8, y2 + 26, 442, 10, 0.3));
+  S.add(R(X + 484, y2, 100, fh, woodPat(S, { name: 'w10b', sw: 14 })), R(X + 484, y2, 100, fh, S.grad([[0, '#fff', 0.06], [1, '#000', 0.22]], 'h')), shadeSide(S, X + 484, y2, fh, 12, 0.3, 1));
+  S.add(win(S, X + 616, y2 + 26, 50, 126, { cols: 1, rows: 3, frame: '#25282d', fw: 3.6, sill: true, sillCol: '#32353c', interior: 'curtain', seed: 7 }));
+  S.add(win(S, X + 696, y2 + 26, 50, 126, { cols: 1, rows: 3, frame: '#25282d', fw: 3.6, sill: true, sillCol: '#32353c', interior: 'shelf', seed: 8 }));
+  S.add(ac(S, X + 628, y2 + 176 - 4, 38, 0));
+  S.add(R(X + Wd + 14, y2, 10, fh, '#32353c'));
+  // roof plane
+  S.add(slab(S, X - 36, s2 - 4, Wd + 72, 22, { fill: '#2d3036', shy: 22 }));
+  S.add(R(X - 36, s2 - 4, Wd + 72, 3, B.brass, { op: 0.9 }));
+  // landscape in front
+  hedge(S, X - 30, GY + 36, 250, 26, th, { seed: 2 }); hedge(S, X + 230, GY + 36, 160, 22, th, { seed: 3 });
+  shrub(S, X + 400, GY + 4, 140, 40, th, { seed: 5, flowers: ['#f2c14e', '#fff'] });
+  topiary(S, X + 40, GY + 18, 18, th);
+  ashoka(S, 150, 750, 280, th, { seed: 3 }); ashoka(S, 182, 750, 240, th, { seed: 4 });
+  // wall + gate
+  boundaryWall(S, 0, X + 586, { top: 742, fill: '#ebe5d9', capCol: '#2d3036' });
+  boundaryWall(S, X + 818, W - X - 818, { top: 742, fill: '#ddd6c8', capCol: '#2d3036' });
+  S.add(gate(S, X + 704, WALL_BASE, 114, 100, { col: B.char, style: 'vslats', accent: B.brass }));
+  S.add(R(X + 590, 742, 12, 58, '#000', { op: 0 }));
+  S.add(pillar(S, X + 584, WALL_BASE, 26, 98, { fill: '#ebe5d9', cap: '#2d3036', lamp: true, glow: th.lights }));
+  S.add(pillar(S, X + 818, WALL_BASE, 26, 98, { fill: '#ebe5d9', cap: '#2d3036', lamp: true, glow: th.lights }));
+  S.add(plate(S, X + 60, 770, 36, 20, '#2d3036'));
+  street(S, th, WALL_BASE);
+  palm(S, 1090, 812, 540, th, { lean: -0.04, seed: 4 }); palm(S, 1140, 812, 430, th, { lean: 0.05, seed: 9 });
+  blobTree(S, 70, 812, 360, th, { seed: 12, w: 0.9 });
+  S.add(carSide(S, 380, 884, 0.8, '#f3f4f5'));
+  finish(S);
+  S.write('house-10marla-modern.svg');
+};
